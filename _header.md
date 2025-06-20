@@ -1,3 +1,3 @@
-# terraform-azurerm-avm-template
+# terraform-azurerm-avm-ptn-aiml-landing-zone
 
-This is a template repo for Terraform Azure Verified Modules.
+This pattern module creates the full AI/ML landing zone which supports multiple ai project scenarios.

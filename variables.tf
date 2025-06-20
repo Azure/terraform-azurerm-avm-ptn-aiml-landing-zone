@@ -21,6 +21,12 @@ DESCRIPTION
   nullable    = false
 }
 
+variable "name_prefix" {
+  type        = string
+  default     = null
+  description = "Optional Prefix to be used for naming resources. This is useful for ensuring standard naming without requiring a name input for each name."
+}
+
 variable "tags" {
   type        = map(string)
   default     = null
