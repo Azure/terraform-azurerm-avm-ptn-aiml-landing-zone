@@ -28,7 +28,6 @@ module "firewall_route_table" {
   name                          = local.route_table_name
   resource_group_name           = azurerm_resource_group.this.name
   bgp_route_propagation_enabled = true
-
   routes = {
     azure_firewall = {
       name                   = "default-to-firewall"
