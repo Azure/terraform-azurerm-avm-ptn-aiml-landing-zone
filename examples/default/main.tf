@@ -43,21 +43,17 @@ module "naming" {
 
 module "test" {
   source = "../../"
-  # source             = "Azure/avm-<res/ptn>-<name>/azurerm"
-  # ...
 
   location            = "westus3"
   resource_group_name = "ai-lz-rg"
-
   vnet_definition = {
-    name = "ai-lz-vnet"
+    name          = "ai-lz-vnet-test"
     address_space = "10.100.0.0/23"
-
   }
-
-  enable_telemetry = var.enable_telemetry # see variables.tf
+  bastion_definition = {
+    zones = [] #Zonal configurations are preview and not supported in westus3
+  }
+  enable_telemetry           = var.enable_telemetry
+  flag_platform_landing_zone = true
 }
 
-output "subnets" {
-  value = module.test.subnets
-}

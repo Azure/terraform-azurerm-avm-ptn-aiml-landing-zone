@@ -47,26 +47,22 @@ module "naming" {
   version = "~> 0.3"
 }
 
-# This is required for resource modules
-resource "azurerm_resource_group" "this" {
-  location = module.regions.regions[random_integer.region_index.result].name
-  name     = module.naming.resource_group.name_unique
-}
-
-# This is the module call
-# Do not specify location here due to the randomization above.
-# Leaving location as `null` will cause the module to use the resource group location
-# with a data source.
 module "test" {
   source = "../../"
-  # source             = "Azure/avm-<res/ptn>-<name>/azurerm"
-  # ...
-  location            = azurerm_resource_group.this.location
-  name                = "TODO" # TODO update with module.naming.<RESOURCE_TYPE>.name_unique
-  resource_group_name = azurerm_resource_group.this.name
 
-  enable_telemetry = var.enable_telemetry # see variables.tf
+  location            = "westus3"
+  resource_group_name = "ai-lz-rg"
+  vnet_definition = {
+    name          = "ai-lz-vnet-test"
+    address_space = "10.100.0.0/23"
+  }
+  bastion_definition = {
+    zones = [] #Zonal configurations are preview and not supported in westus3
+  }
+  enable_telemetry           = var.enable_telemetry
+  flag_platform_landing_zone = true
 }
+
 ```
 
 <!-- markdownlint-disable MD033 -->
@@ -86,7 +82,6 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
-- [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 
 <!-- markdownlint-disable MD013 -->
