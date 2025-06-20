@@ -106,6 +106,16 @@ module "azure_bastion" {
   zones = var.bastion_definition.zones
 }
 
-#TODO: priavate DNS zone
+module "private_dns_zones" {
+  source  = "Azure/avm-res-network-privatednszone/azurerm"
+  version = "0.3.4"
+
+  for_each = local.private_dns_zones
+
+  domain_name           = each.value.name
+  resource_group_name   = azurerm_resource_group.this.name
+  enable_telemetry      = var.enable_telemetry
+  virtual_network_links = local.virtual_network_links
+}
 
 #TODO: App Gateway w WAF. (What is in the backend pool?

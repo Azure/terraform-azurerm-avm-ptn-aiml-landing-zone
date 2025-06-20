@@ -10,3 +10,5 @@ resource "random_string" "name_suffix" {
   special = false
   upper   = false
 }
+
+data "azurerm_client_config" "current" {}

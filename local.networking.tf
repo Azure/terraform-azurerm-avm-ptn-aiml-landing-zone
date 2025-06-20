@@ -1,7 +1,70 @@
 locals {
-  bastion_name     = try(var.bastion_definition.name, null) != null ? var.bastion_definition.name : (try(var.name_prefix, null) != null ? "${var.name_prefix}-bastion" : "ai-alz-bastion")
+  bastion_name = try(var.bastion_definition.name, null) != null ? var.bastion_definition.name : (try(var.name_prefix, null) != null ? "${var.name_prefix}-bastion" : "ai-alz-bastion")
+  default_virtual_network_link = {
+    alz_vnet_link = {
+      vnetlinkname     = "${local.vnet_name}-link"
+      vnetid           = module.ai_lz_vnet.resource_id
+      autoregistration = false #TODO: confirm if we want auto-registration enabled by default for the alz vnet
+    }
+  }
   deployed_subnets = { for subnet_name, subnet in local.subnets : subnet_name => subnet if subnet.enabled }
   firewall_name    = try(var.firewall_definition.name, null) != null ? var.firewall_definition.name : (try(var.name_prefix, null) != null ? "${var.name_prefix}-fw" : "ai-alz-fw")
+  private_dns_zones = var.flag_platform_landing_zone == true ? {
+    key_vault_zone = {
+      name = "privatelink.vaultcore.azure.net"
+    }
+    apim_zone = {
+      name = "privatelink.azure-api.net"
+    }
+    cosmos_sql_zone = {
+      name = "privatelink.documents.azure.com"
+    }
+    cosmos_mongo_zone = {
+      name = "privatelink.mongo.cosmos.azure.com"
+    }
+    cosmos_cassandra_zone = {
+      name = "privatelink.cassandra.cosmos.azure.com"
+    }
+    cosmos_gremlin_zone = {
+      name = "privatelink.gremlin.cosmos.azure.com"
+    }
+    cosmos_table_zone = {
+      name = "privatelink.table.cosmos.azure.com"
+    }
+    cosmos_analytical_zone = {
+      name = "privatelink.analytics.cosmos.azure.com"
+    }
+    cosmos_postgres_zone = {
+      name = "privatelink.postgres.cosmos.azure.com"
+    }
+    storage_blob_zone = {
+      name = "privatelink.blob.core.windows.net"
+    }
+    storage_queue_zone = {
+      name = "privatelink.queue.core.windows.net"
+    }
+    storage_table_zone = {
+      name = "privatelink.table.core.windows.net"
+    }
+    storage_file_zone = {
+      name = "privatelink.file.core.windows.net"
+    }
+    storage_dlfs_zone = {
+      name = "privatelink.dfs.core.windows.net"
+    }
+    storage_web_zone = {
+      name = "privatelink.web.core.windows.net"
+    }
+    ai_search_zone = {
+      name = "privatelink.search.windows.net"
+    }
+    container_registry_zone = {
+      name = "privatelink.azurecr.io"
+    }
+    app_configuration_zone = {
+      name = "privatelink.azconfig.io"
+    }
+  } : {}
   route_table_name = "${local.vnet_name}-firewall-route-table"
   subnets = {
     AzureBastionSubnet = {
@@ -73,5 +136,6 @@ locals {
       } : null
     }
   }
-  vnet_name = try(var.vnet_definition.name, null) != null ? var.vnet_definition.name : (try(var.name_prefix, null) != null ? "${var.name_prefix}-vnet" : "ai-alz-vnet")
+  virtual_network_links = merge(local.default_virtual_network_link, var.dns_zones_network_links)
+  vnet_name             = try(var.vnet_definition.name, null) != null ? var.vnet_definition.name : (try(var.name_prefix, null) != null ? "${var.name_prefix}-vnet" : "ai-alz-vnet")
 }

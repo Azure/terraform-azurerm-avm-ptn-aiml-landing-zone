@@ -27,6 +27,7 @@ The following resources are used by this module:
 - [random_string.name_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
 - [random_uuid.telemetry](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
 - [azapi_client_config.telemetry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config) (data source)
+- [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 - [modtm_module_source.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/data-sources/module_source) (data source)
 
 <!-- markdownlint-disable MD013 -->
@@ -88,6 +89,22 @@ object({
 
 Default: `{}`
 
+### <a name="input_dns_zones_network_links"></a> [dns\_zones\_network\_links](#input\_dns\_zones\_network\_links)
+
+Description: n/a
+
+Type:
+
+```hcl
+map(object({
+    vnetlinkname     = string
+    vnetid           = string
+    autoregistration = optional(bool, false)
+  }))
+```
+
+Default: `{}`
+
 ### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
 
 Description: This variable controls whether or not telemetry is enabled for the module.  
@@ -123,6 +140,27 @@ Description: Flag to indicate if the platform landing zone is enabled. If true, 
 Type: `bool`
 
 Default: `true`
+
+### <a name="input_genai_key_vault_definition"></a> [genai\_key\_vault\_definition](#input\_genai\_key\_vault\_definition)
+
+Description: Definition of the Key Vault to be created for GenAI services.
+
+Type:
+
+```hcl
+object({
+    name      = optional(string)
+    sku       = optional(string, "standard")
+    tenant_id = optional(string)
+    role_assignments = optional(map(object({
+      role_definition_id_or_name = string
+      principal_id               = string
+    })), {})
+    tags = optional(map(string), {})
+  })
+```
+
+Default: `{}`
 
 ### <a name="input_law_definition"></a> [law\_definition](#input\_law\_definition)
 
@@ -175,6 +213,12 @@ Source: Azure/avm-res-network-virtualnetwork/azurerm
 
 Version: =0.7.1
 
+### <a name="module_avm_res_keyvault_vault"></a> [avm\_res\_keyvault\_vault](#module\_avm\_res\_keyvault\_vault)
+
+Source: Azure/avm-res-keyvault-vault/azurerm
+
+Version: =0.10.0
+
 ### <a name="module_azure_bastion"></a> [azure\_bastion](#module\_azure\_bastion)
 
 Source: Azure/avm-res-network-bastionhost/azurerm
@@ -210,6 +254,12 @@ Version: 0.2.0
 Source: Azure/avm-res-operationalinsights-workspace/azurerm
 
 Version: 0.4.2
+
+### <a name="module_private_dns_zones"></a> [private\_dns\_zones](#module\_private\_dns\_zones)
+
+Source: Azure/avm-res-network-privatednszone/azurerm
+
+Version: 0.3.4
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

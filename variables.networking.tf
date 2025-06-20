@@ -23,6 +23,15 @@ variable "bastion_definition" {
   default = {}
 }
 
+variable "dns_zones_network_links" {
+  type = map(object({
+    vnetlinkname     = string
+    vnetid           = string
+    autoregistration = optional(bool, false)
+  }))
+  default = {}
+}
+
 variable "firewall_definition" {
   type = object({
     name  = optional(string)
