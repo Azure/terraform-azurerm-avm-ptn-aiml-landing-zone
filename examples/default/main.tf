@@ -1,5 +1,6 @@
 terraform {
   required_version = "~> 1.5"
+
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -17,7 +18,11 @@ terraform {
 }
 
 provider "azurerm" {
-  features {}
+  features {
+    resource_group {
+      prevent_deletion_if_contains_resources = false
+    }
+  }
 }
 
 
@@ -44,7 +49,7 @@ module "naming" {
 module "test" {
   source = "../../"
 
-  location            = "westus3"
+  location            = "westus2"
   resource_group_name = "ai-lz-rg"
   vnet_definition = {
     name          = "ai-lz-vnet-test"
@@ -53,6 +58,9 @@ module "test" {
   bastion_definition = {
     zones = [] #Zonal configurations are preview and not supported in westus3
   }
+  #law_definition = {
+  #  resource_id = "/subscriptions/19fbc0d1-6eee-4268-a84a-3f06e7a69fca/resourceGroups/sample_ai_resources/providers/Microsoft.OperationalInsights/workspaces/test-ai-law"
+  #}
   enable_telemetry           = var.enable_telemetry
   flag_platform_landing_zone = true
 }

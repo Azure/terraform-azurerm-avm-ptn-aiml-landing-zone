@@ -22,7 +22,7 @@ DESCRIPTION
 }
 
 variable "name_prefix" {
-  #TODO: add a validation rule to keep this under 10 characters
+  #TODO: add a validation rule to keep this under 10 characters only alphanumeric lowercase
   type        = string
   default     = null
   description = "Optional Prefix to be used for naming resources. This is useful for ensuring standard naming without requiring a name input for each name."

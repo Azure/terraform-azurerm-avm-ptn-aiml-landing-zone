@@ -12,3 +12,10 @@ resource "random_string" "name_suffix" {
 }
 
 data "azurerm_client_config" "current" {}
+
+module "avm-utl-regions" {
+  source  = "Azure/avm-utl-regions/azurerm"
+  version = "0.5.2"
+
+  recommended_filter = false
+}

@@ -58,11 +58,11 @@ object({
     name          = optional(string)
     address_space = string
     enable_ddos   = optional(bool, false)
+    dns_servers   = optional(list(string))
     subnets = optional(map(object({
       enabled        = optional(bool, true)
       name           = optional(string)
       address_prefix = optional(string)
-      dns_servers    = optional(list(string))
       }
     )), {})
   })
@@ -141,6 +141,82 @@ Type: `bool`
 
 Default: `true`
 
+### <a name="input_genai_container_registry_definition"></a> [genai\_container\_registry\_definition](#input\_genai\_container\_registry\_definition)
+
+Description: Definition of the Container Registry to be created for GenAI services.
+
+Type:
+
+```hcl
+object({
+    name                          = optional(string)
+    sku                           = optional(string, "Premium")
+    zone_redundancy_enabled       = optional(bool, true)
+    public_network_access_enabled = optional(bool, false)
+    tags                          = optional(map(string), {})
+    role_assignments = optional(map(object({
+      role_definition_id_or_name = string
+      principal_id               = string
+    })), {})
+  })
+```
+
+Default: `{}`
+
+### <a name="input_genai_cosmosdb_definition"></a> [genai\_cosmosdb\_definition](#input\_genai\_cosmosdb\_definition)
+
+Description: Definition of the Cosmos DB account to be created for GenAI services.
+
+Type:
+
+```hcl
+object({
+    name = optional(string)
+    secondary_regions = optional(list(object({
+      location          = string
+      zone_redundant    = optional(bool, true)
+      failover_priority = optional(number, 0)
+    })), [])
+    public_network_access_enabled    = optional(bool, false)
+    analytical_storage_enabled       = optional(bool, true)
+    automatic_failover_enabled       = optional(bool, false)
+    local_authentication_disabled    = optional(bool, true)
+    partition_merge_enabled          = optional(bool, false)
+    multiple_write_locations_enabled = optional(bool, false)
+    analytical_storage_config = optional(object({
+      schema_type = string
+    }), null)
+    consistency_policy = optional(object({
+      max_interval_in_seconds = optional(number, 300)
+      max_staleness_prefix    = optional(number, 100001)
+      consistency_level       = optional(string, "BoundedStaleness")
+    }), {})
+    backup = optional(object({
+      retention_in_hours  = optional(number)
+      interval_in_minutes = optional(number)
+      storage_redundancy  = optional(string)
+      type                = optional(string)
+      tier                = optional(string)
+    }), {})
+    capabilities = optional(set(object({
+      name = string
+    })), [])
+    capacity = optional(object({
+      total_throughput_limit = optional(number, -1)
+    }), {})
+    cors_rule = optional(object({
+      allowed_headers    = set(string)
+      allowed_methods    = set(string)
+      allowed_origins    = set(string)
+      exposed_headers    = set(string)
+      max_age_in_seconds = optional(number, null)
+    }), null)
+
+  })
+```
+
+Default: `{}`
+
 ### <a name="input_genai_key_vault_definition"></a> [genai\_key\_vault\_definition](#input\_genai\_key\_vault\_definition)
 
 Description: Definition of the Key Vault to be created for GenAI services.
@@ -162,18 +238,48 @@ object({
 
 Default: `{}`
 
-### <a name="input_law_definition"></a> [law\_definition](#input\_law\_definition)
+### <a name="input_genai_storage_account_definition"></a> [genai\_storage\_account\_definition](#input\_genai\_storage\_account\_definition)
 
-Description: Definition of the Log Analytics Workspace to be created.
+Description: Definition of the Storage Account to be created for GenAI services.
 
 Type:
 
 ```hcl
 object({
-    name      = optional(string)
-    retention = optional(number, 30)
-    sku       = optional(string, "PerGB2018")
-    tags      = optional(map(string), {})
+    name                          = optional(string)
+    account_kind                  = optional(string, "StorageV2")
+    account_tier                  = optional(string, "Standard")
+    account_replication_type      = optional(string, "GRS")
+    endpoint_types                = optional(set(string), ["blob"])
+    access_tier                   = optional(string, "Hot")
+    public_network_access_enabled = optional(bool, false)
+    shared_access_key_enabled     = optional(bool, true)
+    role_assignments = optional(map(object({
+      role_definition_id_or_name = string
+      principal_id               = string
+    })), {})
+    tags = optional(map(string), {})
+
+    #TODO:
+    # Implement subservice passthrough here
+  })
+```
+
+Default: `{}`
+
+### <a name="input_law_definition"></a> [law\_definition](#input\_law\_definition)
+
+Description: Definition of the Log Analytics Workspace to be created. If `resource_id` is provided, the workspace will not be created and the other inputs will be ignored, and the workspace id provided will be used.
+
+Type:
+
+```hcl
+object({
+    resource_id = optional(string)
+    name        = optional(string)
+    retention   = optional(number, 30)
+    sku         = optional(string, "PerGB2018")
+    tags        = optional(map(string), {})
   })
 ```
 
@@ -213,6 +319,12 @@ Source: Azure/avm-res-network-virtualnetwork/azurerm
 
 Version: =0.7.1
 
+### <a name="module_avm-utl-regions"></a> [avm-utl-regions](#module\_avm-utl-regions)
+
+Source: Azure/avm-utl-regions/azurerm
+
+Version: 0.5.2
+
 ### <a name="module_avm_res_keyvault_vault"></a> [avm\_res\_keyvault\_vault](#module\_avm\_res\_keyvault\_vault)
 
 Source: Azure/avm-res-keyvault-vault/azurerm
@@ -224,6 +336,12 @@ Version: =0.10.0
 Source: Azure/avm-res-network-bastionhost/azurerm
 
 Version: 0.7.2
+
+### <a name="module_containerregistry"></a> [containerregistry](#module\_containerregistry)
+
+Source: Azure/avm-res-containerregistry-registry/azurerm
+
+Version: 0.4.0
 
 ### <a name="module_firewall"></a> [firewall](#module\_firewall)
 
@@ -260,6 +378,12 @@ Version: 0.4.2
 Source: Azure/avm-res-network-privatednszone/azurerm
 
 Version: 0.3.4
+
+### <a name="module_storage_account"></a> [storage\_account](#module\_storage\_account)
+
+Source: Azure/avm-res-storage-storageaccount/azurerm
+
+Version: 0.6.3
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

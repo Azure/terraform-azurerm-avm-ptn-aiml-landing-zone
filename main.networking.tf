@@ -10,7 +10,7 @@ module "ai_lz_vnet" {
   diagnostic_settings = {
     sendToLogAnalytics = {
       name                           = "sendToLogAnalytics"
-      workspace_resource_id          = module.log_analytics_workspace.resource_id
+      workspace_resource_id          = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
       log_analytics_destination_type = "Dedicated"
     }
   }
@@ -63,7 +63,7 @@ module "firewall" {
   diagnostic_settings = {
     to_law = {
       name                  = "sendToLogAnalytics"
-      workspace_resource_id = module.log_analytics_workspace.resource_id
+      workspace_resource_id = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
       log_groups            = ["allLogs"]
       metric_categories     = ["AllMetrics"]
     }

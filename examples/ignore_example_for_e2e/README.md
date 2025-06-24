@@ -6,6 +6,7 @@ This example will not be run as an e2e test as it has the .e2eignore file in the
 ```hcl
 terraform {
   required_version = "~> 1.5"
+
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
