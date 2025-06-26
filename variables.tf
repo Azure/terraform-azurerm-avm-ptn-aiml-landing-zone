@@ -33,3 +33,16 @@ variable "tags" {
   default     = null
   description = "Map of tags to be assigned to this resource"
 }
+
+variable "flag_platform_landing_zone" {
+  type        = bool
+  default     = true
+  description = "Flag to indicate if the platform landing zone is enabled. If true, the module will deploy resources and connect to a platform landing zone hub."
+}
+
+variable "flag_split_deployment_persona" {
+  type        = string
+  default     = "lza"
+  description = "Flag to indicate which part to deploy in a split deployment. Valid values are build, or lza. If set to build, the module will deploy the initial vnet, bastion, and build machine resources. If set to platform, the module will deploy the remaining landing zone resources."
+}
+

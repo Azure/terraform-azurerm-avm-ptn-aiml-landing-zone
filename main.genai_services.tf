@@ -34,15 +34,55 @@ module "avm_res_keyvault_vault" {
     create = "60s"
   }
 
-  private_endpoints = {
-    primary = {
-      private_dns_zone_resource_ids = [module.private_dns_zones.key_vault_zone.resource_id]
-      subnet_resource_id            = module.ai_lz_vnet.subnets["PrivateEndpointSubnet"].resource_id
+
+
+  #private_endpoints = {
+  #  primary = {
+  #    private_dns_zone_resource_ids = [module.private_dns_zones.key_vault_zone.resource_id]
+  #    subnet_resource_id            = module.ai_lz_vnet.subnets["PrivateEndpointSubnet"].resource_id
+  #  }
+  #}
+}
+
+/*
+# The PE resource for the key vault.  Separating it from the module to allow for the vm module to write secrets during deployment.
+resource "azurerm_private_endpoint" "this" {
+  for_each = { for k, v in var.private_endpoints : k => v if var.private_endpoints_manage_dns_zone_group }
+
+  location                      = each.value.location != null ? each.value.location : var.location
+  name                          = each.value.name != null ? each.value.name : "pe-${var.name}"
+  resource_group_name           = each.value.resource_group_name != null ? each.value.resource_group_name : var.resource_group_name
+  subnet_id                     = each.value.subnet_resource_id
+  custom_network_interface_name = each.value.network_interface_name
+  tags                          = each.value.tags
+
+  private_service_connection {
+    is_manual_connection           = false
+    name                           = each.value.private_service_connection_name != null ? each.value.private_service_connection_name : "pse-${var.name}"
+    private_connection_resource_id = azurerm_key_vault.this.id
+    subresource_names              = ["vault"]
+  }
+  dynamic "ip_configuration" {
+    for_each = each.value.ip_configurations
+
+    content {
+      name               = ip_configuration.value.name
+      private_ip_address = ip_configuration.value.private_ip_address
+      member_name        = "default"
+      subresource_name   = "vault"
+    }
+  }
+  dynamic "private_dns_zone_group" {
+    for_each = length(each.value.private_dns_zone_resource_ids) > 0 ? ["this"] : []
+
+    content {
+      name                 = each.value.private_dns_zone_group_name
+      private_dns_zone_ids = each.value.private_dns_zone_resource_ids
     }
   }
 }
 
-/*
+
 #TODO:
 # validate the defaults for the cosmosdb module
 # create private endpoint config
@@ -105,15 +145,15 @@ module "storage_account" {
   access_tier                   = var.genai_storage_account_definition.access_tier
   enable_telemetry              = var.enable_telemetry
 
-  private_endpoints = {
-    for endpoint in var.genai_storage_account_definition.endpoint_types :
-    endpoint => {
-      name                          = "${local.genai_storage_account_name}-${endpoint}-pe"
-      private_dns_zone_resource_ids = [module.private_dns_zones["storage_${lower(endpoint)}_zone"].resource_id]
-      subnet_resource_id            = module.ai_lz_vnet.subnets["PrivateEndpointSubnet"].resource_id
-      subresource_name              = endpoint
-    }
-  }
+  #private_endpoints = {
+  #  for endpoint in var.genai_storage_account_definition.endpoint_types :
+  #  endpoint => {
+  #    name                          = "${local.genai_storage_account_name}-${endpoint}-pe"
+  #    private_dns_zone_resource_ids = [module.private_dns_zones["storage_${lower(endpoint)}_zone"].resource_id]
+  #    subnet_resource_id            = module.ai_lz_vnet.subnets["PrivateEndpointSubnet"].resource_id
+  #    subresource_name              = endpoint
+  #  }
+  #}
 
   diagnostic_settings_storage_account = {
     storage = {
@@ -138,12 +178,12 @@ module "containerregistry" {
   public_network_access_enabled = var.genai_container_registry_definition.public_network_access_enabled
   zone_redundancy_enabled       = length(local.region_zones) > 1 ? var.genai_container_registry_definition.zone_redundancy_enabled : false
 
-  private_endpoints = {
-    container_registry = {
-      private_dns_zone_resource_ids = [module.private_dns_zones.container_registry_zone.resource_id]
-      subnet_resource_id            = module.ai_lz_vnet.subnets["PrivateEndpointSubnet"].resource_id
-    }
-  }
+  #private_endpoints = {
+  #  container_registry = {
+  #    private_dns_zone_resource_ids = [module.private_dns_zones.container_registry_zone.resource_id]
+  #    subnet_resource_id            = module.ai_lz_vnet.subnets["PrivateEndpointSubnet"].resource_id
+  #  }
+  #}
 
   diagnostic_settings = {
     storage = {

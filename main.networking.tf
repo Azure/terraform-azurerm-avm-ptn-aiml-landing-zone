@@ -19,6 +19,31 @@ module "ai_lz_vnet" {
   subnets          = local.deployed_subnets
 }
 
+module "hub_vnet_peering" {
+  source  = "Azure/avm-res-network-virtualnetwork/azurerm//modules/peering"
+  version = "0.9.0"
+
+  count = var.vnet_definition.peer_vnet_resource_id != null ? 1 : 0
+
+  name = var.hub_vnet_peering_definition.name != null ? var.hub_vnet_peering_definition.name : "${local.vnet_name}-local-to-remote"
+  remote_virtual_network = {
+    resource_id = var.vnet_definition.peer_vnet_resource_id
+  }
+  virtual_network = {
+    resource_id = module.ai_lz_vnet.resource_id
+  }
+  allow_forwarded_traffic              = var.hub_vnet_peering_definition.allow_forwarded_traffic
+  allow_gateway_transit                = var.hub_vnet_peering_definition.allow_gateway_transit
+  allow_virtual_network_access         = var.hub_vnet_peering_definition.allow_virtual_network_access
+  create_reverse_peering               = var.hub_vnet_peering_definition.create_reverse_peering
+  reverse_allow_forwarded_traffic      = var.hub_vnet_peering_definition.reverse_allow_forwarded_traffic
+  reverse_allow_gateway_transit        = var.hub_vnet_peering_definition.reverse_allow_gateway_transit
+  reverse_allow_virtual_network_access = var.hub_vnet_peering_definition.reverse_allow_virtual_network_access
+  reverse_name                         = var.hub_vnet_peering_definition.reverse_name != null ? var.hub_vnet_peering_definition.reverse_name : "${local.vnet_name}-remote-to-local"
+  reverse_use_remote_gateways          = var.hub_vnet_peering_definition.reverse_use_remote_gateways
+  use_remote_gateways                  = var.hub_vnet_peering_definition.use_remote_gateways
+}
+
 module "firewall_route_table" {
   source  = "Azure/avm-res-network-routetable/azurerm"
   version = "0.4.1"
