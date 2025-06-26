@@ -36,12 +36,14 @@ module "avm_res_keyvault_vault" {
 
 
 
-  #private_endpoints = {
-  #  primary = {
-  #    private_dns_zone_resource_ids = [module.private_dns_zones.key_vault_zone.resource_id]
-  #    subnet_resource_id            = module.ai_lz_vnet.subnets["PrivateEndpointSubnet"].resource_id
-  #  }
-  #}
+  private_endpoints = {
+    primary = {
+      private_dns_zone_resource_ids = [module.private_dns_zones.key_vault_zone.resource_id]
+      subnet_resource_id            = module.ai_lz_vnet.subnets["PrivateEndpointSubnet"].resource_id
+    }
+  }
+
+  depends_on = [ module.private_dns_zones ]
 }
 
 /*
@@ -145,15 +147,15 @@ module "storage_account" {
   access_tier                   = var.genai_storage_account_definition.access_tier
   enable_telemetry              = var.enable_telemetry
 
-  #private_endpoints = {
-  #  for endpoint in var.genai_storage_account_definition.endpoint_types :
-  #  endpoint => {
-  #    name                          = "${local.genai_storage_account_name}-${endpoint}-pe"
-  #    private_dns_zone_resource_ids = [module.private_dns_zones["storage_${lower(endpoint)}_zone"].resource_id]
-  #    subnet_resource_id            = module.ai_lz_vnet.subnets["PrivateEndpointSubnet"].resource_id
-  #    subresource_name              = endpoint
-  #  }
-  #}
+  private_endpoints = {
+    for endpoint in var.genai_storage_account_definition.endpoint_types :
+    endpoint => {
+      name                          = "${local.genai_storage_account_name}-${endpoint}-pe"
+      private_dns_zone_resource_ids = [module.private_dns_zones["storage_${lower(endpoint)}_zone"].resource_id]
+      subnet_resource_id            = module.ai_lz_vnet.subnets["PrivateEndpointSubnet"].resource_id
+      subresource_name              = endpoint
+    }
+  }
 
   diagnostic_settings_storage_account = {
     storage = {
@@ -165,6 +167,8 @@ module "storage_account" {
   role_assignments = local.genai_storage_account_role_assignments
 
   tags = var.genai_storage_account_definition.tags
+
+  depends_on = [ module.private_dns_zones ]
 
 }
 
@@ -178,12 +182,12 @@ module "containerregistry" {
   public_network_access_enabled = var.genai_container_registry_definition.public_network_access_enabled
   zone_redundancy_enabled       = length(local.region_zones) > 1 ? var.genai_container_registry_definition.zone_redundancy_enabled : false
 
-  #private_endpoints = {
-  #  container_registry = {
-  #    private_dns_zone_resource_ids = [module.private_dns_zones.container_registry_zone.resource_id]
-  #    subnet_resource_id            = module.ai_lz_vnet.subnets["PrivateEndpointSubnet"].resource_id
-  #  }
-  #}
+  private_endpoints = {
+    container_registry = {
+      private_dns_zone_resource_ids = [module.private_dns_zones.container_registry_zone.resource_id]
+      subnet_resource_id            = module.ai_lz_vnet.subnets["PrivateEndpointSubnet"].resource_id
+    }
+  }
 
   diagnostic_settings = {
     storage = {
@@ -193,5 +197,7 @@ module "containerregistry" {
   }
 
   role_assignments = local.genai_container_registry_role_assignments
+
+  depends_on = [ module.private_dns_zones ]
 
 }

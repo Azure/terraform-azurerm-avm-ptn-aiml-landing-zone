@@ -60,6 +60,12 @@ module "test" {
   bastion_definition = {
     zones = [] #Zonal configurations are preview and not supported in westus3
   }
+  dns_zones_network_links = {
+    hub = {
+      name = "ai-lz-hub"
+      resource_id = "resourceId"
+    }
+  }
 
   enable_telemetry           = var.enable_telemetry
   flag_platform_landing_zone = true
