@@ -55,18 +55,23 @@ module "naming" {
 module "test" {
   source = "../../"
 
-  location            = "westus2"
-  resource_group_name = "ai-lz-rg"
+  location            = "westus3"
+  resource_group_name = "ai-lz-rg-test"
   vnet_definition = {
-    name          = "ai-lz-vnet-test"
-    address_space = "10.100.0.0/23"
+    name                  = "ai-lz-vnet"
+    address_space         = "10.100.0.0/23"
+    dns_servers           = ["10.0.2.4"]
+    peer_vnet_resource_id = ""
   }
   bastion_definition = {
     zones = [] #Zonal configurations are preview and not supported in westus3
   }
-  #law_definition = {
-  #  resource_id = "/subscriptions/19fbc0d1-6eee-4268-a84a-3f06e7a69fca/resourceGroups/sample_ai_resources/providers/Microsoft.OperationalInsights/workspaces/test-ai-law"
-  #}
+  dns_zones_network_links = {
+    hub = {
+      vnetlinkname = "ai-lz-hub"
+      vnetid       = "resourceId"
+    }
+  }
   enable_telemetry           = var.enable_telemetry
   flag_platform_landing_zone = true
 }

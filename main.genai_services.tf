@@ -43,7 +43,7 @@ module "avm_res_keyvault_vault" {
     }
   }
 
-  depends_on = [ module.private_dns_zones ]
+  depends_on = [module.private_dns_zones, module.hub_vnet_peering]
 }
 
 /*
@@ -168,7 +168,7 @@ module "storage_account" {
 
   tags = var.genai_storage_account_definition.tags
 
-  depends_on = [ module.private_dns_zones ]
+  depends_on = [module.private_dns_zones, module.hub_vnet_peering]
 
 }
 
@@ -198,6 +198,6 @@ module "containerregistry" {
 
   role_assignments = local.genai_container_registry_role_assignments
 
-  depends_on = [ module.private_dns_zones ]
+  depends_on = [module.private_dns_zones, module.hub_vnet_peering]
 
 }

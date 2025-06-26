@@ -24,6 +24,7 @@ The following resources are used by this module:
 
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [modtm_telemetry.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/resources/telemetry) (resource)
+- [random_integer.zone_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 - [random_string.name_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
 - [random_uuid.telemetry](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
 - [azapi_client_config.telemetry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config) (data source)
@@ -65,6 +66,7 @@ object({
       address_prefix = optional(string)
       }
     )), {})
+    peer_vnet_resource_id = optional(string)
   })
 ```
 
@@ -135,11 +137,19 @@ Default: `{}`
 
 ### <a name="input_flag_platform_landing_zone"></a> [flag\_platform\_landing\_zone](#input\_flag\_platform\_landing\_zone)
 
-Description: Flag to indicate if the platform landing zone is enabled. If true, the module will deploy resources in a platform landing zone.
+Description: Flag to indicate if the platform landing zone is enabled. If true, the module will deploy resources and connect to a platform landing zone hub.
 
 Type: `bool`
 
 Default: `true`
+
+### <a name="input_flag_split_deployment_persona"></a> [flag\_split\_deployment\_persona](#input\_flag\_split\_deployment\_persona)
+
+Description: Flag to indicate which part to deploy in a split deployment. Valid values are build, or lza. If set to build, the module will deploy the initial vnet, bastion, and build machine resources. If set to platform, the module will deploy the remaining landing zone resources.
+
+Type: `string`
+
+Default: `"lza"`
 
 ### <a name="input_genai_container_registry_definition"></a> [genai\_container\_registry\_definition](#input\_genai\_container\_registry\_definition)
 
@@ -267,6 +277,75 @@ object({
 
 Default: `{}`
 
+### <a name="input_hub_vnet_peering_definition"></a> [hub\_vnet\_peering\_definition](#input\_hub\_vnet\_peering\_definition)
+
+Description: n/a
+
+Type:
+
+```hcl
+object({
+    peer_vnet_resource_id                = optional(string)
+    firewall_ip_address                  = optional(string)
+    name                                 = optional(string)
+    allow_forwarded_traffic              = optional(bool, true)
+    allow_gateway_transit                = optional(bool, true)
+    allow_virtual_network_access         = optional(bool, true)
+    create_reverse_peering               = optional(bool, true)
+    reverse_allow_forwarded_traffic      = optional(bool, false)
+    reverse_allow_gateway_transit        = optional(bool, false)
+    reverse_allow_virtual_network_access = optional(bool, true)
+    reverse_name                         = optional(string)
+    reverse_use_remote_gateways          = optional(bool, false)
+    use_remote_gateways                  = optional(bool, false)
+  })
+```
+
+Default: `{}`
+
+### <a name="input_jumpvm_definition"></a> [jumpvm\_definition](#input\_jumpvm\_definition)
+
+Description: Definition of the Jump VM to be created for managing the implementation services.
+
+Type:
+
+```hcl
+object({
+    name             = optional(string)
+    sku              = optional(string, "Standard_B2s")
+    tags             = optional(map(string), {})
+    enable_telemetry = optional(bool, true)
+  })
+```
+
+Default: `{}`
+
+### <a name="input_ks_ai_search_definition"></a> [ks\_ai\_search\_definition](#input\_ks\_ai\_search\_definition)
+
+Description: Definition of the AI Search service to be created as part of the enterprise and public knowledge services.
+
+Type:
+
+```hcl
+object({
+    name                          = optional(string)
+    sku                           = optional(string, "standard")
+    local_authentication_enabled  = optional(bool, true)
+    partition_count               = optional(number, 1)
+    public_network_access_enabled = optional(bool, false)
+    replica_count                 = optional(number, 2)
+    semantic_search_sku           = optional(string, "standard")
+    tags                          = optional(map(string), {})
+    role_assignments = optional(map(object({
+      role_definition_id_or_name = string
+      principal_id               = string
+    })), {})
+    enable_telemetry = optional(bool, true)
+  })
+```
+
+Default: `{}`
+
 ### <a name="input_law_definition"></a> [law\_definition](#input\_law\_definition)
 
 Description: Definition of the Log Analytics Workspace to be created. If `resource_id` is provided, the workspace will not be created and the other inputs will be ignored, and the workspace id provided will be used.
@@ -367,6 +446,18 @@ Source: Azure/avm-res-network-publicipaddress/azurerm
 
 Version: 0.2.0
 
+### <a name="module_hub_vnet_peering"></a> [hub\_vnet\_peering](#module\_hub\_vnet\_peering)
+
+Source: Azure/avm-res-network-virtualnetwork/azurerm//modules/peering
+
+Version: 0.9.0
+
+### <a name="module_jumpvm"></a> [jumpvm](#module\_jumpvm)
+
+Source: Azure/avm-res-compute-virtualmachine/azurerm
+
+Version: 0.19.3
+
 ### <a name="module_log_analytics_workspace"></a> [log\_analytics\_workspace](#module\_log\_analytics\_workspace)
 
 Source: Azure/avm-res-operationalinsights-workspace/azurerm
@@ -378,6 +469,12 @@ Version: 0.4.2
 Source: Azure/avm-res-network-privatednszone/azurerm
 
 Version: 0.3.4
+
+### <a name="module_search_service"></a> [search\_service](#module\_search\_service)
+
+Source: Azure/avm-res-search-searchservice/azurerm
+
+Version: 0.1.5
 
 ### <a name="module_storage_account"></a> [storage\_account](#module\_storage\_account)
 

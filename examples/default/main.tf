@@ -52,9 +52,9 @@ module "test" {
   location            = "westus3"
   resource_group_name = "ai-lz-rg-test"
   vnet_definition = {
-    name          = "ai-lz-vnet"
-    address_space = "10.100.0.0/23"
-    dns_servers = ["10.0.2.4"]
+    name                  = "ai-lz-vnet"
+    address_space         = "10.100.0.0/23"
+    dns_servers           = ["10.0.2.4"]
     peer_vnet_resource_id = ""
   }
   bastion_definition = {
@@ -62,13 +62,11 @@ module "test" {
   }
   dns_zones_network_links = {
     hub = {
-      name = "ai-lz-hub"
-      resource_id = "resourceId"
+      vnetlinkname = "ai-lz-hub"
+      vnetid       = "resourceId"
     }
   }
-
   enable_telemetry           = var.enable_telemetry
   flag_platform_landing_zone = true
-
 }
 
