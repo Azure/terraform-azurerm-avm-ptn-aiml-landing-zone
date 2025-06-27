@@ -3,7 +3,6 @@
 variable "genai_container_registry_definition" {
   type = object({
     name                          = optional(string)
-    private_dns_zone_resource_id  = optional(string)
     sku                           = optional(string, "Premium")
     zone_redundancy_enabled       = optional(bool, true)
     public_network_access_enabled = optional(bool, false)
@@ -19,8 +18,7 @@ variable "genai_container_registry_definition" {
 
 variable "genai_cosmosdb_definition" {
   type = object({
-    name                         = optional(string)
-    private_dns_zone_resource_id = optional(string)
+    name = optional(string)
     secondary_regions = optional(list(object({
       location          = string
       zone_redundant    = optional(bool, true)
@@ -70,10 +68,9 @@ variable "genai_cosmosdb_definition" {
 
 variable "genai_key_vault_definition" {
   type = object({
-    name                         = optional(string)
-    private_dns_zone_resource_id = optional(string)
-    sku                          = optional(string, "standard")
-    tenant_id                    = optional(string)
+    name      = optional(string)
+    sku       = optional(string, "standard")
+    tenant_id = optional(string)
     role_assignments = optional(map(object({
       role_definition_id_or_name = string
       principal_id               = string

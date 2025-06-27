@@ -29,6 +29,9 @@ The following resources are used by this module:
 - [random_uuid.telemetry](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
 - [azapi_client_config.telemetry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config) (data source)
 - [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
+- [azurerm_private_dns_zone.existing](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/private_dns_zone) (data source)
+- [azurerm_subscription.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subscription) (data source)
+- [azurerm_subscription.dns_zones](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subscription) (data source)
 - [modtm_module_source.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/data-sources/module_source) (data source)
 
 <!-- markdownlint-disable MD013 -->
@@ -91,22 +94,6 @@ object({
 
 Default: `{}`
 
-### <a name="input_dns_zones_network_links"></a> [dns\_zones\_network\_links](#input\_dns\_zones\_network\_links)
-
-Description: n/a
-
-Type:
-
-```hcl
-map(object({
-    vnetlinkname     = string
-    vnetid           = string
-    autoregistration = optional(bool, false)
-  }))
-```
-
-Default: `{}`
-
 ### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
 
 Description: This variable controls whether or not telemetry is enabled for the module.  
@@ -160,7 +147,6 @@ Type:
 ```hcl
 object({
     name                          = optional(string)
-    private_dns_zone_resource_id  = optional(string)
     sku                           = optional(string, "Premium")
     zone_redundancy_enabled       = optional(bool, true)
     public_network_access_enabled = optional(bool, false)
@@ -182,8 +168,7 @@ Type:
 
 ```hcl
 object({
-    name                         = optional(string)
-    private_dns_zone_resource_id = optional(string)
+    name = optional(string)
     secondary_regions = optional(list(object({
       location          = string
       zone_redundant    = optional(bool, true)
@@ -237,10 +222,9 @@ Type:
 
 ```hcl
 object({
-    name                         = optional(string)
-    private_dns_zone_resource_id = optional(string)
-    sku                          = optional(string, "standard")
-    tenant_id                    = optional(string)
+    name      = optional(string)
+    sku       = optional(string, "standard")
+    tenant_id = optional(string)
     role_assignments = optional(map(object({
       role_definition_id_or_name = string
       principal_id               = string
@@ -332,7 +316,6 @@ Type:
 ```hcl
 object({
     name                          = optional(string)
-    private_dns_zone_resource_id  = optional(string)
     sku                           = optional(string, "standard")
     local_authentication_enabled  = optional(bool, true)
     partition_count               = optional(number, 1)
@@ -375,6 +358,26 @@ Description: Optional Prefix to be used for naming resources. This is useful for
 Type: `string`
 
 Default: `null`
+
+### <a name="input_private_dns_zones"></a> [private\_dns\_zones](#input\_private\_dns\_zones)
+
+Description: n/a
+
+Type:
+
+```hcl
+(object({
+    existing_zones_subscription_id     = optional(string)
+    existing_zones_resource_group_name = optional(string)
+    network_links = map(object({
+      vnetlinkname     = string
+      vnetid           = string
+      autoregistration = optional(bool, false)
+    }))
+  }))
+```
+
+Default: `{}`
 
 ### <a name="input_tags"></a> [tags](#input\_tags)
 

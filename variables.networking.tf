@@ -24,11 +24,15 @@ variable "bastion_definition" {
   default = {}
 }
 
-variable "dns_zones_network_links" {
-  type = map(object({
-    vnetlinkname     = string
-    vnetid           = string
-    autoregistration = optional(bool, false)
+variable "private_dns_zones" {
+  type = (object({
+    existing_zones_subscription_id     = optional(string)
+    existing_zones_resource_group_name = optional(string)
+    network_links = map(object({
+      vnetlinkname     = string
+      vnetid           = string
+      autoregistration = optional(bool, false)
+    }))
   }))
   default = {}
 }

@@ -8,7 +8,7 @@ module "search_service" {
   resource_group_name = azurerm_resource_group.this.name
   private_endpoints = {
     primary = {
-      private_dns_zone_resource_ids = var.flag_platform_landing_zone ? [module.private_dns_zones.ai_search_zone.resource_id] : null
+      private_dns_zone_resource_ids = var.flag_platform_landing_zone ? [module.private_dns_zones.ai_search_zone.resource_id] : [local.private_dns_zones_existing.ai_search_zone.resource_id]
       subnet_resource_id            = module.ai_lz_vnet.subnets["PrivateEndpointSubnet"].resource_id
     }
   }
@@ -27,6 +27,4 @@ module "search_service" {
   }
 
   enable_telemetry = var.enable_telemetry # see variables.tf
-
-
 }

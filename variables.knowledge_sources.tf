@@ -1,7 +1,6 @@
 variable "ks_ai_search_definition" {
   type = object({
     name                          = optional(string)
-    private_dns_zone_resource_id  = optional(string)
     sku                           = optional(string, "standard")
     local_authentication_enabled  = optional(bool, true)
     partition_count               = optional(number, 1)

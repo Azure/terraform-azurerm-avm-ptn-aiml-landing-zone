@@ -65,6 +65,16 @@ locals {
       name = "privatelink.azconfig.io"
     }
   } : {}
+  private_dns_zones_existing = var.flag_platform_landing_zone ? { for key, value in local.var.private_dns_zones : key => {
+    name        = value.name
+    resource_id = "${local.private_dns_zones_existing_resource_group_resource_id}/providers/Microsoft.Network/privateDnsZones/${value.name}"
+    }
+  } : {}
+  private_dns_zones_existing_resource_group_resource_id = (
+    var.private_dns_zones.existing_zones_subscription_id != null ?
+    "/subscriptions/${var.private_dns_zones.existing_zones_subscription_id}/resourceGroups${var.private_dns_zones.existing_zones_resource_group_name}" :
+    "${data.azurerm_subscription.current.id}/resourceGroups${var.private_dns_zones.existing_zones_resource_group_name}"
+  )
   route_table_name = "${local.vnet_name}-firewall-route-table"
   subnets = {
     AzureBastionSubnet = {
@@ -136,6 +146,6 @@ locals {
       } : null
     }
   }
-  virtual_network_links = merge(local.default_virtual_network_link, var.dns_zones_network_links)
+  virtual_network_links = merge(local.default_virtual_network_link, var.private_dns_zones.network_links)
   vnet_name             = try(var.vnet_definition.name, null) != null ? var.vnet_definition.name : (try(var.name_prefix, null) != null ? "${var.name_prefix}-vnet" : "ai-alz-vnet")
 }
