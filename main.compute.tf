@@ -22,6 +22,11 @@ module "container_apps_managed_environment" {
     }
   }
 
+  managed_identities = {
+    system_assigned            = true
+    user_assigned_resource_ids = var.container_app_environment_definition.user_assigned_managed_identity_ids
+  }
+
   role_assignments = local.container_app_environment_role_assignments
   tags             = var.container_app_environment_definition.tags
 

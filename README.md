@@ -107,6 +107,7 @@ object({
     internal_load_balancer_enabled      = optional(bool, true)
     log_analytics_workspace_resource_id = optional(string)
     zone_redundancy_enabled             = optional(bool, true)
+    user_assigned_managed_identity_ids  = optional(list(string), [])
     workload_profile = optional(list(object({
       name                  = string
       workload_profile_type = string

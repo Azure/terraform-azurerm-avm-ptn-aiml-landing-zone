@@ -35,6 +35,7 @@ module "jumpvm" {
   }
 
 
+
   sku_size = var.jumpvm_definition.sku
   tags     = var.jumpvm_definition.tags
 }
