@@ -73,8 +73,8 @@ locals {
   }
   private_dns_zones_existing_resource_group_resource_id = (
     var.private_dns_zones.existing_zones_subscription_id != null ?
-    "/subscriptions/${var.private_dns_zones.existing_zones_subscription_id}/resourceGroups${var.private_dns_zones.existing_zones_resource_group_name}" :
-    "${data.azurerm_subscription.current.id}/resourceGroups${var.private_dns_zones.existing_zones_resource_group_name}"
+    "/subscriptions/${var.private_dns_zones.existing_zones_subscription_id}/resourceGroups/${var.private_dns_zones.existing_zones_resource_group_name}" :
+    "${data.azurerm_subscription.current.id}/resourceGroups/${var.private_dns_zones.existing_zones_resource_group_name}"
   )
   route_table_name = "${local.vnet_name}-firewall-route-table"
   subnets = {
