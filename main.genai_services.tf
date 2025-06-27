@@ -132,6 +132,8 @@ module "cosmosdb" {
 
 #TODO:
 # Implement subservice passthrough in variables and here
+# removing for testing PE DNS zone strategy when platform flag is false
+/*
 module "storage_account" {
   source  = "Azure/avm-res-storage-storageaccount/azurerm"
   version = "0.6.3"
@@ -171,6 +173,7 @@ module "storage_account" {
   depends_on = [module.private_dns_zones, module.hub_vnet_peering]
 
 }
+*/
 
 module "containerregistry" {
   source                        = "Azure/avm-res-containerregistry-registry/azurerm"

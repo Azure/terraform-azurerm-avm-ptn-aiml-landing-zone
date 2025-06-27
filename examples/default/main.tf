@@ -67,6 +67,21 @@ module "test" {
     }
   }
   enable_telemetry           = var.enable_telemetry
-  flag_platform_landing_zone = true
+  flag_platform_landing_zone = false
+  genai_container_registry_definition = {
+    private_dns_zone_resource_id = ""
+  }
+  genai_cosmosdb_definition = {
+    private_dns_zone_resource_id = ""
+  }
+  genai_key_vault_definition = {
+    private_dns_zone_resource_id = ""
+  }
+  genai_storage_account_definition = {
+
+  }
+  ks_ai_search_definition = {
+    private_dns_zone_resource_id = ""
+  }
 }
 

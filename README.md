@@ -160,6 +160,7 @@ Type:
 ```hcl
 object({
     name                          = optional(string)
+    private_dns_zone_resource_id  = optional(string)
     sku                           = optional(string, "Premium")
     zone_redundancy_enabled       = optional(bool, true)
     public_network_access_enabled = optional(bool, false)
@@ -181,7 +182,8 @@ Type:
 
 ```hcl
 object({
-    name = optional(string)
+    name                         = optional(string)
+    private_dns_zone_resource_id = optional(string)
     secondary_regions = optional(list(object({
       location          = string
       zone_redundant    = optional(bool, true)
@@ -235,9 +237,10 @@ Type:
 
 ```hcl
 object({
-    name      = optional(string)
-    sku       = optional(string, "standard")
-    tenant_id = optional(string)
+    name                         = optional(string)
+    private_dns_zone_resource_id = optional(string)
+    sku                          = optional(string, "standard")
+    tenant_id                    = optional(string)
     role_assignments = optional(map(object({
       role_definition_id_or_name = string
       principal_id               = string
@@ -329,6 +332,7 @@ Type:
 ```hcl
 object({
     name                          = optional(string)
+    private_dns_zone_resource_id  = optional(string)
     sku                           = optional(string, "standard")
     local_authentication_enabled  = optional(bool, true)
     partition_count               = optional(number, 1)
@@ -475,12 +479,6 @@ Version: 0.3.4
 Source: Azure/avm-res-search-searchservice/azurerm
 
 Version: 0.1.5
-
-### <a name="module_storage_account"></a> [storage\_account](#module\_storage\_account)
-
-Source: Azure/avm-res-storage-storageaccount/azurerm
-
-Version: 0.6.3
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection
