@@ -24,19 +24,6 @@ variable "bastion_definition" {
   default = {}
 }
 
-variable "private_dns_zones" {
-  type = (object({
-    existing_zones_subscription_id     = optional(string)
-    existing_zones_resource_group_name = optional(string)
-    network_links = map(object({
-      vnetlinkname     = string
-      vnetid           = string
-      autoregistration = optional(bool, false)
-    }))
-  }))
-  default = {}
-}
-
 variable "firewall_definition" {
   type = object({
     name  = optional(string)
@@ -63,6 +50,19 @@ variable "hub_vnet_peering_definition" {
     reverse_name                         = optional(string)
     reverse_use_remote_gateways          = optional(bool, false)
     use_remote_gateways                  = optional(bool, false)
+  })
+  default = {}
+}
+
+variable "private_dns_zones" {
+  type = object({
+    existing_zones_subscription_id     = optional(string)
+    existing_zones_resource_group_name = optional(string)
+    network_links = map(object({
+      vnetlinkname     = string
+      vnetid           = string
+      autoregistration = optional(bool, false)
+    }))
   })
   default = {}
 }

@@ -366,7 +366,7 @@ Description: n/a
 Type:
 
 ```hcl
-(object({
+object({
     existing_zones_subscription_id     = optional(string)
     existing_zones_resource_group_name = optional(string)
     network_links = map(object({
@@ -374,7 +374,7 @@ Type:
       vnetid           = string
       autoregistration = optional(bool, false)
     }))
-  }))
+  })
 ```
 
 Default: `{}`
