@@ -38,7 +38,7 @@ module "avm_res_keyvault_vault" {
 
   private_endpoints = {
     primary = {
-      private_dns_zone_resource_ids = [(var.flag_platform_landing_zone ? module.private_dns_zones.key_vault_zone.resource_id : null)]
+      private_dns_zone_resource_ids = var.flag_platform_landing_zone ? [module.private_dns_zones.key_vault_zone.resource_id] : null
       subnet_resource_id            = module.ai_lz_vnet.subnets["PrivateEndpointSubnet"].resource_id
     }
   }
@@ -151,7 +151,7 @@ module "storage_account" {
     for endpoint in var.genai_storage_account_definition.endpoint_types :
     endpoint => {
       name                          = "${local.genai_storage_account_name}-${endpoint}-pe"
-      private_dns_zone_resource_ids = [(var.flag_platform_landing_zone ? module.private_dns_zones["storage_${lower(endpoint)}_zone"].resource_id : null)]
+      private_dns_zone_resource_ids = var.flag_platform_landing_zone ? [module.private_dns_zones["storage_${lower(endpoint)}_zone"].resource_id] : null
       subnet_resource_id            = module.ai_lz_vnet.subnets["PrivateEndpointSubnet"].resource_id
       subresource_name              = endpoint
     }
@@ -184,7 +184,7 @@ module "containerregistry" {
 
   private_endpoints = {
     container_registry = {
-      private_dns_zone_resource_ids = [(var.flag_platform_landing_zone ? module.private_dns_zones.container_registry_zone.resource_id : null)]
+      private_dns_zone_resource_ids = var.flag_platform_landing_zone ? [module.private_dns_zones.container_registry_zone.resource_id] : null
       subnet_resource_id            = module.ai_lz_vnet.subnets["PrivateEndpointSubnet"].resource_id
     }
   }
