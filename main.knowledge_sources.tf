@@ -21,7 +21,7 @@ module "search_service" {
   partition_count               = var.ks_ai_search_definition.partition_count
   diagnostic_settings = {
     storage = {
-      name                  = "sendToLogAnalytics"
+      name                  = "sendToLogAnalytics-${random_string.name_suffix.result}"
       workspace_resource_id = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
     }
   }

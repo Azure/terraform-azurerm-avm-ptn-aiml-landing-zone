@@ -21,7 +21,7 @@ module "avm_res_keyvault_vault" {
 
   diagnostic_settings = {
     to_law = {
-      name                  = "sendToLogAnalytics"
+      name                  = "sendToLogAnalytics-${random_string.name_suffix.result}"
       workspace_resource_id = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
     }
   }
@@ -103,7 +103,7 @@ module "cosmosdb" {
 
   diagnostic_settings = {
     to_law = {
-      name                  = "sendToLogAnalytics"
+      name                  = "sendToLogAnalytics-${random_string.name_suffix.result}"
       workspace_resource_id = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
     }
   }
@@ -159,7 +159,7 @@ module "storage_account" {
 
   diagnostic_settings_storage_account = {
     storage = {
-      name                  = "sendToLogAnalytics"
+      name                  = "sendToLogAnalytics-${random_string.name_suffix.result}"
       workspace_resource_id = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
     }
   }
@@ -192,7 +192,7 @@ module "containerregistry" {
 
   diagnostic_settings = {
     storage = {
-      name                  = "sendToLogAnalytics"
+      name                  = "sendToLogAnalytics-${random_string.name_suffix.result}"
       workspace_resource_id = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
     }
   }
