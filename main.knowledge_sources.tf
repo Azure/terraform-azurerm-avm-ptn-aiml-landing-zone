@@ -8,7 +8,7 @@ module "search_service" {
   resource_group_name = azurerm_resource_group.this.name
   private_endpoints = {
     primary = {
-      private_dns_zone_resource_ids = [module.private_dns_zones.ai_search_zone.resource_id]
+      private_dns_zone_resource_ids = [(var.flag_platform_landing_zone ? module.private_dns_zones.ai_search_zone.resource_id : null)]
       subnet_resource_id            = module.ai_lz_vnet.subnets["PrivateEndpointSubnet"].resource_id
     }
   }
