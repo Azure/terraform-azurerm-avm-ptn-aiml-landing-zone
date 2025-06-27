@@ -3,7 +3,7 @@ variable "vnet_definition" {
     name          = optional(string)
     address_space = string
     enable_ddos   = optional(bool, false)
-    dns_servers   = optional(list(string))
+    dns_servers   = optional(set(string))
     subnets = optional(map(object({
       enabled        = optional(bool, true)
       name           = optional(string)

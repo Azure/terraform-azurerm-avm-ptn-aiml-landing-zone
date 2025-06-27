@@ -7,7 +7,9 @@ module "ai_lz_vnet" {
   address_space       = [var.vnet_definition.address_space]
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
-  dns_servers         = var.vnet_definition.dns_servers
+  dns_servers = {
+    dns_servers = var.vnet_definition.dns_servers
+  }
   diagnostic_settings = {
     sendToLogAnalytics = {
       name                           = "sendToLogAnalytics"
