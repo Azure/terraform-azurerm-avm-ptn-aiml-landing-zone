@@ -9,7 +9,7 @@ locals {
   }
   deployed_subnets = { for subnet_name, subnet in local.subnets : subnet_name => subnet if subnet.enabled }
   firewall_name    = try(var.firewall_definition.name, null) != null ? var.firewall_definition.name : (try(var.name_prefix, null) != null ? "${var.name_prefix}-fw" : "ai-alz-fw")
-  private_dns_zones = var.flag_platform_landing_zone == true ? {
+  private_dns_zone_map = {
     key_vault_zone = {
       name = "privatelink.vaultcore.azure.net"
     }
@@ -64,8 +64,9 @@ locals {
     app_configuration_zone = {
       name = "privatelink.azconfig.io"
     }
-  } : {}
-  private_dns_zones_existing = var.flag_platform_landing_zone ? {} : { for key, value in local.private_dns_zones : key => {
+  }
+  private_dns_zones = var.flag_platform_landing_zone == true ? local.private_dns_zone_map  : {}
+  private_dns_zones_existing = var.flag_platform_landing_zone ? {} : { for key, value in local.private_dns_zone_map : key => {
     name        = value.name
     resource_id = "${local.private_dns_zones_existing_resource_group_resource_id}/providers/Microsoft.Network/privateDnsZones/${value.name}"
     }
