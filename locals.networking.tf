@@ -65,7 +65,7 @@ locals {
       name = "privatelink.azconfig.io"
     }
   } : {}
-  private_dns_zones_existing = var.flag_platform_landing_zone ? { for key, value in local.var.private_dns_zones : key => {
+  private_dns_zones_existing = var.flag_platform_landing_zone ? { for key, value in local.private_dns_zones : key => {
     name        = value.name
     resource_id = "${local.private_dns_zones_existing_resource_group_resource_id}/providers/Microsoft.Network/privateDnsZones/${value.name}"
     }
