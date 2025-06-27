@@ -94,6 +94,43 @@ object({
 
 Default: `{}`
 
+### <a name="input_container_app_environment_definition"></a> [container\_app\_environment\_definition](#input\_container\_app\_environment\_definition)
+
+Description: Definition of the Container App Environment to be created for GenAI services.
+
+Type:
+
+```hcl
+object({
+    name                                = optional(string)
+    tags                                = optional(map(string), {})
+    internal_load_balancer_enabled      = optional(bool, true)
+    log_analytics_workspace_resource_id = optional(string)
+    zone_redundancy_enabled             = optional(bool, true)
+    workload_profile = optional(list(object({
+      name                  = string
+      workload_profile_type = string
+      })), [{
+      name                  = "Consumption"
+      workload_profile_type = "Consumption"
+    }])
+    app_logs_configuration = optional(object({
+      destination = string
+      log_analytics = optional(object({
+        customer_id = string
+        shared_key  = string
+      }), null)
+    }), null)
+
+    role_assignments = optional(map(object({
+      role_definition_id_or_name = string
+      principal_id               = string
+    })), {})
+  })
+```
+
+Default: `{}`
+
 ### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
 
 Description: This variable controls whether or not telemetry is enabled for the module.  
@@ -422,6 +459,12 @@ Version: =0.10.0
 Source: Azure/avm-res-network-bastionhost/azurerm
 
 Version: 0.7.2
+
+### <a name="module_container_apps_managed_environment"></a> [container\_apps\_managed\_environment](#module\_container\_apps\_managed\_environment)
+
+Source: Azure/avm-res-app-managedenvironment/azurerm
+
+Version: 0.3.0
 
 ### <a name="module_containerregistry"></a> [containerregistry](#module\_containerregistry)
 
