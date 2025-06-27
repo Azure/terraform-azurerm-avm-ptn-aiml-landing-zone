@@ -60,13 +60,13 @@ module "test" {
   vnet_definition = {
     name                  = "ai-lz-vnet"
     address_space         = "10.100.0.0/23"
-    dns_servers           = ["10.0.2.4"]
+    dns_servers           = ["10.0.2.4"] #test private dns resolver
     peer_vnet_resource_id = ""
   }
   bastion_definition = {
     zones = [] #Zonal configurations are preview and not supported in westus3
   }
-  dns_zones_network_links = {
+  dns_zones_network_links = { #temporary link to the test hub for testing purposes
     hub = {
       vnetlinkname = "ai-lz-hub"
       vnetid       = "resourceId"

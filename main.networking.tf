@@ -120,6 +120,8 @@ module "azure_bastion" {
   source  = "Azure/avm-res-network-bastionhost/azurerm"
   version = "0.7.2"
 
+  count = var.flag_platform_landing_zone ? 1 : 0
+
   location            = azurerm_resource_group.this.location
   name                = local.bastion_name
   resource_group_name = azurerm_resource_group.this.name
@@ -136,7 +138,7 @@ module "private_dns_zones" {
   source  = "Azure/avm-res-network-privatednszone/azurerm"
   version = "0.3.4"
 
-  for_each = local.private_dns_zones
+  for_each = var.flag_platform_landing_zone ? local.private_dns_zones : {}
 
   domain_name           = each.value.name
   resource_group_name   = azurerm_resource_group.this.name
