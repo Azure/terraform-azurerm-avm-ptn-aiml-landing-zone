@@ -40,9 +40,6 @@ resource "azapi_resource" "bing_grounding" {
       name = var.ks_bing_grounding_definition.sku
     }
   }
+  schema_validation_enabled = false
   tags           = var.ks_bing_grounding_definition.tags
-  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 }
