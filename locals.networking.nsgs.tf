@@ -9,7 +9,7 @@ locals {
       direction                    = "Outbound"
       priority                     = 100
       protocol                     = "Any"
-      source_address_prefix        = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
+      source_address_prefixes      = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
       source_port_range            = "*"
     }
   }
