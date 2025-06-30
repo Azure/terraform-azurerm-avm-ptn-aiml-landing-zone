@@ -22,6 +22,7 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
+- [azapi_resource.bing_grounding](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [modtm_telemetry.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/resources/telemetry) (resource)
 - [random_integer.zone_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
@@ -366,6 +367,22 @@ object({
       principal_id               = string
     })), {})
     enable_telemetry = optional(bool, true)
+  })
+```
+
+Default: `{}`
+
+### <a name="input_ks_bing_grounding_definition"></a> [ks\_bing\_grounding\_definition](#input\_ks\_bing\_grounding\_definition)
+
+Description: Definition of the Bing Grounding service to be created as part of the enterprise and public knowledge services.
+
+Type:
+
+```hcl
+object({
+    name = optional(string)
+    sku  = optional(string, "G1")
+    tags = optional(map(string), {})
   })
 ```
 

@@ -57,15 +57,9 @@ module "test" {
     dns_servers           = ["10.0.2.4"] #test private dns resolver
     peer_vnet_resource_id = ""
   }
-
   bastion_definition = {
     zones = [] #Zonal configurations are preview and not supported in westus3
   }
-
- private_dns_zones = {
-    existing_zones_resource_group_name = ""
- }
-
   enable_telemetry           = var.enable_telemetry
   flag_platform_landing_zone = false
   genai_container_registry_definition = {
@@ -77,6 +71,9 @@ module "test" {
   genai_storage_account_definition = {
   }
   ks_ai_search_definition = {
+  }
+  private_dns_zones = {
+    existing_zones_resource_group_name = ""
   }
 }
 

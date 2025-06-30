@@ -66,12 +66,6 @@ module "test" {
   bastion_definition = {
     zones = [] #Zonal configurations are preview and not supported in westus3
   }
-  dns_zones_network_links = { #temporary link to the test hub for testing purposes
-    hub = {
-      vnetlinkname = "ai-lz-hub"
-      vnetid       = "resourceId"
-    }
-  }
   enable_telemetry           = var.enable_telemetry
   flag_platform_landing_zone = false
   genai_container_registry_definition = {
@@ -83,6 +77,9 @@ module "test" {
   genai_storage_account_definition = {
   }
   ks_ai_search_definition = {
+  }
+  private_dns_zones = {
+    existing_zones_resource_group_name = ""
   }
 }
 

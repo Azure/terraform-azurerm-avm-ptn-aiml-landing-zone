@@ -28,3 +28,20 @@ module "search_service" {
 
   enable_telemetry = var.enable_telemetry # see variables.tf
 }
+
+resource "azapi_resource" "bing_grounding" {
+  type     = "Microsoft.Bing/accounts@2025-05-01-preview"
+  name     = local.ks_bing_grouding_name
+  location = azurerm_resource_group.this.location
+  body = {
+    kind = "Bing.Grounding"
+    sku = {
+      name = var.ks_bing_grounding_definition.sku
+    }
+  }
+  tags           = var.ks_bing_grounding_definition.tags
+  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+}
