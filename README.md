@@ -177,6 +177,33 @@ Type: `string`
 
 Default: `"lza"`
 
+### <a name="input_genai_app_configuration_definition"></a> [genai\_app\_configuration\_definition](#input\_genai\_app\_configuration\_definition)
+
+Description: Definition of the App Configuration to be created for GenAI services.
+
+Type:
+
+```hcl
+object({
+    data_plan_proxy = optional(object({
+      authentication_mode     = string
+      private_link_delegation = string
+    }), null)
+    name                          = optional(string)
+    local_auth_enabled            = optional(bool, false)
+    purge_protection_enabled      = optional(bool, true)
+    sku                           = optional(string, "standard")
+    soft_delete_retention_in_days = optional(number, 7)
+    tags                          = optional(map(string), {})
+    role_assignments = optional(map(object({
+      role_definition_id_or_name = string
+      principal_id               = string
+    })), {})
+  })
+```
+
+Default: `{}`
+
 ### <a name="input_genai_container_registry_definition"></a> [genai\_container\_registry\_definition](#input\_genai\_container\_registry\_definition)
 
 Description: Definition of the Container Registry to be created for GenAI services.
@@ -497,6 +524,12 @@ The following Modules are called:
 Source: Azure/avm-res-network-virtualnetwork/azurerm
 
 Version: =0.7.1
+
+### <a name="module_app_configuration"></a> [app\_configuration](#module\_app\_configuration)
+
+Source: Azure/avm-res-appconfiguration-configurationstore/azure
+
+Version: 0.1.0
 
 ### <a name="module_avm-utl-regions"></a> [avm-utl-regions](#module\_avm-utl-regions)
 

@@ -1,4 +1,10 @@
 locals {
+  genai_app_configuration_default_role_assignments = {}
+  genai_app_configuration_name                     = try(var.genai_app_configuration_definition.name, null) != null ? var.genai_app_configuration_definition.name : (try(var.name_prefix, null) != null ? "${var.name_prefix}-genai-appconfig-${random_string.name_suffix.result}" : "genai-appconfig-${random_string.name_suffix.result}")
+  genai_app_configuration_role_assignments = merge(
+    local.genai_app_configuration_default_role_assignments,
+    var.genai_app_configuration_definition.role_assignments
+  )
   genai_container_registry_default_role_assignments = {}
   genai_container_registry_name                     = try(var.genai_container_registry_definition.name, null) != null ? var.genai_container_registry_definition.name : (try(var.name_prefix, null) != null ? "${var.name_prefix}genaicr${random_string.name_suffix.result}" : "genaicr${random_string.name_suffix.result}")
   genai_container_registry_role_assignments = merge(
@@ -14,12 +20,12 @@ locals {
     try(length(var.genai_cosmosdb_definition.secondary_regions) == 0, false) ? [
       {
         location          = local.paired_region
-        zone_redundant    = length(local.paired_region_zones) > 1 ? true : false
+        zone_redundant    = false #length(local.paired_region_zones) > 1 ? true : false TODO: set this back to dynamic based on region zone availability after testing. Our subs don't have quota for zonal deployments.
         failover_priority = 1
       },
       {
         location          = azurerm_resource_group.this.location
-        zone_redundant    = length(local.region_zones) > 1 ? true : false
+        zone_redundant    = false #length(local.region_zones) > 1 ? true : false
         failover_priority = 0
       }
     ] : var.genai_cosmosdb_definition.secondary_regions

@@ -103,3 +103,24 @@ variable "genai_storage_account_definition" {
   default     = {}
   description = "Definition of the Storage Account to be created for GenAI services."
 }
+
+variable "genai_app_configuration_definition" {
+  type = object({
+    data_plan_proxy = optional(object({
+      authentication_mode     = string
+      private_link_delegation = string
+    }), null)
+    name                          = optional(string)
+    local_auth_enabled            = optional(bool, false)
+    purge_protection_enabled      = optional(bool, true)
+    sku                           = optional(string, "standard")
+    soft_delete_retention_in_days = optional(number, 7)
+    tags                          = optional(map(string), {})
+    role_assignments = optional(map(object({
+      role_definition_id_or_name = string
+      principal_id               = string
+    })), {})
+  })
+  default     = {}
+  description = "Definition of the App Configuration to be created for GenAI services."
+}

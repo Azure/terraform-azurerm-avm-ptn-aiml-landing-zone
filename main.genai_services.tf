@@ -204,3 +204,29 @@ module "containerregistry" {
   depends_on = [module.private_dns_zones, module.hub_vnet_peering]
 
 }
+
+
+module "app_configuration" {
+  source  = "Azure/avm-res-appconfiguration-configurationstore/azure"
+  version = "0.1.0"
+
+  location                        = azurerm_resource_group.this.location
+  name                            = local.genai_app_configuration_name
+  resource_group_resource_id      = azurerm_resource_group.this.id
+  azapi_schema_validation_enabled = false
+  sku                             = var.genai_app_configuration_definition.sku
+  public_network_access_enabled   = var.genai_app_configuration_definition.public_network_access_enabled
+  soft_delete_retention_days      = var.genai_app_configuration_definition.soft_delete_retention_days
+  local_auth_enabled              = var.genai_app_configuration_definition.local_auth_enabled
+  tags                            = var.genai_app_configuration_definition.tags
+  role_assignments                = local.genai_app_configuration_role_assignments
+
+  private_endpoints = {
+    app_configuration = {
+      private_dns_zone_resource_ids = var.flag_platform_landing_zone ? [module.private_dns_zones.app_configuration_zone.resource_id] : [local.private_dns_zones_existing.app_configuration_zone.resource_id]
+      subnet_resource_id            = module.ai_lz_vnet.subnets["PrivateEndpointSubnet"].resource_id
+    }
+  }
+
+  enable_telemetry = var.enable_telemetry
+}
