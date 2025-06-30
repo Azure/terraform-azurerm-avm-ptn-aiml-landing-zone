@@ -528,6 +528,12 @@ Source: Azure/avm-res-containerregistry-registry/azurerm
 
 Version: 0.4.0
 
+### <a name="module_cosmosdb"></a> [cosmosdb](#module\_cosmosdb)
+
+Source: Azure/avm-res-documentdb-databaseaccount/azurerm
+
+Version: 0.8.0
+
 ### <a name="module_firewall"></a> [firewall](#module\_firewall)
 
 Source: Azure/avm-res-network-azurefirewall/azurerm
@@ -587,6 +593,12 @@ Version: 0.3.4
 Source: Azure/avm-res-search-searchservice/azurerm
 
 Version: 0.1.5
+
+### <a name="module_storage_account"></a> [storage\_account](#module\_storage\_account)
+
+Source: Azure/avm-res-storage-storageaccount/azurerm
+
+Version: 0.6.3
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

@@ -152,7 +152,7 @@ locals {
       delegation = [{
         name = "ContainerAppEnvironmentSubnetDelegation"
         service_delegation = {
-          name = "Microsoft.App/environment"
+          name = "Microsoft.App/environments"
         }
       }]
       enabled          = true
