@@ -125,6 +125,8 @@ module "cosmosdb" {
   geo_locations = local.genai_cosmosdb_secondary_regions
 
   analytical_storage_config = var.genai_cosmosdb_definition.analytical_storage_config
+
+  depends_on = [module.private_dns_zones, module.hub_vnet_peering]
 }
 
 

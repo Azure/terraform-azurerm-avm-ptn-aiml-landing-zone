@@ -27,6 +27,8 @@ module "search_service" {
   }
 
   enable_telemetry = var.enable_telemetry # see variables.tf
+
+  depends_on = [module.private_dns_zones, module.hub_vnet_peering]
 }
 
 resource "azapi_resource" "bing_grounding" {
