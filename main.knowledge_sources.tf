@@ -30,9 +30,9 @@ module "search_service" {
 }
 
 resource "azapi_resource" "bing_grounding" {
-  type     = "Microsoft.Bing/accounts@2025-05-01-preview"
-  name     = local.ks_bing_grouding_name
-  location = azurerm_resource_group.this.location
+  type      = "Microsoft.Bing/accounts@2025-05-01-preview"
+  name      = local.ks_bing_grounding_name
+  location  = "global"
   parent_id = azurerm_resource_group.this.id
   body = {
     kind = "Bing.Grounding"
@@ -41,5 +41,9 @@ resource "azapi_resource" "bing_grounding" {
     }
   }
   schema_validation_enabled = false
-  tags           = var.ks_bing_grounding_definition.tags
+  tags                      = var.ks_bing_grounding_definition.tags
+  create_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers              = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 }

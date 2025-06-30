@@ -18,7 +18,6 @@ variable "ks_ai_search_definition" {
   description = "Definition of the AI Search service to be created as part of the enterprise and public knowledge services."
 }
 
-
 variable "ks_bing_grounding_definition" {
   type = object({
     name = optional(string)
