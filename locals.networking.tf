@@ -83,6 +83,9 @@ locals {
       name             = "AzureBastionSubnet"
       address_prefixes = try(var.vnet_definition.subnets["AzureBastionSubnet"].address_prefix, null) != null ? [var.vnet_definition.subnets["AzureBastionSubnet"].address_prefix] : [cidrsubnet(var.vnet_definition.address_space, 3, 5)]
       route_table      = null
+      network_security_group = {
+        id = module.nsgs.resource_id
+      }
     }
     AzureFirewallSubnet = {
       enabled          = var.flag_platform_landing_zone == true ? try(var.vnet_definition.subnets["AzureFirewallSubnet"].enabled, true) : try(var.vnet_definition.subnets["AzureFirewallSubnet"].enabled, false)
@@ -97,6 +100,9 @@ locals {
       route_table = var.flag_platform_landing_zone == true ? {
         id = module.firewall_route_table[0].resource_id
       } : null
+      network_security_group = {
+        id = module.nsgs.resource_id
+      }
     }
     AppGatewaySubnet = {
       enabled          = true
@@ -105,6 +111,9 @@ locals {
       route_table = var.flag_platform_landing_zone == true ? {
         id = module.firewall_route_table[0].resource_id
       } : null
+      network_security_group = {
+        id = module.nsgs.resource_id
+      }
     }
     APIMSubnet = {
       enabled          = true
@@ -113,6 +122,9 @@ locals {
       route_table = var.flag_platform_landing_zone == true ? {
         id = module.firewall_route_table[0].resource_id
       } : null
+      network_security_group = {
+        id = module.nsgs.resource_id
+      }
     }
     AIFoundrySubnet = {
       enabled          = true
@@ -121,6 +133,9 @@ locals {
       route_table = var.flag_platform_landing_zone == true ? {
         id = module.firewall_route_table[0].resource_id
       } : null
+      network_security_group = {
+        id = module.nsgs.resource_id
+      }
     }
     DevOpsBuildSubnet = {
       enabled          = true
@@ -129,6 +144,9 @@ locals {
       route_table = var.flag_platform_landing_zone == true ? {
         id = module.firewall_route_table[0].resource_id
       } : null
+      network_security_group = {
+        id = module.nsgs.resource_id
+      }
     }
     ContainerAppEnvironmentSubnet = {
       enabled          = true
@@ -145,6 +163,9 @@ locals {
       route_table = var.flag_platform_landing_zone == true ? {
         id = module.firewall_route_table[0].resource_id
       } : null
+      network_security_group = {
+        id = module.nsgs.resource_id
+      }
     }
   }
   virtual_network_links = merge(local.default_virtual_network_link, var.private_dns_zones.network_links)

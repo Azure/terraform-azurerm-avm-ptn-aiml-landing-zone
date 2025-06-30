@@ -22,6 +22,17 @@ module "ai_lz_vnet" {
   subnets          = local.deployed_subnets
 }
 
+module "nsgs" {
+  source  = "Azure/avm-res-network-networksecuritygroup/azurerm"
+  version = "0.4.0"
+
+  resource_group_name = azurerm_resource_group.this.name
+  name                = local.nsg_name
+  location            = azurerm_resource_group.this.location
+
+  security_rules = local.nsg_rules
+}
+
 module "hub_vnet_peering" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm//modules/peering"
   version = "0.9.0"
