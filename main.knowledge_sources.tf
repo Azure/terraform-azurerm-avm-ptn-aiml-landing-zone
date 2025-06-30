@@ -33,6 +33,7 @@ resource "azapi_resource" "bing_grounding" {
   type     = "Microsoft.Bing/accounts@2025-05-01-preview"
   name     = local.ks_bing_grouding_name
   location = azurerm_resource_group.this.location
+  parent_id = azurerm_resource_group.this.id
   body = {
     kind = "Bing.Grounding"
     sku = {
