@@ -215,8 +215,7 @@ module "app_configuration" {
   resource_group_resource_id      = azurerm_resource_group.this.id
   azapi_schema_validation_enabled = false
   sku                             = var.genai_app_configuration_definition.sku
-  public_network_access_enabled   = var.genai_app_configuration_definition.public_network_access_enabled
-  soft_delete_retention_days      = var.genai_app_configuration_definition.soft_delete_retention_days
+  soft_delete_retention_days      = var.genai_app_configuration_definition.soft_delete_retention_in_days
   local_auth_enabled              = var.genai_app_configuration_definition.local_auth_enabled
   tags                            = var.genai_app_configuration_definition.tags
   role_assignments                = local.genai_app_configuration_role_assignments
