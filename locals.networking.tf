@@ -149,12 +149,12 @@ locals {
       }
     }
     ContainerAppEnvironmentSubnet = {
-      delegation = {
+      delegation = [{
         name = "ContainerAppEnvironmentSubnetDelegation"
         service_delegation = {
           name = "Microsoft.App/environment"
         }
-      }
+      }]
       enabled          = true
       name             = try(var.vnet_definition.subnets["ContainerAppEnvironmentSubnet"].name, null) != null ? var.vnet_definition.subnets["ContainerAppEnvironmentSubnet"].name : "ContainerAppEnvironmentSubnet"
       address_prefixes = try(var.vnet_definition.subnets["ContainerAppEnvironmentSubnet"].address_prefix, null) != null ? [var.vnet_definition.subnets["ContainerAppEnvironmentSubnet"].address_prefix] : [cidrsubnet(var.vnet_definition.address_space, 4, 1)]
