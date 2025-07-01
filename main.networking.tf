@@ -7,6 +7,9 @@ module "ai_lz_vnet" {
   address_space       = [var.vnet_definition.address_space]
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
+  ddos_protection_plan = var.vnet_definition.ddos_protection_plan != null ? {
+    id = var.vnet_definition.ddos_protection_plan
+  } : null
   dns_servers = {
     dns_servers = var.vnet_definition.dns_servers
   }
@@ -173,5 +176,62 @@ module "private_dns_zones" {
   virtual_network_links = local.virtual_network_links
 }
 
+module "app_gateway_waf_policy" {
+  source  = "Azure/avm-res-network-applicationgatewaywebapplicationfirewallpolicy/azurerm"
+  version = "0.2.0"
 
-#TODO: App Gateway w WAF. (What is in the backend pool?
+  location            = azurerm_resource_group.this.location
+  managed_rules       = local.web_application_firewall_managed_rules
+  name                = local.web_application_firewall_policy_name
+  resource_group_name = azurerm_resource_group.this.name
+  enable_telemetry    = var.enable_telemetry
+  policy_settings     = var.waf_policy_definition.policy_settings
+}
+
+module "application_gateway" {
+  source  = "Azure/avm-res-network-applicationgateway/azurerm"
+  version = "0.4.2"
+
+  name                               = local.application_gateway_name
+  location                           = azurerm_resource_group.this.location
+  resource_group_name                = azurerm_resource_group.this.name
+  sku                                = var.app_gateway_definition.sku
+  zones                              = local.region_zones
+  http2_enable                       = var.app_gateway_definition.http2_enable
+  app_gateway_waf_policy_resource_id = module.app_gateway_waf_policy.resource_id
+  enable_telemetry                   = var.enable_telemetry
+  public_ip_name                     = "${local.application_gateway_name}-pip"
+  authentication_certificate         = var.app_gateway_definition.authentication_certificate
+  autoscale_configuration            = var.app_gateway_definition.autoscale_configuration
+  backend_address_pools              = var.app_gateway_definition.backend_address_pools
+  backend_http_settings              = var.app_gateway_definition.backend_http_settings
+  frontend_ports                     = var.app_gateway_definition.frontend_ports
+  http_listeners                     = var.app_gateway_definition.http_listeners
+  probe_configurations               = var.app_gateway_definition.probe_configurations
+  redirect_configuration             = var.app_gateway_definition.redirect_configuration
+  request_routing_rules              = var.app_gateway_definition.request_routing_rules
+  rewrite_rule_set                   = var.app_gateway_definition.rewrite_rule_set
+  ssl_certificates                   = var.app_gateway_definition.ssl_certificates
+  ssl_policy                         = var.app_gateway_definition.ssl_policy
+  ssl_profile                        = var.app_gateway_definition.ssl_profile
+  trusted_client_certificate         = var.app_gateway_definition.trusted_client_certificate
+  trusted_root_certificate           = var.app_gateway_definition.trusted_root_certificate
+  url_path_map_configurations        = var.app_gateway_definition.url_path_map_configurations
+
+  gateway_ip_configuration = {
+    subnet_id = module.ai_lz_vnet.subnets["AppGatewaySubnet"].resource_id
+  }
+
+  diagnostic_settings = {
+    to_law = {
+      name                  = "sendToLogAnalytics-${random_string.name_suffix.result}"
+      workspace_resource_id = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
+      log_groups            = ["allLogs"]
+      metric_categories     = ["AllMetrics"]
+    }
+  }
+
+  role_assignments = local.application_gateway_role_assignments
+  tags             = var.app_gateway_definition.tags
+
+}

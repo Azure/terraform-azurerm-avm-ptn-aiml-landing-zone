@@ -174,6 +174,22 @@ locals {
       }
     }
   }
-  virtual_network_links = merge(local.default_virtual_network_link, var.private_dns_zones.network_links)
-  vnet_name             = try(var.vnet_definition.name, null) != null ? var.vnet_definition.name : (try(var.name_prefix, null) != null ? "${var.name_prefix}-vnet" : "ai-alz-vnet")
+  virtual_network_links                     = merge(local.default_virtual_network_link, var.private_dns_zones.network_links)
+  vnet_name                                 = try(var.vnet_definition.name, null) != null ? var.vnet_definition.name : (try(var.name_prefix, null) != null ? "${var.name_prefix}-vnet" : "ai-alz-vnet")
+  application_gateway_name                  = try(var.application_gateway_definition.name, null) != null ? var.application_gateway_definition.name : (try(var.name_prefix, null) != null ? "${var.name_prefix}-appgw" : "ai-alz-appgw")
+  application_gateway_role_assignments_base = {}
+  application_gateway_role_assignments = merge(
+    local.application_gateway_role_assignments_base,
+    var.application_gateway_definition.role_assignments
+  )
+  web_application_firewall_policy_name = try(var.waf_policy_definition.name, null) != null ? var.waf_policy_definition.name : (try(var.name_prefix, null) != null ? "${var.name_prefix}-waf-policy" : "ai-alz-waf-policy")
+  web_application_firewall_managed_rules = var.waf_policy_definition.managd_rules == null ? {
+    managed_rule_set = {
+      owasp = {
+        version = "3.2"
+        type    = "OWASP"
+      }
+    }
+  } : var.waf_policy_definition.managed_rules
+
 }
