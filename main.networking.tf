@@ -10,15 +10,15 @@ module "ai_lz_vnet" {
   ddos_protection_plan = var.vnet_definition.ddos_protection_plan != null ? {
     id = var.vnet_definition.ddos_protection_plan
   } : null
-  dns_servers = {
-    dns_servers = var.vnet_definition.dns_servers
-  }
   diagnostic_settings = {
     sendToLogAnalytics = {
       name                           = "sendToLogAnalytics-${random_string.name_suffix.result}"
       workspace_resource_id          = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
       log_analytics_destination_type = "Dedicated"
     }
+  }
+  dns_servers = {
+    dns_servers = var.vnet_definition.dns_servers
   }
   enable_telemetry = var.enable_telemetry
   name             = local.vnet_name
@@ -29,36 +29,34 @@ module "nsgs" {
   source  = "Azure/avm-res-network-networksecuritygroup/azurerm"
   version = "0.4.0"
 
-  resource_group_name = azurerm_resource_group.this.name
-  name                = local.nsg_name
   location            = azurerm_resource_group.this.location
-
-  security_rules = local.nsg_rules
+  name                = local.nsg_name
+  resource_group_name = azurerm_resource_group.this.name
+  security_rules      = local.nsg_rules
 }
 
 module "hub_vnet_peering" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm//modules/peering"
   version = "0.9.0"
+  count   = var.vnet_definition.peer_vnet_resource_id != null ? 1 : 0
 
-  count = var.vnet_definition.peer_vnet_resource_id != null ? 1 : 0
-
-  name = var.hub_vnet_peering_definition.name != null ? var.hub_vnet_peering_definition.name : "${local.vnet_name}-local-to-remote"
+  allow_forwarded_traffic      = var.hub_vnet_peering_definition.allow_forwarded_traffic
+  allow_gateway_transit        = var.hub_vnet_peering_definition.allow_gateway_transit
+  allow_virtual_network_access = var.hub_vnet_peering_definition.allow_virtual_network_access
+  create_reverse_peering       = var.hub_vnet_peering_definition.create_reverse_peering
+  name                         = var.hub_vnet_peering_definition.name != null ? var.hub_vnet_peering_definition.name : "${local.vnet_name}-local-to-remote"
   remote_virtual_network = {
     resource_id = var.vnet_definition.peer_vnet_resource_id
   }
-  virtual_network = {
-    resource_id = module.ai_lz_vnet.resource_id
-  }
-  allow_forwarded_traffic              = var.hub_vnet_peering_definition.allow_forwarded_traffic
-  allow_gateway_transit                = var.hub_vnet_peering_definition.allow_gateway_transit
-  allow_virtual_network_access         = var.hub_vnet_peering_definition.allow_virtual_network_access
-  create_reverse_peering               = var.hub_vnet_peering_definition.create_reverse_peering
   reverse_allow_forwarded_traffic      = var.hub_vnet_peering_definition.reverse_allow_forwarded_traffic
   reverse_allow_gateway_transit        = var.hub_vnet_peering_definition.reverse_allow_gateway_transit
   reverse_allow_virtual_network_access = var.hub_vnet_peering_definition.reverse_allow_virtual_network_access
   reverse_name                         = var.hub_vnet_peering_definition.reverse_name != null ? var.hub_vnet_peering_definition.reverse_name : "${local.vnet_name}-remote-to-local"
   reverse_use_remote_gateways          = var.hub_vnet_peering_definition.reverse_use_remote_gateways
   use_remote_gateways                  = var.hub_vnet_peering_definition.use_remote_gateways
+  virtual_network = {
+    resource_id = module.ai_lz_vnet.resource_id
+  }
 }
 
 module "firewall_route_table" {
@@ -135,8 +133,7 @@ module "firewall_policy" {
 module "azure_bastion" {
   source  = "Azure/avm-res-network-bastionhost/azurerm"
   version = "0.7.2"
-
-  count = var.flag_platform_landing_zone ? 1 : 0
+  count   = var.flag_platform_landing_zone ? 1 : 0
 
   location            = azurerm_resource_group.this.location
   name                = local.bastion_name
@@ -155,19 +152,15 @@ data "azurerm_private_dns_zone" "existing" {
 
   name                = each.value.name
   resource_group_name = azurerm_resource_group.this.name
-
 }
 
 data "azurerm_subscription" "dns_zones" {
   count = var.flag_platform_landing_zone ? 1 : 0
-
-
 }
 
 module "private_dns_zones" {
-  source  = "Azure/avm-res-network-privatednszone/azurerm"
-  version = "0.3.4"
-
+  source   = "Azure/avm-res-network-privatednszone/azurerm"
+  version  = "0.3.4"
   for_each = var.flag_platform_landing_zone ? local.private_dns_zones : {}
 
   domain_name           = each.value.name
@@ -193,36 +186,20 @@ module "application_gateway" {
   source  = "Azure/avm-res-network-applicationgateway/azurerm"
   version = "0.4.2"
 
-  name                               = local.application_gateway_name
-  location                           = azurerm_resource_group.this.location
-  resource_group_name                = azurerm_resource_group.this.name
-  sku                                = var.app_gateway_definition.sku
-  zones                              = local.region_zones
-  http2_enable                       = var.app_gateway_definition.http2_enable
-  app_gateway_waf_policy_resource_id = module.app_gateway_waf_policy.resource_id
-  enable_telemetry                   = var.enable_telemetry
-  public_ip_name                     = "${local.application_gateway_name}-pip"
-  authentication_certificate         = var.app_gateway_definition.authentication_certificate
-  autoscale_configuration            = var.app_gateway_definition.autoscale_configuration
-  backend_address_pools              = var.app_gateway_definition.backend_address_pools
-  backend_http_settings              = var.app_gateway_definition.backend_http_settings
-  frontend_ports                     = var.app_gateway_definition.frontend_ports
-  http_listeners                     = var.app_gateway_definition.http_listeners
-  probe_configurations               = var.app_gateway_definition.probe_configurations
-  redirect_configuration             = var.app_gateway_definition.redirect_configuration
-  request_routing_rules              = var.app_gateway_definition.request_routing_rules
-  rewrite_rule_set                   = var.app_gateway_definition.rewrite_rule_set
-  ssl_certificates                   = var.app_gateway_definition.ssl_certificates
-  ssl_policy                         = var.app_gateway_definition.ssl_policy
-  ssl_profile                        = var.app_gateway_definition.ssl_profile
-  trusted_client_certificate         = var.app_gateway_definition.trusted_client_certificate
-  trusted_root_certificate           = var.app_gateway_definition.trusted_root_certificate
-  url_path_map_configurations        = var.app_gateway_definition.url_path_map_configurations
-
+  backend_address_pools = var.app_gateway_definition.backend_address_pools
+  backend_http_settings = var.app_gateway_definition.backend_http_settings
+  frontend_ports        = var.app_gateway_definition.frontend_ports
   gateway_ip_configuration = {
     subnet_id = module.ai_lz_vnet.subnets["AppGatewaySubnet"].resource_id
   }
-
+  http_listeners                     = var.app_gateway_definition.http_listeners
+  location                           = azurerm_resource_group.this.location
+  name                               = local.application_gateway_name
+  request_routing_rules              = var.app_gateway_definition.request_routing_rules
+  resource_group_name                = azurerm_resource_group.this.name
+  app_gateway_waf_policy_resource_id = module.app_gateway_waf_policy.resource_id
+  authentication_certificate         = var.app_gateway_definition.authentication_certificate
+  autoscale_configuration            = var.app_gateway_definition.autoscale_configuration
   diagnostic_settings = {
     to_law = {
       name                  = "sendToLogAnalytics-${random_string.name_suffix.result}"
@@ -231,9 +208,21 @@ module "application_gateway" {
       metric_categories     = ["AllMetrics"]
     }
   }
-
-  role_assignments = local.application_gateway_role_assignments
-  tags             = var.app_gateway_definition.tags
-
+  enable_telemetry            = var.enable_telemetry
+  http2_enable                = var.app_gateway_definition.http2_enable
+  probe_configurations        = var.app_gateway_definition.probe_configurations
+  public_ip_name              = "${local.application_gateway_name}-pip"
+  redirect_configuration      = var.app_gateway_definition.redirect_configuration
+  rewrite_rule_set            = var.app_gateway_definition.rewrite_rule_set
+  role_assignments            = local.application_gateway_role_assignments
+  sku                         = var.app_gateway_definition.sku
+  ssl_certificates            = var.app_gateway_definition.ssl_certificates
+  ssl_policy                  = var.app_gateway_definition.ssl_policy
+  ssl_profile                 = var.app_gateway_definition.ssl_profile
+  tags                        = var.app_gateway_definition.tags
+  trusted_client_certificate  = var.app_gateway_definition.trusted_client_certificate
+  trusted_root_certificate    = var.app_gateway_definition.trusted_root_certificate
+  url_path_map_configurations = var.app_gateway_definition.url_path_map_configurations
+  zones                       = local.region_zones
 }
 

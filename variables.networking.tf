@@ -1,19 +1,3 @@
-variable "vnet_definition" {
-  type = object({
-    name                             = optional(string)
-    address_space                    = string
-    ddos_protection_plan_resource_id = optional(string)
-    dns_servers                      = optional(set(string))
-    subnets = optional(map(object({
-      enabled        = optional(bool, true)
-      name           = optional(string)
-      address_prefix = optional(string)
-      }
-    )), {})
-    peer_vnet_resource_id = optional(string)
-  })
-}
-
 variable "app_gateway_definition" {
   type = object({
     name         = optional(string)
@@ -208,7 +192,22 @@ variable "app_gateway_definition" {
       principal_id               = string
     })), {})
   })
-  default = {}
+}
+
+variable "vnet_definition" {
+  type = object({
+    name                             = optional(string)
+    address_space                    = string
+    ddos_protection_plan_resource_id = optional(string)
+    dns_servers                      = optional(set(string))
+    subnets = optional(map(object({
+      enabled        = optional(bool, true)
+      name           = optional(string)
+      address_prefix = optional(string)
+      }
+    )), {})
+    peer_vnet_resource_id = optional(string)
+  })
 }
 
 variable "bastion_definition" {

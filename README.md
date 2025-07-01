@@ -40,44 +40,6 @@ The following resources are used by this module:
 
 The following input variables are required:
 
-### <a name="input_location"></a> [location](#input\_location)
-
-Description: Azure region where the resource should be deployed.
-
-Type: `string`
-
-### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
-
-Description: The resource group where the resources will be deployed.
-
-Type: `string`
-
-### <a name="input_vnet_definition"></a> [vnet\_definition](#input\_vnet\_definition)
-
-Description: n/a
-
-Type:
-
-```hcl
-object({
-    name                             = optional(string)
-    address_space                    = string
-    ddos_protection_plan_resource_id = optional(string)
-    dns_servers                      = optional(set(string))
-    subnets = optional(map(object({
-      enabled        = optional(bool, true)
-      name           = optional(string)
-      address_prefix = optional(string)
-      }
-    )), {})
-    peer_vnet_resource_id = optional(string)
-  })
-```
-
-## Optional Inputs
-
-The following input variables are optional (have default values):
-
 ### <a name="input_app_gateway_definition"></a> [app\_gateway\_definition](#input\_app\_gateway\_definition)
 
 Description: n/a
@@ -280,7 +242,43 @@ object({
   })
 ```
 
-Default: `{}`
+### <a name="input_location"></a> [location](#input\_location)
+
+Description: Azure region where the resource should be deployed.
+
+Type: `string`
+
+### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
+
+Description: The resource group where the resources will be deployed.
+
+Type: `string`
+
+### <a name="input_vnet_definition"></a> [vnet\_definition](#input\_vnet\_definition)
+
+Description: n/a
+
+Type:
+
+```hcl
+object({
+    name                             = optional(string)
+    address_space                    = string
+    ddos_protection_plan_resource_id = optional(string)
+    dns_servers                      = optional(set(string))
+    subnets = optional(map(object({
+      enabled        = optional(bool, true)
+      name           = optional(string)
+      address_prefix = optional(string)
+      }
+    )), {})
+    peer_vnet_resource_id = optional(string)
+  })
+```
+
+## Optional Inputs
+
+The following input variables are optional (have default values):
 
 ### <a name="input_bastion_definition"></a> [bastion\_definition](#input\_bastion\_definition)
 
