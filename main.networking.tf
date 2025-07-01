@@ -7,8 +7,9 @@ module "ai_lz_vnet" {
   address_space       = [var.vnet_definition.address_space]
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
-  ddos_protection_plan = var.vnet_definition.ddos_protection_plan != null ? {
-    id = var.vnet_definition.ddos_protection_plan
+  ddos_protection_plan = var.vnet_definition.ddos_protection_plan_resource_id != null ? {
+    id     = var.vnet_definition.ddos_protection_plan_resource_id
+    enable = true
   } : null
   diagnostic_settings = {
     sendToLogAnalytics = {

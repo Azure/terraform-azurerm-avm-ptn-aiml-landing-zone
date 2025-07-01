@@ -1,8 +1,8 @@
 locals {
-  application_gateway_name = try(var.application_gateway_definition.name, null) != null ? var.application_gateway_definition.name : (try(var.name_prefix, null) != null ? "${var.name_prefix}-appgw" : "ai-alz-appgw")
+  application_gateway_name = try(var.app_gateway_definition.name, null) != null ? var.app_gateway_definition.name : (try(var.name_prefix, null) != null ? "${var.name_prefix}-appgw" : "ai-alz-appgw")
   application_gateway_role_assignments = merge(
     local.application_gateway_role_assignments_base,
-    var.application_gateway_definition.role_assignments
+    var.app_gateway_definition.role_assignments
   )
   application_gateway_role_assignments_base = {}
   bastion_name                              = try(var.bastion_definition.name, null) != null ? var.bastion_definition.name : (try(var.name_prefix, null) != null ? "${var.name_prefix}-bastion" : "ai-alz-bastion")
@@ -182,7 +182,7 @@ locals {
   }
   virtual_network_links = merge(local.default_virtual_network_link, var.private_dns_zones.network_links)
   vnet_name             = try(var.vnet_definition.name, null) != null ? var.vnet_definition.name : (try(var.name_prefix, null) != null ? "${var.name_prefix}-vnet" : "ai-alz-vnet")
-  web_application_firewall_managed_rules = var.waf_policy_definition.managd_rules == null ? {
+  web_application_firewall_managed_rules = var.waf_policy_definition.managed_rules == null ? {
     managed_rule_set = {
       owasp = {
         version = "3.2"
