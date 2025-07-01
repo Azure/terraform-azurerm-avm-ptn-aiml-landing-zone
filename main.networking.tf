@@ -188,6 +188,7 @@ module "app_gateway_waf_policy" {
   policy_settings     = var.waf_policy_definition.policy_settings
 }
 
+
 module "application_gateway" {
   source  = "Azure/avm-res-network-applicationgateway/azurerm"
   version = "0.4.2"
@@ -235,3 +236,4 @@ module "application_gateway" {
   tags             = var.app_gateway_definition.tags
 
 }
+
