@@ -63,6 +63,46 @@ module "test" {
     dns_servers           = ["10.0.2.4"] #test private dns resolver
     peer_vnet_resource_id = ""
   }
+  app_gateway_definition = {
+    backend_address_pools = {
+      example_pool = {
+        name = "example-backend-pool"
+      }
+    }
+
+    backend_http_settings = {
+      example_http_settings = {
+        name     = "example-http-settings"
+        port     = 80
+        protocol = "Http"
+      }
+    }
+
+    frontend_ports = {
+      example_frontend_port = {
+        name = "example-frontend-port"
+        port = 80
+      }
+    }
+
+    http_listeners = {
+      example_listener = {
+        name               = "example-listener"
+        frontend_port_name = "example-frontend-port"
+      }
+    }
+
+    request_routing_rules = {
+      example_rule = {
+        name                       = "example-rule"
+        rule_type                  = "Basic"
+        http_listener_name         = "example-listener"
+        backend_address_pool_name  = "example-backend-pool"
+        backend_http_settings_name = "example-http-settings"
+        priority                   = 100
+      }
+    }
+  }
   bastion_definition = {
     zones = [] #Zonal configurations are preview and not supported in westus3
   }

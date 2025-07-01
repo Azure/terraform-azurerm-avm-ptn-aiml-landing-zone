@@ -783,7 +783,7 @@ Version: =0.7.1
 
 Source: Azure/avm-res-appconfiguration-configurationstore/azure
 
-Version: 0.1.0
+Version: 0.2.0
 
 ### <a name="module_app_gateway_waf_policy"></a> [app\_gateway\_waf\_policy](#module\_app\_gateway\_waf\_policy)
 
