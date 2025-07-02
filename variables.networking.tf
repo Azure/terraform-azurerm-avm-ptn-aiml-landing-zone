@@ -330,7 +330,14 @@ variable "waf_policy_definition" {
           })))
         })), null)
       }))
-    }), null)
+      }), {
+      managed_rule_set = {
+        owasp = {
+          version = "3.2"
+          type    = "OWASP"
+        }
+      }
+    })
 
     tags = optional(map(string), {})
   })
