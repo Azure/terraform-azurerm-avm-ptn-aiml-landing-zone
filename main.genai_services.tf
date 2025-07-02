@@ -183,7 +183,7 @@ module "containerregistry" {
   depends_on = [module.private_dns_zones, module.hub_vnet_peering]
 }
 
-
+/*
 module "app_configuration" {
   source  = "Azure/avm-res-appconfiguration-configurationstore/azure"
   version = "0.2.0"
@@ -205,3 +205,4 @@ module "app_configuration" {
   soft_delete_retention_days = var.genai_app_configuration_definition.soft_delete_retention_in_days
   tags                       = var.genai_app_configuration_definition.tags
 }
+*/
