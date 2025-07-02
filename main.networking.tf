@@ -175,7 +175,7 @@ module "app_gateway_waf_policy" {
   version = "0.2.0"
 
   location            = azurerm_resource_group.this.location
-  managed_rules       = local.web_application_firewall_managed_rules
+  managed_rules       = var.waf_policy_definition.managed_rules #local.web_application_firewall_managed_rules
   name                = local.web_application_firewall_policy_name
   resource_group_name = azurerm_resource_group.this.name
   enable_telemetry    = var.enable_telemetry
