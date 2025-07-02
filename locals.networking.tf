@@ -183,12 +183,12 @@ locals {
   virtual_network_links = merge(local.default_virtual_network_link, var.private_dns_zones.network_links)
   vnet_name             = try(var.vnet_definition.name, null) != null ? var.vnet_definition.name : (try(var.name_prefix, null) != null ? "${var.name_prefix}-vnet" : "ai-alz-vnet")
   web_application_firewall_managed_rules = var.waf_policy_definition.managed_rules == null ? {
-    managed_rule_set = {
+    managed_rule_set = tomap({
       owasp = {
         version = "3.2"
         type    = "OWASP"
       }
-    }
+    })
   } : var.waf_policy_definition.managed_rules
   web_application_firewall_policy_name = try(var.waf_policy_definition.name, null) != null ? var.waf_policy_definition.name : (try(var.name_prefix, null) != null ? "${var.name_prefix}-waf-policy" : "ai-alz-waf-policy")
 }
