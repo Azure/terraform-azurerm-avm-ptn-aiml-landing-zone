@@ -187,7 +187,7 @@ locals {
       owasp = {
         version = "3.2"
         type    = "OWASP"
-        rule_group_override = tomap({})
+        rule_group_override = null
       }
     })
   } : var.waf_policy_definition.managed_rules

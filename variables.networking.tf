@@ -328,7 +328,7 @@ variable "waf_policy_definition" {
             enabled = optional(bool)
             id      = string
           })))
-        })), {})
+        })), null)
       }))
     }), null)
 
