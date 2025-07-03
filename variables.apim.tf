@@ -84,7 +84,7 @@ variable "apim_definition" {
         text             = optional(string, null)
       })
     }), null)
-    sku_root     = optional(string, "Consumption_Premium")
+    sku_root     = optional(string, "Premium")
     sku_capacity = optional(number, 1)
     tenant_access = optional(object({
       enabled = bool
