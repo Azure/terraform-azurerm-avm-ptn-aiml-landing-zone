@@ -7,8 +7,8 @@ variable "app_gateway_definition" {
       data = string
     })), null)
     sku = optional(object({
-      name     = optional(string, "Standard_v2")
-      tier     = optional(string, "Standard_v2")
+      name     = optional(string, "WAF_v2")
+      tier     = optional(string, "WAF_v2")
       capacity = optional(number, 2)
     }), {})
 

@@ -55,8 +55,8 @@ object({
       data = string
     })), null)
     sku = optional(object({
-      name     = optional(string, "Standard_v2")
-      tier     = optional(string, "Standard_v2")
+      name     = optional(string, "WAF_v2")
+      tier     = optional(string, "WAF_v2")
       capacity = optional(number, 2)
     }), {})
 
@@ -749,9 +749,16 @@ object({
             enabled = optional(bool)
             id      = string
           })))
-        })))
+        })), null)
       }))
-    }), null)
+      }), {
+      managed_rule_set = {
+        owasp = {
+          version = "3.2"
+          type    = "OWASP"
+        }
+      }
+    })
 
     tags = optional(map(string), {})
   })
@@ -776,12 +783,6 @@ The following Modules are called:
 Source: Azure/avm-res-network-virtualnetwork/azurerm
 
 Version: =0.7.1
-
-### <a name="module_app_configuration"></a> [app\_configuration](#module\_app\_configuration)
-
-Source: Azure/avm-res-appconfiguration-configurationstore/azure
-
-Version: 0.2.0
 
 ### <a name="module_app_gateway_waf_policy"></a> [app\_gateway\_waf\_policy](#module\_app\_gateway\_waf\_policy)
 
