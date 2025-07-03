@@ -57,12 +57,12 @@ object({
     sku = optional(object({
       name     = optional(string, "WAF_v2")
       tier     = optional(string, "WAF_v2")
-      capacity = optional(number, 2)
+      capacity = optional(number)
     }), {})
 
     autoscale_configuration = optional(object({
       max_capacity = optional(number, 2)
-      min_capacity = optional(number, 2)
+      min_capacity = optional(number, 10)
     }), {})
 
     backend_address_pools = map(object({
