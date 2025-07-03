@@ -1,5 +1,5 @@
 variable "apim_definition" {
-  type = optional(object({
+  type = object({
     name                = optional(string)
     location            = string
     resource_group_name = string
@@ -89,6 +89,7 @@ variable "apim_definition" {
     tenant_access = optional(object({
       enabled = bool
     }), null)
-  }), null)
+  })
+  default     = null
   description = "Definition of the API Management service."
 }
