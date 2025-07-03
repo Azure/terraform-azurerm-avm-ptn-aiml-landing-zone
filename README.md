@@ -61,8 +61,8 @@ object({
     }), {})
 
     autoscale_configuration = optional(object({
-      max_capacity = optional(number, 2)
-      min_capacity = optional(number, 10)
+      max_capacity = optional(number, 10)
+      min_capacity = optional(number, 2)
     }), {})
 
     backend_address_pools = map(object({
