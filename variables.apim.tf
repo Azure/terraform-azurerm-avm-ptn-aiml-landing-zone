@@ -90,6 +90,6 @@ variable "apim_definition" {
       enabled = bool
     }), null)
   })
-  default     = {}
+  default     = null
   description = "Definition of the API Management service."
 }
