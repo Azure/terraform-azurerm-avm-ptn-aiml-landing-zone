@@ -8,7 +8,7 @@ module "avm_res_keyvault_vault" {
   tenant_id           = var.genai_key_vault_definition.tenant_id != null ? var.genai_key_vault_definition.tenant_id : data.azurerm_client_config.current.tenant_id
   diagnostic_settings = {
     to_law = {
-      name                  = "sendToLogAnalytics-${random_string.name_suffix.result}"
+      name                  = "sendToLogAnalytics-kv-${random_string.name_suffix.result}"
       workspace_resource_id = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
     }
   }
@@ -101,7 +101,7 @@ module "cosmosdb" {
   cors_rule = var.genai_cosmosdb_definition.cors_rule
   diagnostic_settings = {
     to_law = {
-      name                  = "sendToLogAnalytics-${random_string.name_suffix.result}"
+      name                  = "sendToLogAnalytics-cosmosdb-${random_string.name_suffix.result}"
       workspace_resource_id = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
     }
   }
@@ -133,7 +133,7 @@ module "storage_account" {
   account_tier             = var.genai_storage_account_definition.account_tier
   diagnostic_settings_storage_account = {
     storage = {
-      name                  = "sendToLogAnalytics-${random_string.name_suffix.result}"
+      name                  = "sendToLogAnalytics-sa-${random_string.name_suffix.result}"
       workspace_resource_id = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
     }
   }
@@ -165,7 +165,7 @@ module "containerregistry" {
   resource_group_name = azurerm_resource_group.this.name
   diagnostic_settings = {
     storage = {
-      name                  = "sendToLogAnalytics-${random_string.name_suffix.result}"
+      name                  = "sendToLogAnalytics-acr-${random_string.name_suffix.result}"
       workspace_resource_id = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
     }
   }

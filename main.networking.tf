@@ -13,7 +13,7 @@ module "ai_lz_vnet" {
   } : null
   diagnostic_settings = {
     sendToLogAnalytics = {
-      name                           = "sendToLogAnalytics-${random_string.name_suffix.result}"
+      name                           = "sendToLogAnalytics-vnet-${random_string.name_suffix.result}"
       workspace_resource_id          = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
       log_analytics_destination_type = "Dedicated"
     }
@@ -103,7 +103,7 @@ module "firewall" {
   resource_group_name = azurerm_resource_group.this.name
   diagnostic_settings = {
     to_law = {
-      name                  = "sendToLogAnalytics-${random_string.name_suffix.result}"
+      name                  = "sendToLogAnalytics-fwpip-${random_string.name_suffix.result}"
       workspace_resource_id = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
       log_groups            = ["allLogs"]
       metric_categories     = ["AllMetrics"]
@@ -203,7 +203,7 @@ module "application_gateway" {
   autoscale_configuration            = var.app_gateway_definition.autoscale_configuration
   diagnostic_settings = {
     to_law = {
-      name                  = "sendToLogAnalytics-${random_string.name_suffix.result}"
+      name                  = "sendToLogAnalytics-appgw-${random_string.name_suffix.result}"
       workspace_resource_id = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
       log_groups            = ["allLogs"]
       metric_categories     = ["AllMetrics"]

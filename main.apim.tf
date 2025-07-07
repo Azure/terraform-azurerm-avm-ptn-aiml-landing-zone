@@ -29,7 +29,7 @@ module "apim" {
 
   diagnostic_settings = {
     storage = {
-      name                  = "sendToLogAnalytics-${random_string.name_suffix.result}"
+      name                  = "sendToLogAnalytics-apim-${random_string.name_suffix.result}"
       workspace_resource_id = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
     }
   }

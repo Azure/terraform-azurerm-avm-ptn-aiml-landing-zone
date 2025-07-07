@@ -7,7 +7,7 @@ module "container_apps_managed_environment" {
   resource_group_name = azurerm_resource_group.this.name
   diagnostic_settings = {
     to_law = {
-      name                  = "sendToLogAnalytics-${random_string.name_suffix.result}"
+      name                  = "sendToLogAnalytics-cae-${random_string.name_suffix.result}"
       workspace_resource_id = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
     }
   }
