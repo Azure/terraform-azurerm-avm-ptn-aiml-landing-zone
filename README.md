@@ -23,6 +23,8 @@ The following requirements are needed by this module:
 The following resources are used by this module:
 
 - [azapi_resource.bing_grounding](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azurerm_app_configuration.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/app_configuration) (resource)
+- [azurerm_private_endpoint.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [modtm_telemetry.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/resources/telemetry) (resource)
 - [random_integer.zone_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
@@ -372,7 +374,7 @@ object({
         text             = optional(string, null)
       })
     }), null)
-    sku_root     = optional(string, "Consumption_Premium")
+    sku_root     = optional(string, "Premium")
     sku_capacity = optional(number, 1)
     tenant_access = optional(object({
       enabled = bool
@@ -885,12 +887,6 @@ The following Modules are called:
 Source: Azure/avm-res-network-virtualnetwork/azurerm
 
 Version: =0.7.1
-
-### <a name="module_apim"></a> [apim](#module\_apim)
-
-Source: Azure/avm-res-apimanagement-service/azurerm
-
-Version: 0.0.2
 
 ### <a name="module_app_gateway_waf_policy"></a> [app\_gateway\_waf\_policy](#module\_app\_gateway\_waf\_policy)
 

@@ -208,17 +208,15 @@ module "app_configuration" {
 */
 
 resource "azurerm_app_configuration" "this" {
+  location                   = azurerm_resource_group.this.location
   name                       = local.genai_app_configuration_name
   resource_group_name        = azurerm_resource_group.this.name
-  location                   = azurerm_resource_group.this.location
-  sku                        = var.genai_app_configuration_definition.sku
   local_auth_enabled         = var.genai_app_configuration_definition.local_auth_enabled
   public_network_access      = "Disabled"
   purge_protection_enabled   = true
+  sku                        = var.genai_app_configuration_definition.sku
   soft_delete_retention_days = var.genai_app_configuration_definition.soft_delete_retention_in_days
-
-  tags = var.genai_app_configuration_definition.tags
-
+  tags                       = var.genai_app_configuration_definition.tags
 }
 
 
@@ -236,9 +234,8 @@ resource "azurerm_private_endpoint" "this" {
     private_connection_resource_id = azurerm_app_configuration.this.id
     subresource_names              = ["configurationStores"]
   }
-
   private_dns_zone_group {
-      name                 = "default"
-      private_dns_zone_ids = var.flag_platform_landing_zone ? [module.private_dns_zones.app_configuration_zone.resource_id] : [local.private_dns_zones_existing.app_configuration_zone.resource_id]
+    name                 = "default"
+    private_dns_zone_ids = var.flag_platform_landing_zone ? [module.private_dns_zones.app_configuration_zone.resource_id] : [local.private_dns_zones_existing.app_configuration_zone.resource_id]
   }
 }
