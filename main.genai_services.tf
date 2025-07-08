@@ -183,7 +183,7 @@ module "containerregistry" {
   depends_on = [module.private_dns_zones, module.hub_vnet_peering]
 }
 
-
+/*
 module "app_configuration" {
   source  = "Azure/avm-res-appconfiguration-configurationstore/azure"
   version = "0.4.0"
@@ -205,4 +205,40 @@ module "app_configuration" {
   soft_delete_retention_days = var.genai_app_configuration_definition.soft_delete_retention_in_days
   tags                       = var.genai_app_configuration_definition.tags
 }
+*/
 
+resource "azurerm_app_configuration" "this" {
+  name                       = local.genai_app_configuration_name
+  resource_group_name        = azurerm_resource_group.this.name
+  location                   = azurerm_resource_group.this.location
+  sku                        = var.genai_app_configuration_definition.sku
+  local_auth_enabled         = var.genai_app_configuration_definition.local_auth_enabled
+  public_network_access      = "Disabled"
+  purge_protection_enabled   = true
+  soft_delete_retention_days = var.genai_app_configuration_definition.soft_delete_retention_in_days
+
+  tags = var.genai_app_configuration_definition.tags
+
+}
+
+
+resource "azurerm_private_endpoint" "this" {
+  location                      = azurerm_resource_group.this.location
+  name                          = "pe-${local.genai_app_configuration_name}"
+  resource_group_name           = azurerm_resource_group.this.name
+  subnet_id                     = module.ai_lz_vnet.subnets["PrivateEndpointSubnet"].resource_id
+  custom_network_interface_name = "pe-${local.genai_app_configuration_name}-nic"
+  tags                          = var.genai_app_configuration_definition.tags
+
+  private_service_connection {
+    is_manual_connection           = false
+    name                           = "psc-${local.genai_app_configuration_name}"
+    private_connection_resource_id = azurerm_app_configuration.this.id
+    subresource_names              = ["configurationStores"]
+  }
+
+  private_dns_zone_group {
+      name                 = "default"
+      private_dns_zone_ids = var.flag_platform_landing_zone ? [module.private_dns_zones.app_configuration_zone.resource_id] : [local.private_dns_zones_existing.app_configuration_zone.resource_id]
+  }
+}
