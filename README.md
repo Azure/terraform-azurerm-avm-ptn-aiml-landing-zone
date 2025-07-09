@@ -376,6 +376,7 @@ object({
     }), null)
     sku_root     = optional(string, "Premium")
     sku_capacity = optional(number, 1)
+    tags         = optional(map(string), {})
     tenant_access = optional(object({
       enabled = bool
     }), null)
@@ -887,6 +888,12 @@ The following Modules are called:
 Source: Azure/avm-res-network-virtualnetwork/azurerm
 
 Version: =0.7.1
+
+### <a name="module_apim"></a> [apim](#module\_apim)
+
+Source: Azure/avm-res-apimanagement-service/azurerm
+
+Version: 0.0.3
 
 ### <a name="module_app_gateway_waf_policy"></a> [app\_gateway\_waf\_policy](#module\_app\_gateway\_waf\_policy)
 
