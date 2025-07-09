@@ -1,8 +1,8 @@
 variable "apim_definition" {
   type = object({
-    name                = optional(string)
-    publisher_email     = string
-    publisher_name      = string
+    name            = optional(string)
+    publisher_email = string
+    publisher_name  = string
     additional_locations = optional(list(object({
       location             = string
       capacity             = optional(number, null)
@@ -68,8 +68,14 @@ variable "apim_definition" {
       enable_http2 = optional(bool, false)
     }))
     role_assignments = optional(map(object({
-      role_definition_id_or_name = string
-      principal_id               = string
+      role_definition_id_or_name             = string
+      principal_id                           = string
+      description                            = optional(string, null)
+      skip_service_principal_aad_check       = optional(bool, false)
+      condition                              = optional(string, null)
+      condition_version                      = optional(string, null)
+      delegated_managed_identity_resource_id = optional(string, null)
+      principal_type                         = optional(string, null)
     })), {})
     sign_in = optional(object({
       enabled = bool
@@ -89,9 +95,9 @@ variable "apim_definition" {
       enabled = bool
     }), null)
   })
-  default     = {
-    publisher_email     = "DoNotReply@exampleEmail.com"
-    publisher_name      = "Azure API Management"
+  default = {
+    publisher_email = "DoNotReply@exampleEmail.com"
+    publisher_name  = "Azure API Management"
   }
   description = "Definition of the API Management service."
 }

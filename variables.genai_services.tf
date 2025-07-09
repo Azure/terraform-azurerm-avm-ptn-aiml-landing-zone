@@ -11,8 +11,14 @@ variable "genai_app_configuration_definition" {
     soft_delete_retention_in_days = optional(number, 7)
     tags                          = optional(map(string), {})
     role_assignments = optional(map(object({
-      role_definition_id_or_name = string
-      principal_id               = string
+      role_definition_id_or_name             = string
+      principal_id                           = string
+      description                            = optional(string, null)
+      skip_service_principal_aad_check       = optional(bool, false)
+      condition                              = optional(string, null)
+      condition_version                      = optional(string, null)
+      delegated_managed_identity_resource_id = optional(string, null)
+      principal_type                         = optional(string, null)
     })), {})
   })
   default     = {}
@@ -29,8 +35,14 @@ variable "genai_container_registry_definition" {
     public_network_access_enabled = optional(bool, false)
     tags                          = optional(map(string), {})
     role_assignments = optional(map(object({
-      role_definition_id_or_name = string
-      principal_id               = string
+      role_definition_id_or_name             = string
+      principal_id                           = string
+      description                            = optional(string, null)
+      skip_service_principal_aad_check       = optional(bool, false)
+      condition                              = optional(string, null)
+      condition_version                      = optional(string, null)
+      delegated_managed_identity_resource_id = optional(string, null)
+      principal_type                         = optional(string, null)
     })), {})
   })
   default     = {}
@@ -93,8 +105,14 @@ variable "genai_key_vault_definition" {
     sku       = optional(string, "standard")
     tenant_id = optional(string)
     role_assignments = optional(map(object({
-      role_definition_id_or_name = string
-      principal_id               = string
+      role_definition_id_or_name             = string
+      principal_id                           = string
+      description                            = optional(string, null)
+      skip_service_principal_aad_check       = optional(bool, false)
+      condition                              = optional(string, null)
+      condition_version                      = optional(string, null)
+      delegated_managed_identity_resource_id = optional(string, null)
+      principal_type                         = optional(string, null)
     })), {})
     tags = optional(map(string), {})
   })
@@ -113,8 +131,14 @@ variable "genai_storage_account_definition" {
     public_network_access_enabled = optional(bool, false)
     shared_access_key_enabled     = optional(bool, true)
     role_assignments = optional(map(object({
-      role_definition_id_or_name = string
-      principal_id               = string
+      role_definition_id_or_name             = string
+      principal_id                           = string
+      description                            = optional(string, null)
+      skip_service_principal_aad_check       = optional(bool, false)
+      condition                              = optional(string, null)
+      condition_version                      = optional(string, null)
+      delegated_managed_identity_resource_id = optional(string, null)
+      principal_type                         = optional(string, null)
     })), {})
     tags = optional(map(string), {})
 

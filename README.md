@@ -23,8 +23,6 @@ The following requirements are needed by this module:
 The following resources are used by this module:
 
 - [azapi_resource.bing_grounding](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
-- [azurerm_app_configuration.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/app_configuration) (resource)
-- [azurerm_private_endpoint.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [modtm_telemetry.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/resources/telemetry) (resource)
 - [random_integer.zone_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
@@ -41,6 +39,76 @@ The following resources are used by this module:
 ## Required Inputs
 
 The following input variables are required:
+
+### <a name="input_ai_foundry_definition"></a> [ai\_foundry\_definition](#input\_ai\_foundry\_definition)
+
+Description: n/a
+
+Type:
+
+```hcl
+object({
+    ai_foundry_project_description = string
+    ai_model_deployments = optional(map(object({
+      name                   = string
+      rai_policy_name        = optional(string)
+      version_upgrade_option = optional(string, "OnceNewDefaultVersionAvailable")
+      model = object({
+        format  = string
+        name    = string
+        version = string
+      })
+      scale = object({
+        capacity = optional(number)
+        family   = optional(string)
+        size     = optional(string)
+        tier     = optional(string)
+        type     = string
+      })
+    })), {})
+    create_ai_agent_service    = optional(bool, false)
+    create_project_connections = optional(bool, false)
+    lock = optional(object({
+      kind = string
+      name = optional(string, null)
+    }), null)
+
+    ai_foundry_resources = object({
+      create_dependent_resources = optional(bool, true)
+      ai_search = object({
+        existing_resource_id = optional(string, null)
+        name                 = optional(string, null)
+        #create_private_endpoint = optional(bool, true)
+      }),
+      cosmos_db = object({
+        existing_resource_id = optional(string, null)
+        name                 = optional(string, null)
+        #create_private_endpoint = optional(bool, true)
+      }),
+      storage_account = object({
+        existing_resource_id = optional(string, null)
+        name                 = optional(string, null)
+        #create_private_endpoint = optional(bool, true)
+      }),
+      key_vault = object({
+        existing_resource_id = optional(string, null)
+        name                 = optional(string, null)
+        #create_private_endpoint = optional(bool, true)
+      })
+    })
+    role_assignments = optional(map(object({
+      role_definition_id_or_name             = string
+      principal_id                           = string
+      description                            = optional(string, null)
+      skip_service_principal_aad_check       = optional(bool, false)
+      condition                              = optional(string, null)
+      condition_version                      = optional(string, null)
+      delegated_managed_identity_resource_id = optional(string, null)
+      principal_type                         = optional(string, null)
+    })), {})
+
+  })
+```
 
 ### <a name="input_app_gateway_definition"></a> [app\_gateway\_definition](#input\_app\_gateway\_definition)
 
@@ -238,8 +306,14 @@ object({
 
     tags = optional(map(string), {})
     role_assignments = optional(map(object({
-      role_definition_id_or_name = string
-      principal_id               = string
+      role_definition_id_or_name             = string
+      principal_id                           = string
+      description                            = optional(string, null)
+      skip_service_principal_aad_check       = optional(bool, false)
+      condition                              = optional(string, null)
+      condition_version                      = optional(string, null)
+      delegated_managed_identity_resource_id = optional(string, null)
+      principal_type                         = optional(string, null)
     })), {})
   })
 ```
@@ -290,10 +364,9 @@ Type:
 
 ```hcl
 object({
-    name                = optional(string)
-    location            = string
-    resource_group_name = string
-    publisher_email     = string
+    name            = optional(string)
+    publisher_email = string
+    publisher_name  = string
     additional_locations = optional(list(object({
       location             = string
       capacity             = optional(number, null)
@@ -358,10 +431,15 @@ object({
     protocols = optional(object({
       enable_http2 = optional(bool, false)
     }))
-    publisher_name = optional(string, null)
     role_assignments = optional(map(object({
-      role_definition_id_or_name = string
-      principal_id               = string
+      role_definition_id_or_name             = string
+      principal_id                           = string
+      description                            = optional(string, null)
+      skip_service_principal_aad_check       = optional(bool, false)
+      condition                              = optional(string, null)
+      condition_version                      = optional(string, null)
+      delegated_managed_identity_resource_id = optional(string, null)
+      principal_type                         = optional(string, null)
     })), {})
     sign_in = optional(object({
       enabled = bool
@@ -375,7 +453,7 @@ object({
       })
     }), null)
     sku_root     = optional(string, "Premium")
-    sku_capacity = optional(number, 1)
+    sku_capacity = optional(number, 3)
     tags         = optional(map(string), {})
     tenant_access = optional(object({
       enabled = bool
@@ -383,7 +461,14 @@ object({
   })
 ```
 
-Default: `null`
+Default:
+
+```json
+{
+  "publisher_email": "DoNotReply@exampleEmail.com",
+  "publisher_name": "Azure API Management"
+}
+```
 
 ### <a name="input_bastion_definition"></a> [bastion\_definition](#input\_bastion\_definition)
 
@@ -432,8 +517,14 @@ object({
     }), null)
 
     role_assignments = optional(map(object({
-      role_definition_id_or_name = string
-      principal_id               = string
+      role_definition_id_or_name             = string
+      principal_id                           = string
+      description                            = optional(string, null)
+      skip_service_principal_aad_check       = optional(bool, false)
+      condition                              = optional(string, null)
+      condition_version                      = optional(string, null)
+      delegated_managed_identity_resource_id = optional(string, null)
+      principal_type                         = optional(string, null)
     })), {})
   })
 ```
@@ -503,8 +594,14 @@ object({
     soft_delete_retention_in_days = optional(number, 7)
     tags                          = optional(map(string), {})
     role_assignments = optional(map(object({
-      role_definition_id_or_name = string
-      principal_id               = string
+      role_definition_id_or_name             = string
+      principal_id                           = string
+      description                            = optional(string, null)
+      skip_service_principal_aad_check       = optional(bool, false)
+      condition                              = optional(string, null)
+      condition_version                      = optional(string, null)
+      delegated_managed_identity_resource_id = optional(string, null)
+      principal_type                         = optional(string, null)
     })), {})
   })
 ```
@@ -525,8 +622,14 @@ object({
     public_network_access_enabled = optional(bool, false)
     tags                          = optional(map(string), {})
     role_assignments = optional(map(object({
-      role_definition_id_or_name = string
-      principal_id               = string
+      role_definition_id_or_name             = string
+      principal_id                           = string
+      description                            = optional(string, null)
+      skip_service_principal_aad_check       = optional(bool, false)
+      condition                              = optional(string, null)
+      condition_version                      = optional(string, null)
+      delegated_managed_identity_resource_id = optional(string, null)
+      principal_type                         = optional(string, null)
     })), {})
   })
 ```
@@ -599,8 +702,14 @@ object({
     sku       = optional(string, "standard")
     tenant_id = optional(string)
     role_assignments = optional(map(object({
-      role_definition_id_or_name = string
-      principal_id               = string
+      role_definition_id_or_name             = string
+      principal_id                           = string
+      description                            = optional(string, null)
+      skip_service_principal_aad_check       = optional(bool, false)
+      condition                              = optional(string, null)
+      condition_version                      = optional(string, null)
+      delegated_managed_identity_resource_id = optional(string, null)
+      principal_type                         = optional(string, null)
     })), {})
     tags = optional(map(string), {})
   })
@@ -625,8 +734,14 @@ object({
     public_network_access_enabled = optional(bool, false)
     shared_access_key_enabled     = optional(bool, true)
     role_assignments = optional(map(object({
-      role_definition_id_or_name = string
-      principal_id               = string
+      role_definition_id_or_name             = string
+      principal_id                           = string
+      description                            = optional(string, null)
+      skip_service_principal_aad_check       = optional(bool, false)
+      condition                              = optional(string, null)
+      condition_version                      = optional(string, null)
+      delegated_managed_identity_resource_id = optional(string, null)
+      principal_type                         = optional(string, null)
     })), {})
     tags = optional(map(string), {})
 
@@ -697,8 +812,14 @@ object({
     semantic_search_sku           = optional(string, "standard")
     tags                          = optional(map(string), {})
     role_assignments = optional(map(object({
-      role_definition_id_or_name = string
-      principal_id               = string
+      role_definition_id_or_name             = string
+      principal_id                           = string
+      description                            = optional(string, null)
+      skip_service_principal_aad_check       = optional(bool, false)
+      condition                              = optional(string, null)
+      condition_version                      = optional(string, null)
+      delegated_managed_identity_resource_id = optional(string, null)
+      principal_type                         = optional(string, null)
     })), {})
     enable_telemetry = optional(bool, true)
   })
@@ -895,6 +1016,12 @@ Source: Azure/avm-res-apimanagement-service/azurerm
 
 Version: 0.0.3
 
+### <a name="module_app_configuration"></a> [app\_configuration](#module\_app\_configuration)
+
+Source: Azure/avm-res-appconfiguration-configurationstore/azure
+
+Version: 0.4.0
+
 ### <a name="module_app_gateway_waf_policy"></a> [app\_gateway\_waf\_policy](#module\_app\_gateway\_waf\_policy)
 
 Source: Azure/avm-res-network-applicationgatewaywebapplicationfirewallpolicy/azurerm
@@ -960,6 +1087,12 @@ Version: 0.3.3
 Source: Azure/avm-res-network-routetable/azurerm
 
 Version: 0.4.1
+
+### <a name="module_foundry_ptn"></a> [foundry\_ptn](#module\_foundry\_ptn)
+
+Source: Azure/avm-ptn-aiml-ai-foundry/azurerm
+
+Version: 0.2.0
 
 ### <a name="module_fw_pip"></a> [fw\_pip](#module\_fw\_pip)
 
