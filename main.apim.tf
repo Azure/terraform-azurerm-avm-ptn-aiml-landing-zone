@@ -11,7 +11,7 @@ module "apim" {
   zones                         = local.region_zones
   public_network_access_enabled = true
   virtual_network_type          = "None"
-  virtual_network_subnet_id     = module.ai_lz_vnet.subnets["APIMSubnet"].resource_id
+  virtual_network_subnet_id     = null
 
   enable_telemetry           = var.enable_telemetry
   additional_location        = var.apim_definition.additional_locations
