@@ -3,7 +3,7 @@ module "foundry_ptn" {
   version = "0.2.0"
 
   location                                  = azurerm_resource_group.this.location
-  base_name                                 = var.name_prefix
+  base_name                                 = coalesce(var.name_prefix, "foundry"
   agent_subnet_id                           = module.ai_lz_vnet.subnets["AIFoundrySubnet"].resource_id
   create_private_endpoints                  = true
   create_resource_group                     = false
@@ -24,7 +24,6 @@ module "foundry_ptn" {
     storage_account = try(var.ai_foundry_definition.ai_foundry_resources.storage_account.name, null)
   }
 
-
   ai_foundry_project_description = var.ai_foundry_definition.ai_foundry_project_description
   ai_model_deployments           = var.ai_foundry_definition.ai_model_deployments
   create_ai_agent_service        = var.ai_foundry_definition.create_ai_agent_service
@@ -32,8 +31,6 @@ module "foundry_ptn" {
   lock                           = var.ai_foundry_definition.lock
   role_assignments               = var.ai_foundry_definition.role_assignments
   tags                           = var.ai_foundry_definition.tags
-
-
 
   ai_search_resource_id       = try(var.ai_foundry_definition.ai_foundry_resources.ai_search.existing_resource_id, null)
   cosmos_db_resource_id       = try(var.ai_foundry_definition.ai_foundry_resources.cosmos_db.existing_resource_id, null)
