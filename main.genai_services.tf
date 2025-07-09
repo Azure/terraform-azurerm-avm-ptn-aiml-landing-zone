@@ -183,7 +183,7 @@ module "containerregistry" {
   depends_on = [module.private_dns_zones, module.hub_vnet_peering]
 }
 
-/*
+
 module "app_configuration" {
   source  = "Azure/avm-res-appconfiguration-configurationstore/azure"
   version = "0.4.0"
@@ -205,8 +205,8 @@ module "app_configuration" {
   soft_delete_retention_days = var.genai_app_configuration_definition.soft_delete_retention_in_days
   tags                       = var.genai_app_configuration_definition.tags
 }
-*/
 
+/*
 resource "azurerm_app_configuration" "this" {
   location                   = azurerm_resource_group.this.location
   name                       = local.genai_app_configuration_name
@@ -239,3 +239,4 @@ resource "azurerm_private_endpoint" "this" {
     private_dns_zone_ids = var.flag_platform_landing_zone ? [module.private_dns_zones.app_configuration_zone.resource_id] : [local.private_dns_zones_existing.app_configuration_zone.resource_id]
   }
 }
+*/
