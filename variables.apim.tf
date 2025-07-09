@@ -1,8 +1,6 @@
 variable "apim_definition" {
   type = object({
     name                = optional(string)
-    location            = string
-    resource_group_name = string
     publisher_email     = string
     additional_locations = optional(list(object({
       location             = string
