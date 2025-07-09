@@ -42,7 +42,125 @@ The following input variables are required:
 
 ### <a name="input_app_gateway_definition"></a> [app\_gateway\_definition](#input\_app\_gateway\_definition)
 
-Description: n/a
+Description: Configuration object for the Azure Application Gateway to be deployed.
+
+- `name` - (Optional) The name of the Application Gateway. If not provided, a name will be generated.
+- `http2_enable` - (Optional) Whether HTTP/2 is enabled. Default is true.
+- `authentication_certificate` - (Optional) Map of authentication certificates for backend authentication.
+  - `name` - The name of the authentication certificate.
+  - `data` - The base64 encoded certificate data.
+- `sku` - (Optional) SKU configuration for the Application Gateway.
+  - `name` - (Optional) The SKU name. Default is "WAF\_v2".
+  - `tier` - (Optional) The SKU tier. Default is "WAF\_v2".
+  - `capacity` - (Optional) The instance capacity (fixed scale units).
+- `autoscale_configuration` - (Optional) Autoscale configuration.
+  - `max_capacity` - (Optional) Maximum number of scale units. Default is 10.
+  - `min_capacity` - (Optional) Minimum number of scale units. Default is 2.
+- `backend_address_pools` - (Required) Map of backend address pools. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `name` - The name of the backend address pool.
+  - `fqdns` - (Optional) Set of FQDNs for the backend pool.
+  - `ip_addresses` - (Optional) Set of IP addresses for the backend pool.
+- `backend_http_settings` - (Required) Map of backend HTTP settings. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `cookie_based_affinity` - (Optional) Cookie-based affinity setting. Default is "Disabled".
+  - `name` - The name of the HTTP settings.
+  - `port` - The port number for backend communication.
+  - `protocol` - The protocol for backend communication (HTTP/HTTPS).
+  - `affinity_cookie_name` - (Optional) Name of the affinity cookie.
+  - `host_name` - (Optional) Host name for backend requests.
+  - `path` - (Optional) Path for backend requests.
+  - `pick_host_name_from_backend_address` - (Optional) Whether to pick host name from backend address.
+  - `probe_name` - (Optional) Name of the health probe to use.
+  - `request_timeout` - (Optional) Request timeout in seconds.
+  - `trusted_root_certificate_names` - (Optional) List of trusted root certificate names.
+  - `authentication_certificate` - (Optional) List of authentication certificates.
+  - `connection_draining` - (Optional) Connection draining configuration.
+- `frontend_ports` - (Required) Map of frontend port configurations. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `name` - The name of the frontend port.
+  - `port` - The port number.
+- `http_listeners` - (Required) Map of HTTP listener configurations. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `name` - The name of the HTTP listener.
+  - `frontend_port_name` - The name of the frontend port to use.
+  - `frontend_ip_configuration_name` - (Optional) Name of the frontend IP configuration.
+  - `firewall_policy_id` - (Optional) Resource ID of the WAF policy.
+  - `require_sni` - (Optional) Whether SNI is required.
+  - `host_name` - (Optional) Host name for the listener.
+  - `host_names` - (Optional) List of host names for the listener.
+  - `ssl_certificate_name` - (Optional) Name of the SSL certificate.
+  - `ssl_profile_name` - (Optional) Name of the SSL profile.
+  - `custom_error_configuration` - (Optional) Custom error page configurations.
+- `probe_configurations` - (Optional) Map of health probe configurations. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `name` - The name of the probe.
+  - `host` - (Optional) Host name for the probe.
+  - `interval` - Probe interval in seconds.
+  - `timeout` - Probe timeout in seconds.
+  - `unhealthy_threshold` - Number of failed probes before marking unhealthy.
+  - `protocol` - Protocol for the probe (HTTP/HTTPS).
+  - `port` - (Optional) Port for the probe.
+  - `path` - Path for the probe.
+  - `pick_host_name_from_backend_http_settings` - (Optional) Whether to use backend HTTP settings host name.
+  - `minimum_servers` - (Optional) Minimum number of servers always marked healthy.
+  - `match` - (Optional) Response matching criteria.
+- `redirect_configuration` - (Optional) Map of redirect configurations. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `include_path` - (Optional) Whether to include path in redirect.
+  - `include_query_string` - (Optional) Whether to include query string in redirect.
+  - `name` - The name of the redirect configuration.
+  - `redirect_type` - The type of redirect.
+  - `target_listener_name` - (Optional) Target listener for redirect.
+  - `target_url` - (Optional) Target URL for redirect.
+- `request_routing_rules` - (Required) Map of request routing rules. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `name` - The name of the routing rule.
+  - `rule_type` - The type of rule (Basic/PathBasedRouting).
+  - `http_listener_name` - The name of the HTTP listener to use.
+  - `backend_address_pool_name` - The name of the backend address pool.
+  - `priority` - The priority of the rule.
+  - `url_path_map_name` - (Optional) Name of the URL path map for path-based routing.
+  - `backend_http_settings_name` - The name of the backend HTTP settings.
+  - `redirect_configuration_name` - (Optional) Name of the redirect configuration.
+  - `rewrite_rule_set_name` - (Optional) Name of the rewrite rule set.
+- `rewrite_rule_set` - (Optional) Map of rewrite rule sets. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `name` - The name of the rewrite rule set.
+  - `rewrite_rules` - (Optional) Map of rewrite rules within the set.
+- `ssl_certificates` - (Optional) Map of SSL certificates. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `name` - The name of the SSL certificate.
+  - `data` - (Optional) Base64 encoded certificate data.
+  - `password` - (Optional) Password for the certificate.
+  - `key_vault_secret_id` - (Optional) Key Vault secret ID containing the certificate.
+- `ssl_policy` - (Optional) SSL policy configuration.
+  - `cipher_suites` - (Optional) List of cipher suites to enable.
+  - `disabled_protocols` - (Optional) List of protocols to disable.
+  - `min_protocol_version` - (Optional) Minimum TLS protocol version. Default is "TLSv1\_2".
+  - `policy_name` - (Optional) Name of the predefined SSL policy.
+  - `policy_type` - (Optional) Type of the SSL policy.
+- `ssl_profile` - (Optional) Map of SSL profiles. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `name` - The name of the SSL profile.
+  - `trusted_client_certificate_names` - (Optional) List of trusted client certificate names.
+  - `verify_client_cert_issuer_dn` - (Optional) Whether to verify client certificate issuer DN.
+  - `verify_client_certificate_revocation` - (Optional) Client certificate revocation verification method.
+  - `ssl_policy` - (Optional) SSL policy for the profile.
+- `trusted_client_certificate` - (Optional) Map of trusted client certificates. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `data` - The base64 encoded certificate data.
+  - `name` - The name of the certificate.
+- `trusted_root_certificate` - (Optional) Map of trusted root certificates. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `data` - (Optional) Base64 encoded certificate data.
+  - `key_vault_secret_id` - (Optional) Key Vault secret ID containing the certificate.
+  - `name` - The name of the certificate.
+- `url_path_map_configurations` - (Optional) Map of URL path map configurations. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `name` - The name of the URL path map.
+  - `default_redirect_configuration_name` - (Optional) Default redirect configuration name.
+  - `default_rewrite_rule_set_name` - (Optional) Default rewrite rule set name.
+  - `default_backend_http_settings_name` - (Optional) Default backend HTTP settings name.
+  - `default_backend_address_pool_name` - (Optional) Default backend address pool name.
+  - `path_rules` - Map of path-based routing rules.
+- `tags` - (Optional) Map of tags to assign to the Application Gateway.
+- `role_assignments` - (Optional) Map of role assignments to create on the Application Gateway. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `role_definition_id_or_name` - The role definition ID or name to assign.
+  - `principal_id` - The principal ID to assign the role to.
+  - `description` - (Optional) Description of the role assignment.
+  - `skip_service_principal_aad_check` - (Optional) Whether to skip AAD check for service principal.
+  - `condition` - (Optional) Condition for the role assignment.
+  - `condition_version` - (Optional) Version of the condition.
+  - `delegated_managed_identity_resource_id` - (Optional) Resource ID of the delegated managed identity.
+  - `principal_type` - (Optional) Type of the principal (User, Group, ServicePrincipal).
 
 Type:
 
@@ -250,19 +368,33 @@ object({
 
 ### <a name="input_location"></a> [location](#input\_location)
 
-Description: Azure region where the resource should be deployed.
+Description: Azure region where all resources should be deployed.
+
+This specifies the primary Azure region for deploying the AI/ML landing zone infrastructure. All resources will be created in this region unless specifically configured otherwise in individual resource definitions.
 
 Type: `string`
 
 ### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
 
-Description: The resource group where the resources will be deployed.
+Description: The name of the resource group where all resources will be deployed.
+
+This resource group will contain all the AI/ML landing zone infrastructure components. The resource group should already exist or will be created as part of the deployment process.
 
 Type: `string`
 
 ### <a name="input_vnet_definition"></a> [vnet\_definition](#input\_vnet\_definition)
 
-Description: n/a
+Description: Configuration object for the Virtual Network (VNet) to be deployed.
+
+- `name` - (Optional) The name of the Virtual Network. If not provided, a name will be generated.
+- `address_space` - (Required) The address space for the Virtual Network in CIDR notation.
+- `ddos_protection_plan_resource_id` - (Optional) Resource ID of the DDoS Protection Plan to associate with the VNet.
+- `dns_servers` - (Optional) Set of custom DNS server IP addresses for the VNet.
+- `subnets` - (Optional) Map of subnet configurations. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `enabled` - (Optional) Whether the subnet is enabled. Default is true.
+  - `name` - (Optional) The name of the subnet. If not provided, a name will be generated.
+  - `address_prefix` - (Optional) The address prefix for the subnet in CIDR notation.
+- `peer_vnet_resource_id` - (Optional) Resource ID of a VNet to peer with this VNet.
 
 Type:
 
@@ -288,7 +420,52 @@ The following input variables are optional (have default values):
 
 ### <a name="input_ai_foundry_definition"></a> [ai\_foundry\_definition](#input\_ai\_foundry\_definition)
 
-Description: n/a
+Description: Configuration object for the Azure AI Foundry project and related resources.
+
+- `ai_foundry_project_description` - (Optional) Description for the AI Foundry project. Default is "AI Foundry project for agent services and AI workloads".
+- `ai_model_deployments` - (Optional) Map of AI model deployments to create. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `name` - The name of the model deployment.
+  - `rai_policy_name` - (Optional) The name of the Responsible AI policy to apply.
+  - `version_upgrade_option` - (Optional) Version upgrade option for the model. Default is "OnceNewDefaultVersionAvailable".
+  - `model` - The model configuration.
+    - `format` - The format of the model.
+    - `name` - The name of the model.
+    - `version` - The version of the model.
+  - `scale` - The scaling configuration for the model.
+    - `capacity` - (Optional) The capacity for the deployment.
+    - `family` - (Optional) The family for the deployment.
+    - `size` - (Optional) The size for the deployment.
+    - `tier` - (Optional) The tier for the deployment.
+    - `type` - The type of scaling (e.g., "Standard", "Manual").
+- `create_ai_agent_service` - (Optional) Whether to create AI agent services. Default is false.
+- `create_project_connections` - (Optional) Whether to create project connections. Default is false.
+- `lock` - (Optional) Resource lock configuration.
+  - `kind` - The type of lock (e.g., "CanNotDelete", "ReadOnly").
+  - `name` - (Optional) The name of the lock. If not provided, a name will be generated.
+- `ai_foundry_resources` - (Optional) Configuration for AI Foundry dependent resources.
+  - `create_dependent_resources` - (Optional) Whether to create dependent resources. Default is true.
+  - `ai_search` - (Optional) AI Search service configuration.
+    - `existing_resource_id` - (Optional) Resource ID of an existing AI Search service to use.
+    - `name` - (Optional) Name for the AI Search service if creating new.
+  - `cosmos_db` - (Optional) Cosmos DB configuration.
+    - `existing_resource_id` - (Optional) Resource ID of an existing Cosmos DB account to use.
+    - `name` - (Optional) Name for the Cosmos DB account if creating new.
+  - `storage_account` - (Optional) Storage account configuration.
+    - `existing_resource_id` - (Optional) Resource ID of an existing storage account to use.
+    - `name` - (Optional) Name for the storage account if creating new.
+  - `key_vault` - (Optional) Key Vault configuration.
+    - `existing_resource_id` - (Optional) Resource ID of an existing Key Vault to use.
+    - `name` - (Optional) Name for the Key Vault if creating new.
+- `role_assignments` - (Optional) Map of role assignments to create on the AI Foundry resources. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `role_definition_id_or_name` - The role definition ID or name to assign.
+  - `principal_id` - The principal ID to assign the role to.
+  - `description` - (Optional) Description of the role assignment.
+  - `skip_service_principal_aad_check` - (Optional) Whether to skip AAD check for service principal.
+  - `condition` - (Optional) Condition for the role assignment.
+  - `condition_version` - (Optional) Version of the condition.
+  - `delegated_managed_identity_resource_id` - (Optional) Resource ID of the delegated managed identity.
+  - `principal_type` - (Optional) Type of the principal (User, Group, ServicePrincipal).
+- `tags` - (Optional) Map of tags to assign to the AI Foundry resources.
 
 Type:
 
@@ -360,7 +537,64 @@ Default: `{}`
 
 ### <a name="input_apim_definition"></a> [apim\_definition](#input\_apim\_definition)
 
-Description: Definition of the API Management service.
+Description: Configuration object for the Azure API Management service to be deployed.
+
+- `name` - (Optional) The name of the API Management service. If not provided, a name will be generated.
+- `publisher_email` - (Required) The email address of the publisher of the API Management service.
+- `publisher_name` - (Required) The name of the publisher of the API Management service.
+- `additional_locations` - (Optional) List of additional locations where the API Management service will be deployed.
+  - `location` - The Azure region for the additional location.
+  - `capacity` - (Optional) The number of units for the additional location.
+  - `zones` - (Optional) List of availability zones for the additional location.
+  - `public_ip_address_id` - (Optional) Resource ID of the public IP address for the additional location.
+  - `gateway_disabled` - (Optional) Whether the gateway is disabled in the additional location.
+  - `virtual_network_configuration` - (Optional) Virtual network configuration for the additional location.
+    - `subnet_id` - The resource ID of the subnet for virtual network integration.
+- `certificate` - (Optional) List of certificates to be uploaded to the API Management service.
+  - `encoded_certificate` - The base64 encoded certificate data.
+  - `store_name` - The certificate store name (e.g., "CertificateAuthority", "Root").
+  - `certificate_password` - (Optional) The password for the certificate.
+- `client_certificate_enabled` - (Optional) Whether client certificate authentication is enabled. Default is false.
+- `hostname_configuration` - (Optional) Hostname configuration for different endpoints.
+  - `management` - (Optional) List of custom hostnames for the management endpoint.
+  - `portal` - (Optional) List of custom hostnames for the developer portal endpoint.
+  - `developer_portal` - (Optional) List of custom hostnames for the new developer portal endpoint.
+  - `proxy` - (Optional) List of custom hostnames for the proxy endpoint.
+  - `scm` - (Optional) List of custom hostnames for the SCM endpoint.  
+    Each hostname configuration includes:
+    - `host_name` - The custom hostname.
+    - `key_vault_id` - (Optional) Resource ID of the Key Vault containing the certificate.
+    - `certificate` - (Optional) Base64 encoded certificate data.
+    - `certificate_password` - (Optional) Password for the certificate.
+    - `negotiate_client_certificate` - (Optional) Whether to negotiate client certificates.
+    - `ssl_keyvault_identity_client_id` - (Optional) Client ID of the user-assigned managed identity for Key Vault access.
+    - `default_ssl_binding` - (Optional, proxy only) Whether this is the default SSL binding.
+- `min_api_version` - (Optional) The minimum API version that the API Management service will accept.
+- `notification_sender_email` - (Optional) Email address from which notifications will be sent.
+- `protocols` - (Optional) Protocol configuration.
+  - `enable_http2` - (Optional) Whether HTTP/2 protocol is enabled. Default is false.
+- `role_assignments` - (Optional) Map of role assignments to create on the API Management service. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `role_definition_id_or_name` - The role definition ID or name to assign.
+  - `principal_id` - The principal ID to assign the role to.
+  - `description` - (Optional) Description of the role assignment.
+  - `skip_service_principal_aad_check` - (Optional) Whether to skip AAD check for service principal.
+  - `condition` - (Optional) Condition for the role assignment.
+  - `condition_version` - (Optional) Version of the condition.
+  - `delegated_managed_identity_resource_id` - (Optional) Resource ID of the delegated managed identity.
+  - `principal_type` - (Optional) Type of the principal (User, Group, ServicePrincipal).
+- `sign_in` - (Optional) Sign-in configuration for the developer portal.
+  - `enabled` - Whether sign-in is enabled.
+- `sign_up` - (Optional) Sign-up configuration for the developer portal.
+  - `enabled` - Whether sign-up is enabled.
+  - `terms_of_service` - Terms of service configuration.
+    - `consent_required` - Whether consent to terms of service is required.
+    - `enabled` - Whether terms of service are enabled.
+    - `text` - (Optional) The terms of service text.
+- `sku_root` - (Optional) The SKU of the API Management service. Default is "Premium".
+- `sku_capacity` - (Optional) The capacity/scale units of the API Management service. Default is 3.
+- `tags` - (Optional) Map of tags to assign to the API Management service.
+- `tenant_access` - (Optional) Tenant access configuration.
+  - `enabled` - Whether tenant access is enabled.
 
 Type:
 
@@ -474,7 +708,12 @@ Default:
 
 ### <a name="input_bastion_definition"></a> [bastion\_definition](#input\_bastion\_definition)
 
-Description: n/a
+Description: Configuration object for the Azure Bastion service to be deployed.
+
+- `name` - (Optional) The name of the Bastion service. If not provided, a name will be generated.
+- `sku` - (Optional) The SKU of the Bastion service. Default is "Standard".
+- `tags` - (Optional) Map of tags to assign to the Bastion service.
+- `zones` - (Optional) List of availability zones for the Bastion service. Default is ["1", "2", "3"].
 
 Type:
 
@@ -491,7 +730,31 @@ Default: `{}`
 
 ### <a name="input_container_app_environment_definition"></a> [container\_app\_environment\_definition](#input\_container\_app\_environment\_definition)
 
-Description: Definition of the Container App Environment to be created for GenAI services.
+Description: Configuration object for the Container App Environment to be created for GenAI services.
+
+- `name` - (Optional) The name of the Container App Environment. If not provided, a name will be generated.
+- `tags` - (Optional) Map of tags to assign to the Container App Environment.
+- `internal_load_balancer_enabled` - (Optional) Whether the load balancer is internal. Default is true.
+- `log_analytics_workspace_resource_id` - (Optional) Resource ID of the Log Analytics workspace for logging.
+- `zone_redundancy_enabled` - (Optional) Whether zone redundancy is enabled. Default is true.
+- `user_assigned_managed_identity_ids` - (Optional) List of user-assigned managed identity resource IDs.
+- `workload_profile` - (Optional) List of workload profiles for the Container App Environment.
+  - `name` - The name of the workload profile.
+  - `workload_profile_type` - The type of workload profile (e.g., "Consumption", "Dedicated").
+- `app_logs_configuration` - (Optional) Application logs configuration.
+  - `destination` - The destination for application logs.
+  - `log_analytics` - (Optional) Log Analytics configuration when destination is "log-analytics".
+    - `customer_id` - The Log Analytics workspace customer ID.
+    - `shared_key` - The Log Analytics workspace shared key.
+- `role_assignments` - (Optional) Map of role assignments to create on the Container App Environment. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `role_definition_id_or_name` - The role definition ID or name to assign.
+  - `principal_id` - The principal ID to assign the role to.
+  - `description` - (Optional) Description of the role assignment.
+  - `skip_service_principal_aad_check` - (Optional) Whether to skip AAD check for service principal.
+  - `condition` - (Optional) Condition for the role assignment.
+  - `condition_version` - (Optional) Version of the condition.
+  - `delegated_managed_identity_resource_id` - (Optional) Resource ID of the delegated managed identity.
+  - `principal_type` - (Optional) Type of the principal (User, Group, ServicePrincipal).
 
 Type:
 
@@ -545,7 +808,13 @@ Default: `true`
 
 ### <a name="input_firewall_definition"></a> [firewall\_definition](#input\_firewall\_definition)
 
-Description: n/a
+Description: Configuration object for the Azure Firewall to be deployed.
+
+- `name` - (Optional) The name of the Azure Firewall. If not provided, a name will be generated.
+- `sku` - (Optional) The SKU of the Azure Firewall. Default is "AZFW\_VNet".
+- `tier` - (Optional) The tier of the Azure Firewall. Default is "Standard".
+- `zones` - (Optional) List of availability zones for the Azure Firewall. Default is ["1", "2", "3"].
+- `tags` - (Optional) Map of tags to assign to the Azure Firewall.
 
 Type:
 
@@ -563,7 +832,9 @@ Default: `{}`
 
 ### <a name="input_flag_platform_landing_zone"></a> [flag\_platform\_landing\_zone](#input\_flag\_platform\_landing\_zone)
 
-Description: Flag to indicate if the platform landing zone is enabled. If true, the module will deploy resources and connect to a platform landing zone hub.
+Description: Flag to indicate if the platform landing zone is enabled.
+
+If set to true, the module will deploy resources and connect to a platform landing zone hub. This enables integration with existing hub-and-spoke network architectures and centralized management services.
 
 Type: `bool`
 
@@ -571,7 +842,13 @@ Default: `true`
 
 ### <a name="input_flag_split_deployment_persona"></a> [flag\_split\_deployment\_persona](#input\_flag\_split\_deployment\_persona)
 
-Description: Flag to indicate which part to deploy in a split deployment. Valid values are build, or lza. If set to build, the module will deploy the initial vnet, bastion, and build machine resources. If set to platform, the module will deploy the remaining landing zone resources.
+Description: Flag to indicate which part to deploy in a split deployment scenario.
+
+Valid values are:
+- `build` - Deploy only the initial VNet, Bastion, and build machine resources for the build environment
+- `lza` - Deploy the complete landing zone resources including all AI/ML services and networking components
+
+This allows for staged deployments where infrastructure can be deployed in phases.
 
 Type: `string`
 
@@ -579,7 +856,26 @@ Default: `"lza"`
 
 ### <a name="input_genai_app_configuration_definition"></a> [genai\_app\_configuration\_definition](#input\_genai\_app\_configuration\_definition)
 
-Description: Definition of the App Configuration to be created for GenAI services.
+Description: Configuration object for the Azure App Configuration service to be created for GenAI services.
+
+- `data_plan_proxy` - (Optional) Data plane proxy configuration for private endpoints.
+  - `authentication_mode` - The authentication mode for the data plane proxy.
+  - `private_link_delegation` - The private link delegation setting.
+- `name` - (Optional) The name of the App Configuration store. If not provided, a name will be generated.
+- `local_auth_enabled` - (Optional) Whether local authentication is enabled. Default is false.
+- `purge_protection_enabled` - (Optional) Whether purge protection is enabled. Default is true.
+- `sku` - (Optional) The SKU of the App Configuration store. Default is "standard".
+- `soft_delete_retention_in_days` - (Optional) The retention period in days for soft delete. Default is 7.
+- `tags` - (Optional) Map of tags to assign to the App Configuration store.
+- `role_assignments` - (Optional) Map of role assignments to create on the App Configuration store. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `role_definition_id_or_name` - The role definition ID or name to assign.
+  - `principal_id` - The principal ID to assign the role to.
+  - `description` - (Optional) Description of the role assignment.
+  - `skip_service_principal_aad_check` - (Optional) Whether to skip AAD check for service principal.
+  - `condition` - (Optional) Condition for the role assignment.
+  - `condition_version` - (Optional) Version of the condition.
+  - `delegated_managed_identity_resource_id` - (Optional) Resource ID of the delegated managed identity.
+  - `principal_type` - (Optional) Type of the principal (User, Group, ServicePrincipal).
 
 Type:
 
@@ -612,7 +908,22 @@ Default: `{}`
 
 ### <a name="input_genai_container_registry_definition"></a> [genai\_container\_registry\_definition](#input\_genai\_container\_registry\_definition)
 
-Description: Definition of the Container Registry to be created for GenAI services.
+Description: Configuration object for the Azure Container Registry to be created for GenAI services.
+
+- `name` - (Optional) The name of the Container Registry. If not provided, a name will be generated.
+- `sku` - (Optional) The SKU of the Container Registry. Default is "Premium".
+- `zone_redundancy_enabled` - (Optional) Whether zone redundancy is enabled. Default is true.
+- `public_network_access_enabled` - (Optional) Whether public network access is enabled. Default is false.
+- `tags` - (Optional) Map of tags to assign to the Container Registry.
+- `role_assignments` - (Optional) Map of role assignments to create on the Container Registry. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `role_definition_id_or_name` - The role definition ID or name to assign.
+  - `principal_id` - The principal ID to assign the role to.
+  - `description` - (Optional) Description of the role assignment.
+  - `skip_service_principal_aad_check` - (Optional) Whether to skip AAD check for service principal.
+  - `condition` - (Optional) Condition for the role assignment.
+  - `condition_version` - (Optional) Version of the condition.
+  - `delegated_managed_identity_resource_id` - (Optional) Resource ID of the delegated managed identity.
+  - `principal_type` - (Optional) Type of the principal (User, Group, ServicePrincipal).
 
 Type:
 
@@ -640,7 +951,41 @@ Default: `{}`
 
 ### <a name="input_genai_cosmosdb_definition"></a> [genai\_cosmosdb\_definition](#input\_genai\_cosmosdb\_definition)
 
-Description: Definition of the Cosmos DB account to be created for GenAI services.
+Description: Configuration object for the Azure Cosmos DB account to be created for GenAI services.
+
+- `name` - (Optional) The name of the Cosmos DB account. If not provided, a name will be generated.
+- `secondary_regions` - (Optional) List of secondary regions for geo-replication.
+  - `location` - The Azure region for the secondary location.
+  - `zone_redundant` - (Optional) Whether zone redundancy is enabled for the secondary region. Default is true.
+  - `failover_priority` - (Optional) The failover priority for the secondary region. Default is 0.
+- `public_network_access_enabled` - (Optional) Whether public network access is enabled. Default is false.
+- `analytical_storage_enabled` - (Optional) Whether analytical storage is enabled. Default is true.
+- `automatic_failover_enabled` - (Optional) Whether automatic failover is enabled. Default is false.
+- `local_authentication_disabled` - (Optional) Whether local authentication is disabled. Default is true.
+- `partition_merge_enabled` - (Optional) Whether partition merge is enabled. Default is false.
+- `multiple_write_locations_enabled` - (Optional) Whether multiple write locations are enabled. Default is false.
+- `analytical_storage_config` - (Optional) Analytical storage configuration.
+  - `schema_type` - The schema type for analytical storage.
+- `consistency_policy` - (Optional) Consistency policy configuration.
+  - `max_interval_in_seconds` - (Optional) Maximum staleness interval in seconds. Default is 300.
+  - `max_staleness_prefix` - (Optional) Maximum staleness prefix. Default is 100001.
+  - `consistency_level` - (Optional) The consistency level. Default is "BoundedStaleness".
+- `backup` - (Optional) Backup configuration.
+  - `retention_in_hours` - (Optional) Backup retention in hours.
+  - `interval_in_minutes` - (Optional) Backup interval in minutes.
+  - `storage_redundancy` - (Optional) Storage redundancy for backups.
+  - `type` - (Optional) The backup type.
+  - `tier` - (Optional) The backup tier.
+- `capabilities` - (Optional) Set of capabilities to enable on the Cosmos DB account.
+  - `name` - The name of the capability.
+- `capacity` - (Optional) Capacity configuration.
+  - `total_throughput_limit` - (Optional) Total throughput limit. Default is -1 (unlimited).
+- `cors_rule` - (Optional) CORS rule configuration.
+  - `allowed_headers` - Set of allowed headers.
+  - `allowed_methods` - Set of allowed HTTP methods.
+  - `allowed_origins` - Set of allowed origins.
+  - `exposed_headers` - Set of exposed headers.
+  - `max_age_in_seconds` - (Optional) Maximum age in seconds for CORS.
 
 Type:
 
@@ -694,7 +1039,21 @@ Default: `{}`
 
 ### <a name="input_genai_key_vault_definition"></a> [genai\_key\_vault\_definition](#input\_genai\_key\_vault\_definition)
 
-Description: Definition of the Key Vault to be created for GenAI services.
+Description: Configuration object for the Azure Key Vault to be created for GenAI services.
+
+- `name` - (Optional) The name of the Key Vault. If not provided, a name will be generated.
+- `sku` - (Optional) The SKU of the Key Vault. Default is "standard".
+- `tenant_id` - (Optional) The tenant ID for the Key Vault. If not provided, the current tenant will be used.
+- `role_assignments` - (Optional) Map of role assignments to create on the Key Vault. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `role_definition_id_or_name` - The role definition ID or name to assign.
+  - `principal_id` - The principal ID to assign the role to.
+  - `description` - (Optional) Description of the role assignment.
+  - `skip_service_principal_aad_check` - (Optional) Whether to skip AAD check for service principal.
+  - `condition` - (Optional) Condition for the role assignment.
+  - `condition_version` - (Optional) Version of the condition.
+  - `delegated_managed_identity_resource_id` - (Optional) Resource ID of the delegated managed identity.
+  - `principal_type` - (Optional) Type of the principal (User, Group, ServicePrincipal).
+- `tags` - (Optional) Map of tags to assign to the Key Vault.
 
 Type:
 
@@ -721,7 +1080,26 @@ Default: `{}`
 
 ### <a name="input_genai_storage_account_definition"></a> [genai\_storage\_account\_definition](#input\_genai\_storage\_account\_definition)
 
-Description: Definition of the Storage Account to be created for GenAI services.
+Description: Configuration object for the Azure Storage Account to be created for GenAI services.
+
+- `name` - (Optional) The name of the Storage Account. If not provided, a name will be generated.
+- `account_kind` - (Optional) The kind of storage account. Default is "StorageV2".
+- `account_tier` - (Optional) The performance tier of the storage account. Default is "Standard".
+- `account_replication_type` - (Optional) The replication type for the storage account. Default is "GRS".
+- `endpoint_types` - (Optional) Set of endpoint types to enable. Default is ["blob"].
+- `access_tier` - (Optional) The access tier for the storage account. Default is "Hot".
+- `public_network_access_enabled` - (Optional) Whether public network access is enabled. Default is false.
+- `shared_access_key_enabled` - (Optional) Whether shared access keys are enabled. Default is true.
+- `role_assignments` - (Optional) Map of role assignments to create on the Storage Account. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `role_definition_id_or_name` - The role definition ID or name to assign.
+  - `principal_id` - The principal ID to assign the role to.
+  - `description` - (Optional) Description of the role assignment.
+  - `skip_service_principal_aad_check` - (Optional) Whether to skip AAD check for service principal.
+  - `condition` - (Optional) Condition for the role assignment.
+  - `condition_version` - (Optional) Version of the condition.
+  - `delegated_managed_identity_resource_id` - (Optional) Resource ID of the delegated managed identity.
+  - `principal_type` - (Optional) Type of the principal (User, Group, ServicePrincipal).
+- `tags` - (Optional) Map of tags to assign to the Storage Account.
 
 Type:
 
@@ -756,7 +1134,21 @@ Default: `{}`
 
 ### <a name="input_hub_vnet_peering_definition"></a> [hub\_vnet\_peering\_definition](#input\_hub\_vnet\_peering\_definition)
 
-Description: n/a
+Description: Configuration object for VNet peering with a hub network.
+
+- `peer_vnet_resource_id` - (Optional) Resource ID of the hub VNet to peer with.
+- `firewall_ip_address` - (Optional) IP address of the firewall in the hub VNet for routing configuration.
+- `name` - (Optional) The name of the peering connection. If not provided, a name will be generated.
+- `allow_forwarded_traffic` - (Optional) Whether forwarded traffic is allowed across the peering. Default is true.
+- `allow_gateway_transit` - (Optional) Whether gateway transit is allowed. Default is true.
+- `allow_virtual_network_access` - (Optional) Whether virtual network access is allowed. Default is true.
+- `create_reverse_peering` - (Optional) Whether to create the reverse peering connection. Default is true.
+- `reverse_allow_forwarded_traffic` - (Optional) Whether forwarded traffic is allowed in the reverse direction. Default is false.
+- `reverse_allow_gateway_transit` - (Optional) Whether gateway transit is allowed in the reverse direction. Default is false.
+- `reverse_allow_virtual_network_access` - (Optional) Whether virtual network access is allowed in the reverse direction. Default is true.
+- `reverse_name` - (Optional) The name of the reverse peering connection.
+- `reverse_use_remote_gateways` - (Optional) Whether to use remote gateways in the reverse direction. Default is false.
+- `use_remote_gateways` - (Optional) Whether to use remote gateways. Default is false.
 
 Type:
 
@@ -782,7 +1174,12 @@ Default: `{}`
 
 ### <a name="input_jumpvm_definition"></a> [jumpvm\_definition](#input\_jumpvm\_definition)
 
-Description: Definition of the Jump VM to be created for managing the implementation services.
+Description: Configuration object for the Jump VM to be created for managing the implementation services.
+
+- `name` - (Optional) The name of the Jump VM. If not provided, a name will be generated.
+- `sku` - (Optional) The VM size/SKU for the Jump VM. Default is "Standard\_B2s".
+- `tags` - (Optional) Map of tags to assign to the Jump VM.
+- `enable_telemetry` - (Optional) Whether telemetry is enabled for the Jump VM module. Default is true.
 
 Type:
 
@@ -799,7 +1196,26 @@ Default: `{}`
 
 ### <a name="input_ks_ai_search_definition"></a> [ks\_ai\_search\_definition](#input\_ks\_ai\_search\_definition)
 
-Description: Definition of the AI Search service to be created as part of the enterprise and public knowledge services.
+Description: Configuration object for the Azure AI Search service to be created as part of the enterprise and public knowledge services.
+
+- `name` - (Optional) The name of the AI Search service. If not provided, a name will be generated.
+- `sku` - (Optional) The SKU of the AI Search service. Default is "standard".
+- `local_authentication_enabled` - (Optional) Whether local authentication is enabled. Default is true.
+- `partition_count` - (Optional) The number of partitions for the search service. Default is 1.
+- `public_network_access_enabled` - (Optional) Whether public network access is enabled. Default is false.
+- `replica_count` - (Optional) The number of replicas for the search service. Default is 2.
+- `semantic_search_sku` - (Optional) The SKU for semantic search capabilities. Default is "standard".
+- `tags` - (Optional) Map of tags to assign to the AI Search service.
+- `role_assignments` - (Optional) Map of role assignments to create on the AI Search service. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `role_definition_id_or_name` - The role definition ID or name to assign.
+  - `principal_id` - The principal ID to assign the role to.
+  - `description` - (Optional) Description of the role assignment.
+  - `skip_service_principal_aad_check` - (Optional) Whether to skip AAD check for service principal.
+  - `condition` - (Optional) Condition for the role assignment.
+  - `condition_version` - (Optional) Version of the condition.
+  - `delegated_managed_identity_resource_id` - (Optional) Resource ID of the delegated managed identity.
+  - `principal_type` - (Optional) Type of the principal (User, Group, ServicePrincipal).
+- `enable_telemetry` - (Optional) Whether telemetry is enabled for the AI Search module. Default is true.
 
 Type:
 
@@ -831,7 +1247,11 @@ Default: `{}`
 
 ### <a name="input_ks_bing_grounding_definition"></a> [ks\_bing\_grounding\_definition](#input\_ks\_bing\_grounding\_definition)
 
-Description: Definition of the Bing Grounding service to be created as part of the enterprise and public knowledge services.
+Description: Configuration object for the Bing Grounding service to be created as part of the enterprise and public knowledge services.
+
+- `name` - (Optional) The name of the Bing Grounding service. If not provided, a name will be generated.
+- `sku` - (Optional) The SKU of the Bing Grounding service. Default is "G1".
+- `tags` - (Optional) Map of tags to assign to the Bing Grounding service.
 
 Type:
 
@@ -847,7 +1267,13 @@ Default: `{}`
 
 ### <a name="input_law_definition"></a> [law\_definition](#input\_law\_definition)
 
-Description: Definition of the Log Analytics Workspace to be created. If `resource_id` is provided, the workspace will not be created and the other inputs will be ignored, and the workspace id provided will be used.
+Description: Configuration object for the Log Analytics Workspace to be created for monitoring and logging.
+
+- `resource_id` - (Optional) The resource ID of an existing Log Analytics Workspace to use. If provided, the workspace will not be created and the other inputs will be ignored.
+- `name` - (Optional) The name of the Log Analytics Workspace. If not provided, a name will be generated.
+- `retention` - (Optional) The data retention period in days for the workspace. Default is 30.
+- `sku` - (Optional) The SKU of the Log Analytics Workspace. Default is "PerGB2018".
+- `tags` - (Optional) Map of tags to assign to the Log Analytics Workspace.
 
 Type:
 
@@ -865,7 +1291,9 @@ Default: `{}`
 
 ### <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix)
 
-Description: Optional Prefix to be used for naming resources. This is useful for ensuring standard naming without requiring a name input for each name.
+Description: Optional prefix to be used for naming resources.
+
+This prefix will be applied to all resource names generated by the module. It is useful for ensuring consistent naming conventions across deployments without requiring explicit names for each resource. The prefix should be kept under 10 characters and use only alphanumeric lowercase characters to avoid Azure naming limitations.
 
 Type: `string`
 
@@ -873,7 +1301,31 @@ Default: `null`
 
 ### <a name="input_nsgs_definition"></a> [nsgs\_definition](#input\_nsgs\_definition)
 
-Description: n/a
+Description: Configuration object for Network Security Groups (NSGs) to be deployed.
+
+- `name` - (Optional) The name of the Network Security Group. If not provided, a name will be generated.
+- `security_rules` - (Optional) Map of security rules for the NSG. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `access` - Whether to allow or deny traffic (Allow/Deny).
+  - `description` - (Optional) Description of the security rule.
+  - `destination_address_prefix` - (Optional) Destination address prefix (CIDR or service tag).
+  - `destination_address_prefixes` - (Optional) Set of destination address prefixes.
+  - `destination_application_security_group_ids` - (Optional) Set of destination Application Security Group resource IDs.
+  - `destination_port_range` - (Optional) Destination port or port range.
+  - `destination_port_ranges` - (Optional) Set of destination ports or port ranges.
+  - `direction` - Direction of traffic (Inbound/Outbound).
+  - `name` - The name of the security rule.
+  - `priority` - Priority of the rule (100-4096).
+  - `protocol` - Protocol for the rule (TCP/UDP/ICMP/ESP/AH/*).
+  - `source_address_prefix` - (Optional) Source address prefix (CIDR or service tag).
+  - `source_address_prefixes` - (Optional) Set of source address prefixes.
+  - `source_application_security_group_ids` - (Optional) Set of source Application Security Group resource IDs.
+  - `source_port_range` - (Optional) Source port or port range.
+  - `source_port_ranges` - (Optional) Set of source ports or port ranges.
+  - `timeouts` - (Optional) Timeout configuration for resource operations.
+    - `create` - (Optional) Create timeout.
+    - `delete` - (Optional) Delete timeout.
+    - `read` - (Optional) Read timeout.
+    - `update` - (Optional) Update timeout.
 
 Type:
 
@@ -911,7 +1363,14 @@ Default: `{}`
 
 ### <a name="input_private_dns_zones"></a> [private\_dns\_zones](#input\_private\_dns\_zones)
 
-Description: n/a
+Description: Configuration object for Private DNS Zones and their network links.
+
+- `existing_zones_subscription_id` - (Optional) Subscription ID where existing Private DNS Zones are located.
+- `existing_zones_resource_group_name` - (Optional) Resource group name where existing Private DNS Zones are located.
+- `network_links` - (Optional) Map of network links to create for Private DNS Zones. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `vnetlinkname` - The name of the virtual network link.
+  - `vnetid` - The resource ID of the virtual network to link.
+  - `autoregistration` - (Optional) Whether auto-registration is enabled for the link. Default is false.
 
 Type:
 
@@ -931,7 +1390,9 @@ Default: `{}`
 
 ### <a name="input_tags"></a> [tags](#input\_tags)
 
-Description: Map of tags to be assigned to this resource
+Description: Map of tags to be assigned to all resources created by this module.
+
+Tags are key-value pairs that help organize and manage Azure resources. These tags will be applied to all resources created by the module, enabling consistent resource governance, cost tracking, and operational management across the AI/ML landing zone infrastructure.
 
 Type: `map(string)`
 
@@ -939,7 +1400,34 @@ Default: `null`
 
 ### <a name="input_waf_policy_definition"></a> [waf\_policy\_definition](#input\_waf\_policy\_definition)
 
-Description: n/a
+Description: Configuration object for the Web Application Firewall (WAF) Policy to be deployed.
+
+- `name` - (Optional) The name of the WAF Policy. If not provided, a name will be generated.
+- `policy_settings` - (Optional) Policy settings configuration.
+  - `enabled` - (Optional) Whether the WAF policy is enabled. Default is true.
+  - `mode` - (Optional) The mode of the WAF policy (Detection/Prevention). Default is "Prevention".
+  - `request_body_check` - (Optional) Whether request body inspection is enabled. Default is true.
+  - `max_request_body_size_kb` - (Optional) Maximum request body size in KB. Default is 128.
+  - `file_upload_limit_mb` - (Optional) File upload limit in MB. Default is 100.
+- `managed_rules` - (Optional) Managed rules configuration.
+  - `exclusion` - (Optional) Map of rule exclusions. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+    - `match_variable` - The variable to match for exclusion.
+    - `selector` - The selector for the match variable.
+    - `selector_match_operator` - The operator for matching the selector.
+    - `excluded_rule_set` - (Optional) Specific rule set exclusions.
+      - `type` - (Optional) The type of rule set.
+      - `version` - (Optional) The version of rule set.
+      - `rule_group` - (Optional) List of rule groups to exclude.
+  - `managed_rule_set` - Map of managed rule sets to apply. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+    - `type` - (Optional) The type of managed rule set.
+    - `version` - The version of the managed rule set.
+    - `rule_group_override` - (Optional) Map of rule group overrides.
+      - `rule_group_name` - The name of the rule group to override.
+      - `rule` - (Optional) List of specific rules to override.
+        - `action` - (Optional) The action to take for the rule.
+        - `enabled` - (Optional) Whether the rule is enabled.
+        - `id` - The ID of the rule.
+- `tags` - (Optional) Map of tags to assign to the WAF Policy.
 
 Type:
 

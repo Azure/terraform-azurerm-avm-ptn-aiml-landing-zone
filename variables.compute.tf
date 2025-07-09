@@ -33,5 +33,31 @@ variable "container_app_environment_definition" {
     })), {})
   })
   default     = {}
-  description = "Definition of the Container App Environment to be created for GenAI services."
+  description = <<DESCRIPTION
+Configuration object for the Container App Environment to be created for GenAI services.
+
+- `name` - (Optional) The name of the Container App Environment. If not provided, a name will be generated.
+- `tags` - (Optional) Map of tags to assign to the Container App Environment.
+- `internal_load_balancer_enabled` - (Optional) Whether the load balancer is internal. Default is true.
+- `log_analytics_workspace_resource_id` - (Optional) Resource ID of the Log Analytics workspace for logging.
+- `zone_redundancy_enabled` - (Optional) Whether zone redundancy is enabled. Default is true.
+- `user_assigned_managed_identity_ids` - (Optional) List of user-assigned managed identity resource IDs.
+- `workload_profile` - (Optional) List of workload profiles for the Container App Environment.
+  - `name` - The name of the workload profile.
+  - `workload_profile_type` - The type of workload profile (e.g., "Consumption", "Dedicated").
+- `app_logs_configuration` - (Optional) Application logs configuration.
+  - `destination` - The destination for application logs.
+  - `log_analytics` - (Optional) Log Analytics configuration when destination is "log-analytics".
+    - `customer_id` - The Log Analytics workspace customer ID.
+    - `shared_key` - The Log Analytics workspace shared key.
+- `role_assignments` - (Optional) Map of role assignments to create on the Container App Environment. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `role_definition_id_or_name` - The role definition ID or name to assign.
+  - `principal_id` - The principal ID to assign the role to.
+  - `description` - (Optional) Description of the role assignment.
+  - `skip_service_principal_aad_check` - (Optional) Whether to skip AAD check for service principal.
+  - `condition` - (Optional) Condition for the role assignment.
+  - `condition_version` - (Optional) Version of the condition.
+  - `delegated_managed_identity_resource_id` - (Optional) Resource ID of the delegated managed identity.
+  - `principal_type` - (Optional) Type of the principal (User, Group, ServicePrincipal).
+DESCRIPTION
 }

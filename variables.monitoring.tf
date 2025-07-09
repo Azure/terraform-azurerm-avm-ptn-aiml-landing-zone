@@ -7,5 +7,13 @@ variable "law_definition" {
     tags        = optional(map(string), {})
   })
   default     = {}
-  description = "Definition of the Log Analytics Workspace to be created. If `resource_id` is provided, the workspace will not be created and the other inputs will be ignored, and the workspace id provided will be used."
+  description = <<DESCRIPTION
+Configuration object for the Log Analytics Workspace to be created for monitoring and logging.
+
+- `resource_id` - (Optional) The resource ID of an existing Log Analytics Workspace to use. If provided, the workspace will not be created and the other inputs will be ignored.
+- `name` - (Optional) The name of the Log Analytics Workspace. If not provided, a name will be generated.
+- `retention` - (Optional) The data retention period in days for the workspace. Default is 30.
+- `sku` - (Optional) The SKU of the Log Analytics Workspace. Default is "PerGB2018".
+- `tags` - (Optional) Map of tags to assign to the Log Analytics Workspace.
+DESCRIPTION
 }

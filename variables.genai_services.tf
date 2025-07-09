@@ -22,7 +22,28 @@ variable "genai_app_configuration_definition" {
     })), {})
   })
   default     = {}
-  description = "Definition of the App Configuration to be created for GenAI services."
+  description = <<DESCRIPTION
+Configuration object for the Azure App Configuration service to be created for GenAI services.
+
+- `data_plan_proxy` - (Optional) Data plane proxy configuration for private endpoints.
+  - `authentication_mode` - The authentication mode for the data plane proxy.
+  - `private_link_delegation` - The private link delegation setting.
+- `name` - (Optional) The name of the App Configuration store. If not provided, a name will be generated.
+- `local_auth_enabled` - (Optional) Whether local authentication is enabled. Default is false.
+- `purge_protection_enabled` - (Optional) Whether purge protection is enabled. Default is true.
+- `sku` - (Optional) The SKU of the App Configuration store. Default is "standard".
+- `soft_delete_retention_in_days` - (Optional) The retention period in days for soft delete. Default is 7.
+- `tags` - (Optional) Map of tags to assign to the App Configuration store.
+- `role_assignments` - (Optional) Map of role assignments to create on the App Configuration store. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `role_definition_id_or_name` - The role definition ID or name to assign.
+  - `principal_id` - The principal ID to assign the role to.
+  - `description` - (Optional) Description of the role assignment.
+  - `skip_service_principal_aad_check` - (Optional) Whether to skip AAD check for service principal.
+  - `condition` - (Optional) Condition for the role assignment.
+  - `condition_version` - (Optional) Version of the condition.
+  - `delegated_managed_identity_resource_id` - (Optional) Resource ID of the delegated managed identity.
+  - `principal_type` - (Optional) Type of the principal (User, Group, ServicePrincipal).
+DESCRIPTION
 }
 
 #TODO:
@@ -46,7 +67,24 @@ variable "genai_container_registry_definition" {
     })), {})
   })
   default     = {}
-  description = "Definition of the Container Registry to be created for GenAI services."
+  description = <<DESCRIPTION
+Configuration object for the Azure Container Registry to be created for GenAI services.
+
+- `name` - (Optional) The name of the Container Registry. If not provided, a name will be generated.
+- `sku` - (Optional) The SKU of the Container Registry. Default is "Premium".
+- `zone_redundancy_enabled` - (Optional) Whether zone redundancy is enabled. Default is true.
+- `public_network_access_enabled` - (Optional) Whether public network access is enabled. Default is false.
+- `tags` - (Optional) Map of tags to assign to the Container Registry.
+- `role_assignments` - (Optional) Map of role assignments to create on the Container Registry. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `role_definition_id_or_name` - The role definition ID or name to assign.
+  - `principal_id` - The principal ID to assign the role to.
+  - `description` - (Optional) Description of the role assignment.
+  - `skip_service_principal_aad_check` - (Optional) Whether to skip AAD check for service principal.
+  - `condition` - (Optional) Condition for the role assignment.
+  - `condition_version` - (Optional) Version of the condition.
+  - `delegated_managed_identity_resource_id` - (Optional) Resource ID of the delegated managed identity.
+  - `principal_type` - (Optional) Type of the principal (User, Group, ServicePrincipal).
+DESCRIPTION
 }
 
 variable "genai_cosmosdb_definition" {
@@ -96,7 +134,43 @@ variable "genai_cosmosdb_definition" {
 
   })
   default     = {}
-  description = "Definition of the Cosmos DB account to be created for GenAI services."
+  description = <<DESCRIPTION
+Configuration object for the Azure Cosmos DB account to be created for GenAI services.
+
+- `name` - (Optional) The name of the Cosmos DB account. If not provided, a name will be generated.
+- `secondary_regions` - (Optional) List of secondary regions for geo-replication.
+  - `location` - The Azure region for the secondary location.
+  - `zone_redundant` - (Optional) Whether zone redundancy is enabled for the secondary region. Default is true.
+  - `failover_priority` - (Optional) The failover priority for the secondary region. Default is 0.
+- `public_network_access_enabled` - (Optional) Whether public network access is enabled. Default is false.
+- `analytical_storage_enabled` - (Optional) Whether analytical storage is enabled. Default is true.
+- `automatic_failover_enabled` - (Optional) Whether automatic failover is enabled. Default is false.
+- `local_authentication_disabled` - (Optional) Whether local authentication is disabled. Default is true.
+- `partition_merge_enabled` - (Optional) Whether partition merge is enabled. Default is false.
+- `multiple_write_locations_enabled` - (Optional) Whether multiple write locations are enabled. Default is false.
+- `analytical_storage_config` - (Optional) Analytical storage configuration.
+  - `schema_type` - The schema type for analytical storage.
+- `consistency_policy` - (Optional) Consistency policy configuration.
+  - `max_interval_in_seconds` - (Optional) Maximum staleness interval in seconds. Default is 300.
+  - `max_staleness_prefix` - (Optional) Maximum staleness prefix. Default is 100001.
+  - `consistency_level` - (Optional) The consistency level. Default is "BoundedStaleness".
+- `backup` - (Optional) Backup configuration.
+  - `retention_in_hours` - (Optional) Backup retention in hours.
+  - `interval_in_minutes` - (Optional) Backup interval in minutes.
+  - `storage_redundancy` - (Optional) Storage redundancy for backups.
+  - `type` - (Optional) The backup type.
+  - `tier` - (Optional) The backup tier.
+- `capabilities` - (Optional) Set of capabilities to enable on the Cosmos DB account.
+  - `name` - The name of the capability.
+- `capacity` - (Optional) Capacity configuration.
+  - `total_throughput_limit` - (Optional) Total throughput limit. Default is -1 (unlimited).
+- `cors_rule` - (Optional) CORS rule configuration.
+  - `allowed_headers` - Set of allowed headers.
+  - `allowed_methods` - Set of allowed HTTP methods.
+  - `allowed_origins` - Set of allowed origins.
+  - `exposed_headers` - Set of exposed headers.
+  - `max_age_in_seconds` - (Optional) Maximum age in seconds for CORS.
+DESCRIPTION
 }
 
 variable "genai_key_vault_definition" {
@@ -117,7 +191,23 @@ variable "genai_key_vault_definition" {
     tags = optional(map(string), {})
   })
   default     = {}
-  description = "Definition of the Key Vault to be created for GenAI services."
+  description = <<DESCRIPTION
+Configuration object for the Azure Key Vault to be created for GenAI services.
+
+- `name` - (Optional) The name of the Key Vault. If not provided, a name will be generated.
+- `sku` - (Optional) The SKU of the Key Vault. Default is "standard".
+- `tenant_id` - (Optional) The tenant ID for the Key Vault. If not provided, the current tenant will be used.
+- `role_assignments` - (Optional) Map of role assignments to create on the Key Vault. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `role_definition_id_or_name` - The role definition ID or name to assign.
+  - `principal_id` - The principal ID to assign the role to.
+  - `description` - (Optional) Description of the role assignment.
+  - `skip_service_principal_aad_check` - (Optional) Whether to skip AAD check for service principal.
+  - `condition` - (Optional) Condition for the role assignment.
+  - `condition_version` - (Optional) Version of the condition.
+  - `delegated_managed_identity_resource_id` - (Optional) Resource ID of the delegated managed identity.
+  - `principal_type` - (Optional) Type of the principal (User, Group, ServicePrincipal).
+- `tags` - (Optional) Map of tags to assign to the Key Vault.
+DESCRIPTION
 }
 
 variable "genai_storage_account_definition" {
@@ -146,5 +236,26 @@ variable "genai_storage_account_definition" {
     # Implement subservice passthrough here
   })
   default     = {}
-  description = "Definition of the Storage Account to be created for GenAI services."
+  description = <<DESCRIPTION
+Configuration object for the Azure Storage Account to be created for GenAI services.
+
+- `name` - (Optional) The name of the Storage Account. If not provided, a name will be generated.
+- `account_kind` - (Optional) The kind of storage account. Default is "StorageV2".
+- `account_tier` - (Optional) The performance tier of the storage account. Default is "Standard".
+- `account_replication_type` - (Optional) The replication type for the storage account. Default is "GRS".
+- `endpoint_types` - (Optional) Set of endpoint types to enable. Default is ["blob"].
+- `access_tier` - (Optional) The access tier for the storage account. Default is "Hot".
+- `public_network_access_enabled` - (Optional) Whether public network access is enabled. Default is false.
+- `shared_access_key_enabled` - (Optional) Whether shared access keys are enabled. Default is true.
+- `role_assignments` - (Optional) Map of role assignments to create on the Storage Account. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `role_definition_id_or_name` - The role definition ID or name to assign.
+  - `principal_id` - The principal ID to assign the role to.
+  - `description` - (Optional) Description of the role assignment.
+  - `skip_service_principal_aad_check` - (Optional) Whether to skip AAD check for service principal.
+  - `condition` - (Optional) Condition for the role assignment.
+  - `condition_version` - (Optional) Version of the condition.
+  - `delegated_managed_identity_resource_id` - (Optional) Resource ID of the delegated managed identity.
+  - `principal_type` - (Optional) Type of the principal (User, Group, ServicePrincipal).
+- `tags` - (Optional) Map of tags to assign to the Storage Account.
+DESCRIPTION
 }
