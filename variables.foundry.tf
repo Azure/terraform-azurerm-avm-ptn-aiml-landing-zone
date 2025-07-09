@@ -1,6 +1,6 @@
 variable "ai_foundry_definition" {
   type = object({
-    ai_foundry_project_description = string
+    ai_foundry_project_description = optional(string, "AI Foundry project for agent services and AI workloads")
     ai_model_deployments = optional(map(object({
       name                   = string
       rai_policy_name        = optional(string)
@@ -47,7 +47,7 @@ variable "ai_foundry_definition" {
         name                 = optional(string, null)
         #create_private_endpoint = optional(bool, true)
       })
-    })
+    }, {})
     role_assignments = optional(map(object({
       role_definition_id_or_name             = string
       principal_id                           = string

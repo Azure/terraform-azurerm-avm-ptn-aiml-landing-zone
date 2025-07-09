@@ -17,7 +17,7 @@ module "foundry_ptn" {
   resource_group_id                         = azurerm_resource_group.this.id
 
   resource_names = {
-    ai_foundry      = var.ai_foundry_definition.ai_foundry_resources.ai_foundry.name
+    ai_foundry      = local.ai_foundry_name
     ai_search       = var.ai_foundry_definition.ai_foundry_resources.ai_search.name
     cosmos_db       = var.ai_foundry_definition.ai_foundry_resources.cosmos_db.name
     key_vault       = var.ai_foundry_definition.ai_foundry_resources.key_vault.name
