@@ -3,7 +3,7 @@ module "foundry_ptn" {
   version = "0.2.0"
 
   location                                  = azurerm_resource_group.this.location
-  base_name                                 = coalesce(var.name_prefix, "foundry"
+  base_name                                 = coalesce(var.name_prefix, "foundry")
   agent_subnet_id                           = module.ai_lz_vnet.subnets["AIFoundrySubnet"].resource_id
   create_private_endpoints                  = true
   create_resource_group                     = false
