@@ -1,5 +1,5 @@
 variable "ai_foundry_definition" {
-  type = object({
+  type = optional(object({
     ai_foundry_project_description = optional(string, "AI Foundry project for agent services and AI workloads")
     ai_model_deployments = optional(map(object({
       name                   = string
@@ -59,5 +59,5 @@ variable "ai_foundry_definition" {
       principal_type                         = optional(string, null)
     })), {})
     tags = optional(map(string), {})
-  })
+  }), {})
 }

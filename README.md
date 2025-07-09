@@ -47,7 +47,7 @@ Description: n/a
 Type:
 
 ```hcl
-object({
+optional(object({
     ai_foundry_project_description = optional(string, "AI Foundry project for agent services and AI workloads")
     ai_model_deployments = optional(map(object({
       name                   = string
@@ -107,7 +107,7 @@ object({
       principal_type                         = optional(string, null)
     })), {})
     tags = optional(map(string), {})
-  })
+  }), {})
 ```
 
 ### <a name="input_app_gateway_definition"></a> [app\_gateway\_definition](#input\_app\_gateway\_definition)
