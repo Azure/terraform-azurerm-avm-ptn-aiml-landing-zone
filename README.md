@@ -106,6 +106,7 @@ object({
       delegated_managed_identity_resource_id = optional(string, null)
       principal_type                         = optional(string, null)
     })), {})
+    tags = optional(map(string), {})
 
   })
 ```
