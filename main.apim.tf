@@ -1,5 +1,5 @@
 
-/*
+
 module "apim" {
   source  = "Azure/avm-res-apimanagement-service/azurerm"
   version = "0.0.3"
@@ -45,4 +45,4 @@ module "apim" {
   role_assignments = local.apim_role_assignments
 
 }
-*/
+
