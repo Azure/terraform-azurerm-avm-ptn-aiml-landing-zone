@@ -73,7 +73,7 @@ object({
       name = optional(string, null)
     }), null)
 
-    ai_foundry_resources = object({
+    ai_foundry_resources = optional(object({
       create_dependent_resources = optional(bool, true)
       ai_search = object({
         existing_resource_id = optional(string, null)
@@ -95,7 +95,7 @@ object({
         name                 = optional(string, null)
         #create_private_endpoint = optional(bool, true)
       })
-    }, {})
+    }), {})
     role_assignments = optional(map(object({
       role_definition_id_or_name             = string
       principal_id                           = string
@@ -107,7 +107,6 @@ object({
       principal_type                         = optional(string, null)
     })), {})
     tags = optional(map(string), {})
-
   })
 ```
 
