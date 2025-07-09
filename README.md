@@ -75,27 +75,27 @@ object({
 
     ai_foundry_resources = optional(object({
       create_dependent_resources = optional(bool, true)
-      ai_search = object({
+      ai_search = optional(object({
         existing_resource_id = optional(string, null)
         name                 = optional(string, null)
         #create_private_endpoint = optional(bool, true)
-      }),
-      cosmos_db = object({
+      }), {}),
+      cosmos_db = optional(object({
         existing_resource_id = optional(string, null)
         name                 = optional(string, null)
         #create_private_endpoint = optional(bool, true)
-      }),
-      storage_account = object({
+      }), {}),
+      storage_account = optional(object({
         existing_resource_id = optional(string, null)
         name                 = optional(string, null)
         #create_private_endpoint = optional(bool, true)
-      }),
-      key_vault = object({
+      }), {}),
+      key_vault = optional(object({
         existing_resource_id = optional(string, null)
         name                 = optional(string, null)
         #create_private_endpoint = optional(bool, true)
-      })
-    }), {})
+      }), {})
+    }))
     role_assignments = optional(map(object({
       role_definition_id_or_name             = string
       principal_id                           = string
