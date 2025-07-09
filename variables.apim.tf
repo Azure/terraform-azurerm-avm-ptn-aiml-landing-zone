@@ -1,7 +1,8 @@
 variable "apim_definition" {
   type = object({
     name                = optional(string)
-    publisher_email     = optional(string)
+    publisher_email     = string
+    publisher_name      = string
     additional_locations = optional(list(object({
       location             = string
       capacity             = optional(number, null)
@@ -66,7 +67,6 @@ variable "apim_definition" {
     protocols = optional(object({
       enable_http2 = optional(bool, false)
     }))
-    publisher_name = optional(string, null)
     role_assignments = optional(map(object({
       role_definition_id_or_name = string
       principal_id               = string
@@ -89,6 +89,9 @@ variable "apim_definition" {
       enabled = bool
     }), null)
   })
-  default     = {}
+  default     = {
+    publisher_email     = "DoNotReply@exampleEmail.com"
+    publisher_name      = "Azure API Management"
+  }
   description = "Definition of the API Management service."
 }
