@@ -186,7 +186,7 @@ module "containerregistry" {
 
 module "app_configuration" {
   source  = "Azure/avm-res-appconfiguration-configurationstore/azure"
-  version = "0.4.0"
+  version = "0.4.1"
 
   location                        = azurerm_resource_group.this.location
   name                            = local.genai_app_configuration_name
