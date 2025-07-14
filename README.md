@@ -840,20 +840,6 @@ Type: `bool`
 
 Default: `true`
 
-### <a name="input_flag_split_deployment_persona"></a> [flag\_split\_deployment\_persona](#input\_flag\_split\_deployment\_persona)
-
-Description: Flag to indicate which part to deploy in a split deployment scenario.
-
-Valid values are:
-- `build` - Deploy only the initial VNet, Bastion, and build machine resources for the build environment
-- `lza` - Deploy the complete landing zone resources including all AI/ML services and networking components
-
-This allows for staged deployments where infrastructure can be deployed in phases.
-
-Type: `string`
-
-Default: `"lza"`
-
 ### <a name="input_genai_app_configuration_definition"></a> [genai\_app\_configuration\_definition](#input\_genai\_app\_configuration\_definition)
 
 Description: Configuration object for the Azure App Configuration service to be created for GenAI services.
@@ -1488,11 +1474,11 @@ The following outputs are exported:
 
 ### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
 
-Description: n/a
+Description: Future resource ID output for the LZA.
 
 ### <a name="output_subnets"></a> [subnets](#output\_subnets)
 
-Description: n/a
+Description: A map of the deployed subnets in the AI PTN LZA.
 
 ## Modules
 
@@ -1528,17 +1514,17 @@ Source: Azure/avm-res-network-applicationgateway/azurerm
 
 Version: 0.4.2
 
-### <a name="module_avm-utl-regions"></a> [avm-utl-regions](#module\_avm-utl-regions)
-
-Source: Azure/avm-utl-regions/azurerm
-
-Version: 0.5.2
-
 ### <a name="module_avm_res_keyvault_vault"></a> [avm\_res\_keyvault\_vault](#module\_avm\_res\_keyvault\_vault)
 
 Source: Azure/avm-res-keyvault-vault/azurerm
 
 Version: =0.10.0
+
+### <a name="module_avm_utl_regions"></a> [avm\_utl\_regions](#module\_avm\_utl\_regions)
+
+Source: Azure/avm-utl-regions/azurerm
+
+Version: 0.5.2
 
 ### <a name="module_azure_bastion"></a> [azure\_bastion](#module\_azure\_bastion)
 

@@ -1,3 +1,4 @@
 output "resource_id" {
-  value = "tbd"
+  value       = "tbd"
+  description = "Future resource ID output for the LZA."
 }
