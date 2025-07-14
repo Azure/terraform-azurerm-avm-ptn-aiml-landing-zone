@@ -1486,6 +1486,10 @@ Default: `{}`
 
 The following outputs are exported:
 
+### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
+
+Description: n/a
+
 ### <a name="output_subnets"></a> [subnets](#output\_subnets)
 
 Description: n/a
