@@ -1,3 +1,18 @@
+/* TODO: Add this back in when the split deployment is implemented
+variable "flag_split_deployment_persona" {
+  type        = string
+  default     = "lza"
+  description = <<DESCRIPTION
+Flag to indicate which part to deploy in a split deployment scenario.
+
+Valid values are:
+- `build` - Deploy only the initial VNet, Bastion, and build machine resources for the build environment
+- `lza` - Deploy the complete landing zone resources including all AI/ML services and networking components
+
+This allows for staged deployments where infrastructure can be deployed in phases.
+DESCRIPTION
+}
+*/
 variable "location" {
   type        = string
   description = <<DESCRIPTION
@@ -38,21 +53,7 @@ Flag to indicate if the platform landing zone is enabled.
 If set to true, the module will deploy resources and connect to a platform landing zone hub. This enables integration with existing hub-and-spoke network architectures and centralized management services.
 DESCRIPTION
 }
-/* TODO: Add this back in when the split deployment is implemented
-variable "flag_split_deployment_persona" {
-  type        = string
-  default     = "lza"
-  description = <<DESCRIPTION
-Flag to indicate which part to deploy in a split deployment scenario.
 
-Valid values are:
-- `build` - Deploy only the initial VNet, Bastion, and build machine resources for the build environment
-- `lza` - Deploy the complete landing zone resources including all AI/ML services and networking components
-
-This allows for staged deployments where infrastructure can be deployed in phases.
-DESCRIPTION
-}
-*/
 variable "name_prefix" {
   #TODO: add a validation rule to keep this under 10 characters only alphanumeric lowercase
   type        = string
