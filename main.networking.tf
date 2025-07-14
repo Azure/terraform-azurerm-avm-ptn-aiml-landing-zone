@@ -148,16 +148,15 @@ module "azure_bastion" {
   zones = var.bastion_definition.zones
 }
 
-data "azurerm_private_dns_zone" "existing" {
-  for_each = var.flag_platform_landing_zone ? local.private_dns_zones : {}
+#data "azurerm_private_dns_zone" "existing" {
+#  for_each = var.flag_platform_landing_zone ? local.private_dns_zones : {}
+#  name                = each.value.name
+#  resource_group_name = azurerm_resource_group.this.name
+#}
 
-  name                = each.value.name
-  resource_group_name = azurerm_resource_group.this.name
-}
-
-data "azurerm_subscription" "dns_zones" {
-  count = var.flag_platform_landing_zone ? 1 : 0
-}
+#data "azurerm_subscription" "dns_zones" {
+#  count = var.flag_platform_landing_zone ? 1 : 0
+#}
 
 module "private_dns_zones" {
   source   = "Azure/avm-res-network-privatednszone/azurerm"
