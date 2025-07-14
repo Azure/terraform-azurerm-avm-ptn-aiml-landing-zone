@@ -70,14 +70,14 @@ locals {
     app_configuration_zone = {
       name = "privatelink.azconfig.io"
     }
-    ai_foundry_zone = { #TODO:  make sure this is the only zone for foundry. 
+    ai_foundry_zone = { #TODO:  make sure this is the only zone for foundry.
       name = "privatelink.openai.azure.com"
     }
   }
   private_dns_zones = var.flag_platform_landing_zone == true ? local.private_dns_zone_map : {}
   private_dns_zones_existing = var.flag_platform_landing_zone ? {} : { for key, value in local.private_dns_zone_map : key => {
     name        = value.name
-    resource_id = "${local.private_dns_zones_existing_resource_group_resource_id}/providers/Microsoft.Network/privateDnsZones/${value.name}"
+    resource_id = "${local.private_dns_zones_existing_resource_group_resource_id}providers/Microsoft.Network/privateDnsZones/${value.name}"
     }
   }
   private_dns_zones_existing_resource_group_resource_id = (
