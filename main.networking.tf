@@ -172,6 +172,7 @@ module "private_dns_zones" {
 module "app_gateway_waf_policy" {
   source  = "Azure/avm-res-network-applicationgatewaywebapplicationfirewallpolicy/azurerm"
   version = "0.2.0"
+  count   = var.flag_standalone.deploy_build_resources ? 0 : 1
 
   location            = azurerm_resource_group.this.location
   managed_rules       = var.waf_policy_definition.managed_rules #local.web_application_firewall_managed_rules
@@ -185,6 +186,7 @@ module "app_gateway_waf_policy" {
 module "application_gateway" {
   source  = "Azure/avm-res-network-applicationgateway/azurerm"
   version = "0.4.2"
+  count   = var.flag_standalone.deploy_build_resources ? 0 : 1
 
   backend_address_pools = var.app_gateway_definition.backend_address_pools
   backend_http_settings = var.app_gateway_definition.backend_http_settings
@@ -197,7 +199,7 @@ module "application_gateway" {
   name                               = local.application_gateway_name
   request_routing_rules              = var.app_gateway_definition.request_routing_rules
   resource_group_name                = azurerm_resource_group.this.name
-  app_gateway_waf_policy_resource_id = module.app_gateway_waf_policy.resource_id
+  app_gateway_waf_policy_resource_id = module.app_gateway_waf_policy[0].resource_id
   authentication_certificate         = var.app_gateway_definition.authentication_certificate
   autoscale_configuration            = var.app_gateway_definition.autoscale_configuration
   diagnostic_settings = {

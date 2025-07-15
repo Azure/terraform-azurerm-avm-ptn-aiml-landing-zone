@@ -8,7 +8,7 @@ resource "random_integer" "zone_index" {
 module "jumpvm" {
   source  = "Azure/avm-res-compute-virtualmachine/azurerm"
   version = "0.19.3"
-  count   = var.flag_platform_landing_zone ? 1 : 0
+  count   = var.flag_platform_landing_zone ? (var.flag_standalone.deploy_build_resources ? 0 : 1) : 0
 
   location = azurerm_resource_group.this.location
   name     = local.jump_vm_name
@@ -27,7 +27,7 @@ module "jumpvm" {
   zone                = length(local.region_zones) > 0 ? random_integer.zone_index[0].result : null
   account_credentials = {
     key_vault_configuration = {
-      resource_id = module.avm_res_keyvault_vault.resource_id
+      resource_id = module.avm_res_keyvault_vault[0].resource_id
     }
   }
   enable_telemetry = var.enable_telemetry

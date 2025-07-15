@@ -364,6 +364,21 @@ object({
   })
 ```
 
+### <a name="input_flag_standalone"></a> [flag\_standalone](#input\_flag\_standalone)
+
+Description: n/a
+
+Type:
+
+```hcl
+object({
+    deploy_build_resources = optional(bool, false) #TODO: create a validation rule that only allows this to be true if the platform landing zone is also being deployed
+    testing_config = optional(object({
+      tfvars_filename = optional(string, "test.auto.tfvars")
+    }), {})
+  })
+```
+
 ### <a name="input_location"></a> [location](#input\_location)
 
 Description: Azure region where all resources should be deployed.

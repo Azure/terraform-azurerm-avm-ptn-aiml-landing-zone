@@ -1,6 +1,7 @@
 module "avm_res_keyvault_vault" {
   source  = "Azure/avm-res-keyvault-vault/azurerm"
   version = "=0.10.0"
+  count   = var.flag_standalone.deploy_build_resources ? 0 : 1
 
   location            = azurerm_resource_group.this.location
   name                = local.genai_key_vault_name
@@ -38,51 +39,13 @@ module "avm_res_keyvault_vault" {
   depends_on = [module.private_dns_zones, module.hub_vnet_peering]
 }
 
-/*
-# The PE resource for the key vault.  Separating it from the module to allow for the vm module to write secrets during deployment.
-resource "azurerm_private_endpoint" "this" {
-  for_each = { for k, v in var.private_endpoints : k => v if var.private_endpoints_manage_dns_zone_group }
-
-  location                      = each.value.location != null ? each.value.location : var.location
-  name                          = each.value.name != null ? each.value.name : "pe-${var.name}"
-  resource_group_name           = each.value.resource_group_name != null ? each.value.resource_group_name : var.resource_group_name
-  subnet_id                     = each.value.subnet_resource_id
-  custom_network_interface_name = each.value.network_interface_name
-  tags                          = each.value.tags
-
-  private_service_connection {
-    is_manual_connection           = false
-    name                           = each.value.private_service_connection_name != null ? each.value.private_service_connection_name : "pse-${var.name}"
-    private_connection_resource_id = azurerm_key_vault.this.id
-    subresource_names              = ["vault"]
-  }
-  dynamic "ip_configuration" {
-    for_each = each.value.ip_configurations
-
-    content {
-      name               = ip_configuration.value.name
-      private_ip_address = ip_configuration.value.private_ip_address
-      member_name        = "default"
-      subresource_name   = "vault"
-    }
-  }
-  dynamic "private_dns_zone_group" {
-    for_each = length(each.value.private_dns_zone_resource_ids) > 0 ? ["this"] : []
-
-    content {
-      name                 = each.value.private_dns_zone_group_name
-      private_dns_zone_ids = each.value.private_dns_zone_resource_ids
-    }
-  }
-}
-*/
-
 #TODO:
 # validate the defaults for the cosmosdb module
 # create private endpoint config
 module "cosmosdb" {
   source  = "Azure/avm-res-documentdb-databaseaccount/azurerm"
   version = "0.8.0"
+  count   = var.flag_standalone.deploy_build_resources ? 0 : 1
 
   location                   = azurerm_resource_group.this.location
   name                       = local.genai_cosmosdb_name
@@ -123,6 +86,7 @@ module "cosmosdb" {
 module "storage_account" {
   source  = "Azure/avm-res-storage-storageaccount/azurerm"
   version = "0.6.3"
+  count   = var.flag_standalone.deploy_build_resources ? 0 : 1
 
   location                 = azurerm_resource_group.this.location
   name                     = local.genai_storage_account_name
@@ -159,6 +123,7 @@ module "storage_account" {
 module "containerregistry" {
   source  = "Azure/avm-res-containerregistry-registry/azurerm"
   version = "0.4.0"
+  count   = var.flag_standalone.deploy_build_resources ? 0 : 1
 
   location            = azurerm_resource_group.this.location
   name                = local.genai_container_registry_name
@@ -187,6 +152,7 @@ module "containerregistry" {
 module "app_configuration" {
   source  = "Azure/avm-res-appconfiguration-configurationstore/azure"
   version = "0.4.1"
+  count   = var.flag_standalone.deploy_build_resources ? 0 : 1
 
   location                        = azurerm_resource_group.this.location
   name                            = local.genai_app_configuration_name
@@ -206,37 +172,3 @@ module "app_configuration" {
   tags                       = var.genai_app_configuration_definition.tags
 }
 
-/*
-resource "azurerm_app_configuration" "this" {
-  location                   = azurerm_resource_group.this.location
-  name                       = local.genai_app_configuration_name
-  resource_group_name        = azurerm_resource_group.this.name
-  local_auth_enabled         = var.genai_app_configuration_definition.local_auth_enabled
-  public_network_access      = "Disabled"
-  purge_protection_enabled   = true
-  sku                        = var.genai_app_configuration_definition.sku
-  soft_delete_retention_days = var.genai_app_configuration_definition.soft_delete_retention_in_days
-  tags                       = var.genai_app_configuration_definition.tags
-}
-
-
-resource "azurerm_private_endpoint" "this" {
-  location                      = azurerm_resource_group.this.location
-  name                          = "pe-${local.genai_app_configuration_name}"
-  resource_group_name           = azurerm_resource_group.this.name
-  subnet_id                     = module.ai_lz_vnet.subnets["PrivateEndpointSubnet"].resource_id
-  custom_network_interface_name = "pe-${local.genai_app_configuration_name}-nic"
-  tags                          = var.genai_app_configuration_definition.tags
-
-  private_service_connection {
-    is_manual_connection           = false
-    name                           = "psc-${local.genai_app_configuration_name}"
-    private_connection_resource_id = azurerm_app_configuration.this.id
-    subresource_names              = ["configurationStores"]
-  }
-  private_dns_zone_group {
-    name                 = "default"
-    private_dns_zone_ids = var.flag_platform_landing_zone ? [module.private_dns_zones.app_configuration_zone.resource_id] : [local.private_dns_zones_existing.app_configuration_zone.resource_id]
-  }
-}
-*/

@@ -1,6 +1,7 @@
 module "foundry_ptn" {
   source  = "Azure/avm-ptn-aiml-ai-foundry/azurerm"
   version = "0.2.0"
+  count   = var.flag_standalone.deploy_build_resources ? 0 : 1
 
   base_name                                 = coalesce(var.name_prefix, "foundry")
   location                                  = azurerm_resource_group.this.location
