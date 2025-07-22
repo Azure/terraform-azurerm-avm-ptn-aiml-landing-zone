@@ -1,3 +1,32 @@
+variable "vnet_definition" {
+  type = object({
+    name                             = optional(string)
+    address_space                    = string
+    ddos_protection_plan_resource_id = optional(string)
+    dns_servers                      = optional(set(string))
+    subnets = optional(map(object({
+      enabled        = optional(bool, true)
+      name           = optional(string)
+      address_prefix = optional(string)
+      }
+    )), {})
+    peer_vnet_resource_id = optional(string)
+  })
+  description = <<DESCRIPTION
+Configuration object for the Virtual Network (VNet) to be deployed.
+
+- `name` - (Optional) The name of the Virtual Network. If not provided, a name will be generated.
+- `address_space` - (Required) The address space for the Virtual Network in CIDR notation.
+- `ddos_protection_plan_resource_id` - (Optional) Resource ID of the DDoS Protection Plan to associate with the VNet.
+- `dns_servers` - (Optional) Set of custom DNS server IP addresses for the VNet.
+- `subnets` - (Optional) Map of subnet configurations. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `enabled` - (Optional) Whether the subnet is enabled. Default is true.
+  - `name` - (Optional) The name of the subnet. If not provided, a name will be generated.
+  - `address_prefix` - (Optional) The address prefix for the subnet in CIDR notation.
+- `peer_vnet_resource_id` - (Optional) Resource ID of a VNet to peer with this VNet.
+DESCRIPTION
+}
+
 variable "app_gateway_definition" {
   type = object({
     name         = optional(string)
@@ -198,6 +227,7 @@ variable "app_gateway_definition" {
       principal_type                         = optional(string, null)
     })), {})
   })
+  default     = null
   description = <<DESCRIPTION
 Configuration object for the Azure Application Gateway to be deployed.
 
@@ -321,35 +351,6 @@ Configuration object for the Azure Application Gateway to be deployed.
 DESCRIPTION
 }
 
-variable "vnet_definition" {
-  type = object({
-    name                             = optional(string)
-    address_space                    = string
-    ddos_protection_plan_resource_id = optional(string)
-    dns_servers                      = optional(set(string))
-    subnets = optional(map(object({
-      enabled        = optional(bool, true)
-      name           = optional(string)
-      address_prefix = optional(string)
-      }
-    )), {})
-    peer_vnet_resource_id = optional(string)
-  })
-  description = <<DESCRIPTION
-Configuration object for the Virtual Network (VNet) to be deployed.
-
-- `name` - (Optional) The name of the Virtual Network. If not provided, a name will be generated.
-- `address_space` - (Required) The address space for the Virtual Network in CIDR notation.
-- `ddos_protection_plan_resource_id` - (Optional) Resource ID of the DDoS Protection Plan to associate with the VNet.
-- `dns_servers` - (Optional) Set of custom DNS server IP addresses for the VNet.
-- `subnets` - (Optional) Map of subnet configurations. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
-  - `enabled` - (Optional) Whether the subnet is enabled. Default is true.
-  - `name` - (Optional) The name of the subnet. If not provided, a name will be generated.
-  - `address_prefix` - (Optional) The address prefix for the subnet in CIDR notation.
-- `peer_vnet_resource_id` - (Optional) Resource ID of a VNet to peer with this VNet.
-DESCRIPTION
-}
-
 variable "bastion_definition" {
   type = object({
     name  = optional(string)
@@ -386,6 +387,23 @@ Configuration object for the Azure Firewall to be deployed.
 - `zones` - (Optional) List of availability zones for the Azure Firewall. Default is ["1", "2", "3"].
 - `tags` - (Optional) Map of tags to assign to the Azure Firewall.
 DESCRIPTION
+}
+
+#TODO: Add a variable for the firewall policy definition.
+variable "firewall_policy_definition" {
+  type = object({
+    network_policy_rule_collection_group_name     = optional(string)
+    network_policy_rule_collection_group_priority = optional(number, null)
+    network_rules = optional(list(object({
+      name                  = string
+      description           = string
+      destination_addresses = list(string)
+      destination_ports     = list(string)
+      source_addresses      = list(string)
+      protocols             = list(string)
+    })), null)
+  })
+  default = {}
 }
 
 variable "hub_vnet_peering_definition" {

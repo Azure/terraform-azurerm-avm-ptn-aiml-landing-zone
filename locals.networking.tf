@@ -2,7 +2,7 @@ locals {
   application_gateway_name = try(var.app_gateway_definition.name, null) != null ? var.app_gateway_definition.name : (try(var.name_prefix, null) != null ? "${var.name_prefix}-appgw" : "ai-alz-appgw")
   application_gateway_role_assignments = merge(
     local.application_gateway_role_assignments_base,
-    var.app_gateway_definition.role_assignments
+    try(var.app_gateway_definition.role_assignments, {})
   )
   application_gateway_role_assignments_base = {}
   bastion_name                              = try(var.bastion_definition.name, null) != null ? var.bastion_definition.name : (try(var.name_prefix, null) != null ? "${var.name_prefix}-bastion" : "ai-alz-bastion")
@@ -83,7 +83,7 @@ locals {
   private_dns_zones_existing_resource_group_resource_id = (
     var.private_dns_zones.existing_zones_subscription_id != null ?
     "/subscriptions/${var.private_dns_zones.existing_zones_subscription_id}/resourceGroups/${var.private_dns_zones.existing_zones_resource_group_name}" :
-    "${data.azurerm_subscription.current.id}/resourceGroups/${var.private_dns_zones.existing_zones_resource_group_name}"
+    "${data.azurerm_subscription.current.id}/resourceGroups/${coalesce(var.private_dns_zones.existing_zones_resource_group_name, "notused")}"
   )
   route_table_name = "${local.vnet_name}-firewall-route-table"
   subnets = {
@@ -92,9 +92,9 @@ locals {
       name             = "AzureBastionSubnet"
       address_prefixes = try(var.vnet_definition.subnets["AzureBastionSubnet"].address_prefix, null) != null ? [var.vnet_definition.subnets["AzureBastionSubnet"].address_prefix] : [cidrsubnet(var.vnet_definition.address_space, 3, 5)]
       route_table      = null
-      network_security_group = {
-        id = module.nsgs.resource_id
-      }
+      #network_security_group = {
+      #  id = module.nsgs.resource_id
+      #}
     }
     AzureFirewallSubnet = {
       enabled          = var.flag_platform_landing_zone == true ? try(var.vnet_definition.subnets["AzureFirewallSubnet"].enabled, true) : try(var.vnet_definition.subnets["AzureFirewallSubnet"].enabled, false)

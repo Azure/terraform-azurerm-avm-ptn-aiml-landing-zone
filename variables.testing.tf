@@ -5,4 +5,10 @@ variable "flag_standalone" {
       tfvars_filename = optional(string, "test.auto.tfvars")
     }), {})
   })
+  default = {
+    deploy_build_resources = false
+    testing_config = {
+      tfvars_filename = "test.auto.tfvars"
+    }
+  }
 }

@@ -1,7 +1,6 @@
 module "search_service" {
   source  = "Azure/avm-res-search-searchservice/azurerm"
   version = "0.1.5"
-  count   = var.flag_standalone.deploy_build_resources ? 0 : 1
 
   location            = azurerm_resource_group.this.location
   name                = local.ks_ai_search_name
@@ -30,8 +29,6 @@ module "search_service" {
 }
 
 resource "azapi_resource" "bing_grounding" {
-  count = var.flag_standalone.deploy_build_resources ? 0 : 1
-
   location  = "global"
   name      = local.ks_bing_grounding_name
   parent_id = azurerm_resource_group.this.id

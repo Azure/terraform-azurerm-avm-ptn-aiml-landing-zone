@@ -1,3 +1,4 @@
+#TODO: Come up with a standard set of NSG rules for the AI ALZ. This is a starting point.
 locals {
   base_nsg_rules = {
     "rule01" = {

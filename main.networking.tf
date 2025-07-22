@@ -131,6 +131,18 @@ module "firewall_policy" {
   enable_telemetry    = var.enable_telemetry
 }
 
+#TODO: add application rule collection support
+module "firewall_network_rule_collection_group" {
+  source  = "Azure/avm-res-network-firewallpolicy/azurerm//modules/rule_collection_groups"
+  version = "0.3.3"
+
+  firewall_policy_rule_collection_group_firewall_policy_id      = module.firewall_policy[0].resource_id
+  firewall_policy_rule_collection_group_name                    = local.firewall_policy_rule_collection_group_name
+  firewall_policy_rule_collection_group_network_rule_collection = local.firewall_policy_rule_collection_group_network_rule_collection
+  firewall_policy_rule_collection_group_priority                = local.firewall_policy_rule_collection_group_priority
+}
+
+
 module "azure_bastion" {
   source  = "Azure/avm-res-network-bastionhost/azurerm"
   version = "0.7.2"
@@ -172,7 +184,6 @@ module "private_dns_zones" {
 module "app_gateway_waf_policy" {
   source  = "Azure/avm-res-network-applicationgatewaywebapplicationfirewallpolicy/azurerm"
   version = "0.2.0"
-  count   = var.flag_standalone.deploy_build_resources ? 0 : 1
 
   location            = azurerm_resource_group.this.location
   managed_rules       = var.waf_policy_definition.managed_rules #local.web_application_firewall_managed_rules
@@ -186,7 +197,6 @@ module "app_gateway_waf_policy" {
 module "application_gateway" {
   source  = "Azure/avm-res-network-applicationgateway/azurerm"
   version = "0.4.2"
-  count   = var.flag_standalone.deploy_build_resources ? 0 : 1
 
   backend_address_pools = var.app_gateway_definition.backend_address_pools
   backend_http_settings = var.app_gateway_definition.backend_http_settings
@@ -199,7 +209,7 @@ module "application_gateway" {
   name                               = local.application_gateway_name
   request_routing_rules              = var.app_gateway_definition.request_routing_rules
   resource_group_name                = azurerm_resource_group.this.name
-  app_gateway_waf_policy_resource_id = module.app_gateway_waf_policy[0].resource_id
+  app_gateway_waf_policy_resource_id = module.app_gateway_waf_policy.resource_id
   authentication_certificate         = var.app_gateway_definition.authentication_certificate
   autoscale_configuration            = var.app_gateway_definition.autoscale_configuration
   diagnostic_settings = {

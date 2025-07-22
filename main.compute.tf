@@ -1,7 +1,6 @@
 module "container_apps_managed_environment" {
   source  = "Azure/avm-res-app-managedenvironment/azurerm"
   version = "0.3.0"
-  count   = var.flag_standalone.deploy_build_resources ? 0 : 1
 
   location            = azurerm_resource_group.this.location
   name                = local.container_app_environment_name

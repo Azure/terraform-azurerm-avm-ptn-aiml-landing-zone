@@ -22,12 +22,10 @@ module "test" {
   source = "../../"
 
   location            = "westus3"
-  resource_group_name = "ai-lz-rg-test"
+  resource_group_name = "ai-lz-rg-standalone"
   vnet_definition = {
-    name                  = "ai-lz-vnet"
-    address_space         = "10.100.0.0/23"
-    dns_servers           = ["10.0.2.4"] #test private dns resolver
-    peer_vnet_resource_id = ""
+    name          = "ai-lz-vnet-standalone"
+    address_space = "10.100.0.0/23"
   }
   app_gateway_definition = {
     backend_address_pools = {
@@ -73,7 +71,10 @@ module "test" {
     zones = [] #Zonal configurations are preview and not supported in westus3
   }
   enable_telemetry           = var.enable_telemetry
-  flag_platform_landing_zone = false
+  flag_platform_landing_zone = true
+  flag_standalone = {
+    deploy_build_resources = true
+  }
   genai_container_registry_definition = {
   }
   genai_cosmosdb_definition = {
@@ -83,9 +84,6 @@ module "test" {
   genai_storage_account_definition = {
   }
   ks_ai_search_definition = {
-  }
-  private_dns_zones = {
-    existing_zones_resource_group_name = ""
   }
 }
 

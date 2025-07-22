@@ -3,7 +3,6 @@
 module "apim" {
   source  = "Azure/avm-res-apimanagement-service/azurerm"
   version = "0.0.3"
-  count   = var.flag_standalone.deploy_build_resources ? 0 : 1
 
   location                   = azurerm_resource_group.this.location
   name                       = local.apim_name

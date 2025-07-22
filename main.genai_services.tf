@@ -1,7 +1,6 @@
 module "avm_res_keyvault_vault" {
   source  = "Azure/avm-res-keyvault-vault/azurerm"
   version = "=0.10.0"
-  count   = var.flag_standalone.deploy_build_resources ? 0 : 1
 
   location            = azurerm_resource_group.this.location
   name                = local.genai_key_vault_name
@@ -45,7 +44,6 @@ module "avm_res_keyvault_vault" {
 module "cosmosdb" {
   source  = "Azure/avm-res-documentdb-databaseaccount/azurerm"
   version = "0.8.0"
-  count   = var.flag_standalone.deploy_build_resources ? 0 : 1
 
   location                   = azurerm_resource_group.this.location
   name                       = local.genai_cosmosdb_name
@@ -86,7 +84,6 @@ module "cosmosdb" {
 module "storage_account" {
   source  = "Azure/avm-res-storage-storageaccount/azurerm"
   version = "0.6.3"
-  count   = var.flag_standalone.deploy_build_resources ? 0 : 1
 
   location                 = azurerm_resource_group.this.location
   name                     = local.genai_storage_account_name
@@ -123,7 +120,6 @@ module "storage_account" {
 module "containerregistry" {
   source  = "Azure/avm-res-containerregistry-registry/azurerm"
   version = "0.4.0"
-  count   = var.flag_standalone.deploy_build_resources ? 0 : 1
 
   location            = azurerm_resource_group.this.location
   name                = local.genai_container_registry_name
@@ -152,7 +148,6 @@ module "containerregistry" {
 module "app_configuration" {
   source  = "Azure/avm-res-appconfiguration-configurationstore/azure"
   version = "0.4.1"
-  count   = var.flag_standalone.deploy_build_resources ? 0 : 1
 
   location                        = azurerm_resource_group.this.location
   name                            = local.genai_app_configuration_name
