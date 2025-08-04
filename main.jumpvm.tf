@@ -1,8 +1,8 @@
 resource "random_integer" "zone_index" {
   count = length(local.region_zones) > 0 ? 1 : 0
 
-  max = length(local.region_zones) - 1
-  min = 0
+  max = length(local.region_zones)
+  min = 1
 }
 
 module "jumpvm" {

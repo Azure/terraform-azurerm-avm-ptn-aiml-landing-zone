@@ -36,6 +36,7 @@ module "nsgs" {
   security_rules      = local.nsg_rules
 }
 
+#TODO: Add support for a VWAN hub.
 module "hub_vnet_peering" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm//modules/peering"
   version = "0.9.0"

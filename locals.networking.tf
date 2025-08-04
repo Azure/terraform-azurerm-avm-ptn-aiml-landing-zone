@@ -8,9 +8,10 @@ locals {
   bastion_name                              = try(var.bastion_definition.name, null) != null ? var.bastion_definition.name : (try(var.name_prefix, null) != null ? "${var.name_prefix}-bastion" : "ai-alz-bastion")
   default_virtual_network_link = {
     alz_vnet_link = {
-      vnetlinkname     = "${local.vnet_name}-link"
-      vnetid           = module.ai_lz_vnet.resource_id
-      autoregistration = false #TODO: confirm if we want auto-registration enabled by default for the alz vnet
+      vnetlinkname      = "${local.vnet_name}-link"
+      vnetid            = module.ai_lz_vnet.resource_id
+      autoregistration  = false #TODO: confirm if we want auto-registration enabled by default for the alz vnet
+      resolution_policy = var.private_dns_zones.allow_internet_resolution_fallback == false ? "Default" : "NxDomainRedirect"
     }
   }
   deployed_subnets = { for subnet_name, subnet in local.subnets : subnet_name => subnet if subnet.enabled }
@@ -70,21 +71,22 @@ locals {
     app_configuration_zone = {
       name = "privatelink.azconfig.io"
     }
-    ai_foundry_zone = { #TODO:  make sure this is the only zone for foundry.
+    ai_foundry_openai_zone = {
       name = "privatelink.openai.azure.com"
+    }
+    ai_foundry_ai_services_zone = {
+      name = "privatelink.services.ai.azure.com"
+    }
+    ai_foundry_cognitive_services_zone = {
+      name = "privatelink.cognitiveservices.azure.com"
     }
   }
   private_dns_zones = var.flag_platform_landing_zone == true ? local.private_dns_zone_map : {}
-  private_dns_zones_existing = var.flag_platform_landing_zone ? {} : { for key, value in local.private_dns_zone_map : key => {
+  private_dns_zones_existing = var.flag_platform_landing_zone == false ? {} : { for key, value in local.private_dns_zone_map : key => {
     name        = value.name
-    resource_id = "${local.private_dns_zones_existing_resource_group_resource_id}providers/Microsoft.Network/privateDnsZones/${value.name}"
+    resource_id = "${coalesce(var.private_dns_zones.existing_zones_resource_group_resource_id, "notused")}/providers/Microsoft.Network/privateDnsZones/${value.name}" #TODO: determine if there is a more elegant way to do this while avoiding errors
     }
   }
-  private_dns_zones_existing_resource_group_resource_id = (
-    var.private_dns_zones.existing_zones_subscription_id != null ?
-    "/subscriptions/${var.private_dns_zones.existing_zones_subscription_id}/resourceGroups/${var.private_dns_zones.existing_zones_resource_group_name}" :
-    "${data.azurerm_subscription.current.id}/resourceGroups/${coalesce(var.private_dns_zones.existing_zones_resource_group_name, "notused")}"
-  )
   route_table_name = "${local.vnet_name}-firewall-route-table"
   subnets = {
     AzureBastionSubnet = {
@@ -123,6 +125,12 @@ locals {
       network_security_group = {
         id = module.nsgs.resource_id
       }
+      delegation = [{
+        name = "AppGatewaySubnetDelegation"
+        service_delegation = {
+          name = "Microsoft.Network/applicationGateways"
+        }
+      }]
     }
     APIMSubnet = {
       enabled          = true
@@ -145,6 +153,13 @@ locals {
       network_security_group = {
         id = module.nsgs.resource_id
       }
+      delegation = [{
+        name = "AgentServiceDelegation"
+        service_delegation = {
+          name    = "Microsoft.App/environments"
+          actions = ["Microsoft.Network/virtualNetworks/subnets/join/action"]
+        }
+      }]
     }
     DevOpsBuildSubnet = {
       enabled          = true

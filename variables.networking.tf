@@ -502,20 +502,21 @@ DESCRIPTION
 
 variable "private_dns_zones" {
   type = object({
-    existing_zones_subscription_id     = optional(string)
-    existing_zones_resource_group_name = optional(string)
+    existing_zones_resource_group_resource_id = optional(string)
+    allow_internet_resolution_fallback        = optional(bool, false)
     network_links = optional(map(object({
       vnetlinkname     = string
       vnetid           = string
       autoregistration = optional(bool, false)
+      resolutionPolicy = optional(string, "Default")
     })), {})
   })
   default     = {}
   description = <<DESCRIPTION
 Configuration object for Private DNS Zones and their network links.
 
-- `existing_zones_subscription_id` - (Optional) Subscription ID where existing Private DNS Zones are located.
-- `existing_zones_resource_group_name` - (Optional) Resource group name where existing Private DNS Zones are located.
+- `existing_zones_resource_group_resource_id` - (Optional) Resource group resource id where existing Private DNS Zones are located.
+- `allow_internet_resolution_fallback` - (Optional) Whether to allow fallback to internet resolution for Private DNS Zone network links. Default is false.
 - `network_links` - (Optional) Map of network links to create for Private DNS Zones. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
   - `vnetlinkname` - The name of the virtual network link.
   - `vnetid` - The resource ID of the virtual network to link.

@@ -1,3 +1,6 @@
+variable "include_dns_support" {
+}
+
 variable "location" {
   type        = string
   description = <<DESCRIPTION

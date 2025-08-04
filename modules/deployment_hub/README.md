@@ -28,6 +28,12 @@ The following resources are used by this module:
 
 The following input variables are required:
 
+### <a name="input_include_dns_support"></a> [include\_dns\_support](#input\_include\_dns\_support)
+
+Description: n/a
+
+Type: `any`
+
 ### <a name="input_location"></a> [location](#input\_location)
 
 Description: Azure region where all resources should be deployed.
@@ -130,6 +136,10 @@ The following outputs are exported:
 ### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
 
 Description: Future resource ID output for the LZA.
+
+### <a name="output_virtual_network_resource_id"></a> [virtual\_network\_resource\_id](#output\_virtual\_network\_resource\_id)
+
+Description: Azure Resource ID for the hub virtual network
 
 ## Modules
 

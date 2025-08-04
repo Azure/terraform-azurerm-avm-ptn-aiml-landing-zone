@@ -1,6 +1,7 @@
 variable "genai_app_configuration_definition" {
+  #TODO: add functionality to the data plane proxy
   type = object({
-    data_plan_proxy = optional(object({
+    data_plane_proxy = optional(object({
       authentication_mode     = string
       private_link_delegation = string
     }), null)
@@ -175,9 +176,16 @@ DESCRIPTION
 
 variable "genai_key_vault_definition" {
   type = object({
-    name      = optional(string)
-    sku       = optional(string, "standard")
-    tenant_id = optional(string)
+    name = optional(string)
+    network_acls = optional(object({
+      bypass                     = optional(string, "AzureServices")
+      default_action             = optional(string, "Deny")
+      ip_rules                   = optional(list(string), [])
+      virtual_network_subnet_ids = optional(list(string), [])
+    }), null)
+    public_network_access_enabled = optional(bool, false)
+    sku                           = optional(string, "standard")
+    tenant_id                     = optional(string)
     role_assignments = optional(map(object({
       role_definition_id_or_name             = string
       principal_id                           = string

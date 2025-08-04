@@ -15,17 +15,14 @@ module "avm_res_keyvault_vault" {
   enabled_for_deployment          = true
   enabled_for_disk_encryption     = true
   enabled_for_template_deployment = true
-  network_acls = { #TODO check to see if we need to support custom network ACLs
-    default_action = "Allow"
-    bypass         = "AzureServices"
-  }
+  network_acls                    = var.genai_key_vault_definition.network_acls
   private_endpoints = {
     primary = {
       private_dns_zone_resource_ids = var.flag_platform_landing_zone ? [module.private_dns_zones.key_vault_zone.resource_id] : [local.private_dns_zones_existing.key_vault_zone.resource_id]
       subnet_resource_id            = module.ai_lz_vnet.subnets["PrivateEndpointSubnet"].resource_id
     }
   }
-  public_network_access_enabled = false
+  public_network_access_enabled = var.genai_key_vault_definition.public_network_access_enabled
   role_assignments              = local.genai_key_vault_role_assignments
   tags                          = var.genai_key_vault_definition.tags
   wait_for_rbac_before_key_operations = {
@@ -66,12 +63,26 @@ module "cosmosdb" {
       workspace_resource_id = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
     }
   }
-  enable_telemetry                 = var.enable_telemetry
-  geo_locations                    = local.genai_cosmosdb_secondary_regions
-  local_authentication_disabled    = var.genai_cosmosdb_definition.local_authentication_disabled
-  multiple_write_locations_enabled = var.genai_cosmosdb_definition.multiple_write_locations_enabled
-  partition_merge_enabled          = var.genai_cosmosdb_definition.partition_merge_enabled
-  public_network_access_enabled    = var.genai_cosmosdb_definition.public_network_access_enabled
+  enable_telemetry = var.enable_telemetry
+  geo_locations    = local.genai_cosmosdb_secondary_regions
+  ip_range_filter = [
+    "168.125.123.255",
+    "170.0.0.0/24",                                                                 #TODO: check 0.0.0.0 for validity
+    "0.0.0.0",                                                                      #Accept connections from within public Azure datacenters. https://learn.microsoft.com/en-us/azure/cosmos-db/how-to-configure-firewall#allow-requests-from-the-azure-portal
+    "104.42.195.92", "40.76.54.131", "52.176.6.30", "52.169.50.45", "52.187.184.26" #Allow access from the Azure portal. https://learn.microsoft.com/en-us/azure/cosmos-db/how-to-configure-firewall#allow-requests-from-global-azure-datacenters-or-other-sources-within-azure
+  ]
+  local_authentication_disabled         = var.genai_cosmosdb_definition.local_authentication_disabled
+  multiple_write_locations_enabled      = var.genai_cosmosdb_definition.multiple_write_locations_enabled
+  network_acl_bypass_for_azure_services = true
+  partition_merge_enabled               = var.genai_cosmosdb_definition.partition_merge_enabled
+  private_endpoints = {
+    "sql" = {
+      subnet_resource_id            = module.ai_lz_vnet.subnets["PrivateEndpointSubnet"].resource_id
+      subresource_name              = "sql"
+      private_dns_zone_resource_ids = var.flag_platform_landing_zone ? [module.private_dns_zones.cosmos_sql_zone.resource_id] : [local.private_dns_zones_existing.cosmos_sql_zone.resource_id]
+    }
+  }
+  public_network_access_enabled = var.genai_cosmosdb_definition.public_network_access_enabled
 
   depends_on = [module.private_dns_zones, module.hub_vnet_peering]
 }

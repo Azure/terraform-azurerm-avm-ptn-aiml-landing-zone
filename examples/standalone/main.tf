@@ -18,14 +18,89 @@ module "naming" {
   version = "~> 0.3"
 }
 
+# Get the deployer IP address to allow for public write to the key vault. This is to make sure the tests run.
+# In practice your deployer machine will be on a private network and this will not be required.
+data "http" "ip" {
+  url = "https://api.ipify.org/"
+  retry {
+    attempts     = 5
+    max_delay_ms = 1000
+    min_delay_ms = 500
+  }
+}
+
 module "test" {
   source = "../../"
 
-  location            = "westus3"
-  resource_group_name = "ai-lz-rg-standalone"
+  location            = "australiaeast"
+  resource_group_name = "ai-lz-rg-standalone-${substr(module.naming.unique-seed, 0, 5)}"
   vnet_definition = {
     name          = "ai-lz-vnet-standalone"
-    address_space = "10.100.0.0/23"
+    address_space = "192.168.0.0/23" # has to be out of 192.168.0.0/16 currently. Other RFC1918 not supported for foundry capabilityHost injection.
+  }
+  ai_foundry_definition = {
+    ai_foundry = {
+      create_ai_agent_service = true
+    }
+    ai_model_deployments = {
+      "gpt-4o" = {
+        name = "gpt-4.1"
+        model = {
+          format  = "OpenAI"
+          name    = "gpt-4.1"
+          version = "2025-04-14"
+        }
+        scale = {
+          type     = "GlobalStandard"
+          capacity = 1
+        }
+      }
+    }
+    ai_projects = {
+      project_1 = {
+        name                       = "project-1"
+        description                = "Project 1 description"
+        display_name               = "Project 1 Display Name"
+        create_project_connections = true
+        cosmos_db_connection = {
+          new_resource_map_key = "this"
+        }
+        ai_search_connection = {
+          new_resource_map_key = "this"
+        }
+        storage_account_connection = {
+          new_resource_map_key = "this"
+        }
+      }
+    }
+    ai_search_definition = {
+      this = {
+        enable_diagnostic_settings = false
+      }
+    }
+    cosmosdb_definition = {
+      this = {
+        enable_diagnostic_settings = false
+        consistency_level          = "Session"
+      }
+    }
+    key_vault_definition = {
+      this = {
+        enable_diagnostic_settings = false
+      }
+    }
+
+    storage_account_definition = {
+      this = {
+        enable_diagnostic_settings = false
+        shared_access_key_enabled  = true #configured for testing
+        endpoints = {
+          blob = {
+            type = "blob"
+          }
+        }
+      }
+    }
   }
   app_gateway_definition = {
     backend_address_pools = {
@@ -72,18 +147,23 @@ module "test" {
   }
   enable_telemetry           = var.enable_telemetry
   flag_platform_landing_zone = true
-  flag_standalone = {
-    deploy_build_resources = true
-  }
+  #flag_standalone = {
+  #  deploy_build_resources = true
+  #}
   genai_container_registry_definition = {
   }
   genai_cosmosdb_definition = {
   }
   genai_key_vault_definition = {
+    #this is for AVM testing purposes only. Doing this as we don't have an easy for the test runner to be privately connected for testing.
+    public_network_access_enabled = true
+    network_acls = {
+      bypass   = "AzureServices"
+      ip_rules = ["${data.http.ip.response_body}/32"]
+    }
   }
   genai_storage_account_definition = {
   }
   ks_ai_search_definition = {
   }
 }
-
