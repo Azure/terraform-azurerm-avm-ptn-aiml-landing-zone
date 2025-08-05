@@ -1,3 +1,8 @@
+variable "deployer_ip_address" {
+  type        = string
+  description = "The Ip address of the compute resource deploying the module. This is used to allow access Key vault for the jump box secrets."
+}
+
 variable "location" {
   type        = string
   description = <<DESCRIPTION
@@ -18,6 +23,26 @@ This resource group will contain all the AI/ML landing zone infrastructure compo
 DESCRIPTION
 }
 
+variable "vnet_definition" {
+  type = object({
+    name          = optional(string)
+    address_space = string
+  })
+  description = <<DESCRIPTION
+Configuration object for the Virtual Network (VNet) to be deployed.
+
+- `name` - (Optional) The name of the Virtual Network. If not provided, a name will be generated.
+- `address_space` - (Required) The address space for the Virtual Network in CIDR notation.
+- `ddos_protection_plan_resource_id` - (Optional) Resource ID of the DDoS Protection Plan to associate with the VNet.
+- `dns_servers` - (Optional) Set of custom DNS server IP addresses for the VNet.
+- `subnets` - (Optional) Map of subnet configurations. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `enabled` - (Optional) Whether the subnet is enabled. Default is true.
+  - `name` - (Optional) The name of the subnet. If not provided, a name will be generated.
+  - `address_prefix` - (Optional) The address prefix for the subnet in CIDR notation.
+- `peer_vnet_resource_id` - (Optional) Resource ID of a VNet to peer with this VNet.
+DESCRIPTION
+}
+
 variable "enable_telemetry" {
   type        = bool
   default     = true
@@ -29,13 +54,21 @@ DESCRIPTION
   nullable    = false
 }
 
-variable "flag_platform_landing_zone" {
-  type        = bool
-  default     = true
+variable "jump_vm_definition" {
+  type = object({
+    name             = optional(string)
+    sku              = optional(string, "Standard_B2s")
+    tags             = optional(map(string), {})
+    enable_telemetry = optional(bool, true)
+  })
+  default     = {}
   description = <<DESCRIPTION
-Flag to indicate if the platform landing zone is enabled.
+Configuration object for the Build VM to be created for managing the implementation services.
 
-If set to true, the module will deploy resources and connect to a platform landing zone hub. This enables integration with existing hub-and-spoke network architectures and centralized management services.
+- `name` - (Optional) The name of the Build VM. If not provided, a name will be generated.
+- `sku` - (Optional) The VM size/SKU for the Build VM. Default is "Standard_B2s".
+- `tags` - (Optional) Map of tags to assign to the Build VM.
+- `enable_telemetry` - (Optional) Whether telemetry is enabled for the Build VM module. Default is true.
 DESCRIPTION
 }
 

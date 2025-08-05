@@ -18,6 +18,8 @@ module "naming" {
   version = "~> 0.3"
 }
 
+# Get the deployer IP address to allow for public write to the key vault. This is to make sure the tests run.
+# In practice your deployer machine will be on a private network and this will not be required.
 data "http" "ip" {
   url = "https://api.ipify.org/"
   retry {
@@ -27,29 +29,14 @@ data "http" "ip" {
   }
 }
 
-#create a sample hub to mimic an existing network landing zone configuration
-module "example_hub" {
-  source = "../../modules/example_hub_vnet"
-
-  deployer_ip_address = "${data.http.ip.response_body}/32"
-  location            = "australiaeast"
-  resource_group_name = "default-example-${module.naming.resource_group.name_unique}"
-  vnet_definition = {
-    address_space = "10.10.0.0/24"
-  }
-  enable_telemetry = var.enable_telemetry
-  name_prefix      = "${module.naming.resource_group.name_unique}-hub"
-}
-
 module "test" {
   source = "../../"
 
   location            = "australiaeast"
-  resource_group_name = "ai-lz-rg-default-${substr(module.naming.unique-seed, 0, 5)}"
+  resource_group_name = "ai-lz-rg-standalone-${substr(module.naming.unique-seed, 0, 5)}"
   vnet_definition = {
-    name          = "ai-lz-vnet-default"
-    address_space = "192.168.0.0/23"                                                                 # has to be out of 192.168.0.0/16 currently. Other RFC1918 not supported for foundry capabilityHost injection.
-    dns_servers   = [for key, value in module.example_hub.dns_resolver_inbound_ip_addresses : value] # Use the DNS resolver IPs from the example hub
+    name          = "ai-lz-vnet-standalone"
+    address_space = "192.168.0.0/23" # has to be out of 192.168.0.0/16 currently. Other RFC1918 not supported for foundry capabilityHost injection.
   }
   ai_foundry_definition = {
     ai_foundry = {
@@ -159,23 +146,24 @@ module "test" {
     zones = [] #Zonal configurations are preview and not supported in westus3
   }
   enable_telemetry           = var.enable_telemetry
-  flag_platform_landing_zone = false
+  flag_platform_landing_zone = true
+  #flag_standalone = {
+  #  deploy_build_resources = true
+  #}
   genai_container_registry_definition = {
   }
   genai_cosmosdb_definition = {
   }
   genai_key_vault_definition = {
+    #this is for AVM testing purposes only. Doing this as we don't have an easy for the test runner to be privately connected for testing.
+    public_network_access_enabled = true
+    network_acls = {
+      bypass   = "AzureServices"
+      ip_rules = ["${data.http.ip.response_body}/32"]
+    }
   }
   genai_storage_account_definition = {
   }
-  hub_vnet_peering_definition = {
-    peer_vnet_resource_id = module.example_hub.virtual_network_resource_id
-    firewall_ip_address   = module.example_hub.firewall_ip_address
-  }
   ks_ai_search_definition = {
   }
-  private_dns_zones = {
-    existing_zones_resource_group_resource_id = module.example_hub.resource_group_resource_id
-  }
 }
-

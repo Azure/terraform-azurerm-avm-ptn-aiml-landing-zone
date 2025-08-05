@@ -1,0 +1,237 @@
+<!-- BEGIN_TF_DOCS -->
+# example hub vnet for testing
+
+This sub module creates a basic hub for use in testing the default configuration for the landing zone where the created AI LZA vnet will attach to a hub vnet.
+
+<!-- markdownlint-disable MD033 -->
+## Requirements
+
+The following requirements are needed by this module:
+
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
+
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 3.116, < 5.0)
+
+## Resources
+
+The following resources are used by this module:
+
+- [azurerm_bastion_host.bastion](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/bastion_host) (resource)
+- [azurerm_public_ip.bastionpip](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/public_ip) (resource)
+- [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
+- [random_integer.zone_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
+- [random_string.name_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
+- [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
+- [azurerm_subscription.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subscription) (data source)
+
+<!-- markdownlint-disable MD013 -->
+## Required Inputs
+
+The following input variables are required:
+
+### <a name="input_deployer_ip_address"></a> [deployer\_ip\_address](#input\_deployer\_ip\_address)
+
+Description: The Ip address of the compute resource deploying the module. This is used to allow access Key vault for the jump box secrets.
+
+Type: `string`
+
+### <a name="input_location"></a> [location](#input\_location)
+
+Description: Azure region where all resources should be deployed.
+
+This specifies the primary Azure region for deploying the AI/ML landing zone infrastructure. All resources will be created in this region unless specifically configured otherwise in individual resource definitions.
+
+Type: `string`
+
+### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
+
+Description: The name of the resource group where all resources will be deployed.
+
+This resource group will contain all the AI/ML landing zone infrastructure components. The resource group should already exist or will be created as part of the deployment process.
+
+Type: `string`
+
+### <a name="input_vnet_definition"></a> [vnet\_definition](#input\_vnet\_definition)
+
+Description: Configuration object for the Virtual Network (VNet) to be deployed.
+
+- `name` - (Optional) The name of the Virtual Network. If not provided, a name will be generated.
+- `address_space` - (Required) The address space for the Virtual Network in CIDR notation.
+- `ddos_protection_plan_resource_id` - (Optional) Resource ID of the DDoS Protection Plan to associate with the VNet.
+- `dns_servers` - (Optional) Set of custom DNS server IP addresses for the VNet.
+- `subnets` - (Optional) Map of subnet configurations. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `enabled` - (Optional) Whether the subnet is enabled. Default is true.
+  - `name` - (Optional) The name of the subnet. If not provided, a name will be generated.
+  - `address_prefix` - (Optional) The address prefix for the subnet in CIDR notation.
+- `peer_vnet_resource_id` - (Optional) Resource ID of a VNet to peer with this VNet.
+
+Type:
+
+```hcl
+object({
+    name          = optional(string)
+    address_space = string
+  })
+```
+
+## Optional Inputs
+
+The following input variables are optional (have default values):
+
+### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
+
+Description: This variable controls whether or not telemetry is enabled for the module.  
+For more information see <https://aka.ms/avm/telemetryinfo>.  
+If it is set to false, then no telemetry will be collected.
+
+Type: `bool`
+
+Default: `true`
+
+### <a name="input_jump_vm_definition"></a> [jump\_vm\_definition](#input\_jump\_vm\_definition)
+
+Description: Configuration object for the Build VM to be created for managing the implementation services.
+
+- `name` - (Optional) The name of the Build VM. If not provided, a name will be generated.
+- `sku` - (Optional) The VM size/SKU for the Build VM. Default is "Standard\_B2s".
+- `tags` - (Optional) Map of tags to assign to the Build VM.
+- `enable_telemetry` - (Optional) Whether telemetry is enabled for the Build VM module. Default is true.
+
+Type:
+
+```hcl
+object({
+    name             = optional(string)
+    sku              = optional(string, "Standard_B2s")
+    tags             = optional(map(string), {})
+    enable_telemetry = optional(bool, true)
+  })
+```
+
+Default: `{}`
+
+### <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix)
+
+Description: Optional prefix to be used for naming resources.
+
+This prefix will be applied to all resource names generated by the module. It is useful for ensuring consistent naming conventions across deployments without requiring explicit names for each resource. The prefix should be kept under 10 characters and use only alphanumeric lowercase characters to avoid Azure naming limitations.
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_tags"></a> [tags](#input\_tags)
+
+Description: Map of tags to be assigned to all resources created by this module.
+
+Tags are key-value pairs that help organize and manage Azure resources. These tags will be applied to all resources created by the module, enabling consistent resource governance, cost tracking, and operational management across the AI/ML landing zone infrastructure.
+
+Type: `map(string)`
+
+Default: `null`
+
+## Outputs
+
+The following outputs are exported:
+
+### <a name="output_dns_resolver_inbound_ip_addresses"></a> [dns\_resolver\_inbound\_ip\_addresses](#output\_dns\_resolver\_inbound\_ip\_addresses)
+
+Description: The inbound IP address of the DNS resolver in the hub virtual network
+
+### <a name="output_firewall_ip_address"></a> [firewall\_ip\_address](#output\_firewall\_ip\_address)
+
+Description: The IP address of the Azure Firewall in the hub virtual network
+
+### <a name="output_resource_group_resource_id"></a> [resource\_group\_resource\_id](#output\_resource\_group\_resource\_id)
+
+Description: The resource ID of the resource group where the hub virtual network is deployed
+
+### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
+
+Description: Duplicating the vnet resource ID output to keep the linter happy.
+
+### <a name="output_virtual_network_resource_id"></a> [virtual\_network\_resource\_id](#output\_virtual\_network\_resource\_id)
+
+Description: Azure Resource ID for the hub virtual network
+
+## Modules
+
+The following Modules are called:
+
+### <a name="module_ai_lz_vnet"></a> [ai\_lz\_vnet](#module\_ai\_lz\_vnet)
+
+Source: Azure/avm-res-network-virtualnetwork/azurerm
+
+Version: =0.7.1
+
+### <a name="module_avm_res_keyvault_vault"></a> [avm\_res\_keyvault\_vault](#module\_avm\_res\_keyvault\_vault)
+
+Source: Azure/avm-res-keyvault-vault/azurerm
+
+Version: =0.10.0
+
+### <a name="module_avm_utl_regions"></a> [avm\_utl\_regions](#module\_avm\_utl\_regions)
+
+Source: Azure/avm-utl-regions/azurerm
+
+Version: 0.5.2
+
+### <a name="module_firewall"></a> [firewall](#module\_firewall)
+
+Source: Azure/avm-res-network-azurefirewall/azurerm
+
+Version: 0.3.0
+
+### <a name="module_firewall_network_rule_collection_group"></a> [firewall\_network\_rule\_collection\_group](#module\_firewall\_network\_rule\_collection\_group)
+
+Source: Azure/avm-res-network-firewallpolicy/azurerm//modules/rule_collection_groups
+
+Version: 0.3.3
+
+### <a name="module_firewall_policy"></a> [firewall\_policy](#module\_firewall\_policy)
+
+Source: Azure/avm-res-network-firewallpolicy/azurerm
+
+Version: 0.3.3
+
+### <a name="module_fw_pip"></a> [fw\_pip](#module\_fw\_pip)
+
+Source: Azure/avm-res-network-publicipaddress/azurerm
+
+Version: 0.2.0
+
+### <a name="module_jumpvm"></a> [jumpvm](#module\_jumpvm)
+
+Source: Azure/avm-res-compute-virtualmachine/azurerm
+
+Version: 0.19.3
+
+### <a name="module_log_analytics_workspace"></a> [log\_analytics\_workspace](#module\_log\_analytics\_workspace)
+
+Source: Azure/avm-res-operationalinsights-workspace/azurerm
+
+Version: 0.4.2
+
+### <a name="module_natgateway"></a> [natgateway](#module\_natgateway)
+
+Source: Azure/avm-res-network-natgateway/azurerm
+
+Version: 0.2.1
+
+### <a name="module_private_dns_zones"></a> [private\_dns\_zones](#module\_private\_dns\_zones)
+
+Source: Azure/avm-res-network-privatednszone/azurerm
+
+Version: 0.3.4
+
+### <a name="module_private_resolver"></a> [private\_resolver](#module\_private\_resolver)
+
+Source: Azure/avm-res-network-dnsresolver/azurerm
+
+Version: 0.8.0
+
+<!-- markdownlint-disable-next-line MD041 -->
+## Data Collection
+
+The software may collect information about you and your use of the software and send it to Microsoft. Microsoft may use this information to provide services and improve our products and services. You may turn off the telemetry as described in the repository. There are also some features in the software that may enable you and Microsoft to collect data from users of your applications. If you use these features, you must comply with applicable law, including providing appropriate notices to users of your applications together with a copy of Microsoft’s privacy statement. Our privacy statement is located at <https://go.microsoft.com/fwlink/?LinkID=824704>. You can learn more about data collection and use in the help documentation and our privacy statement. Your use of the software operates as your consent to these practices.
+<!-- END_TF_DOCS -->
