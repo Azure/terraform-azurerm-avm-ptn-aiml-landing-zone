@@ -1,4 +1,6 @@
-variable "include_dns_support" {
+variable "deployer_ip_address" {
+  type        = string
+  description = "The Ip address of the compute resource deploying the module. This is used to allow access Key vault for the jump box secrets."
 }
 
 variable "location" {
@@ -41,7 +43,18 @@ Configuration object for the Virtual Network (VNet) to be deployed.
 DESCRIPTION
 }
 
-variable "buildvm_definition" {
+variable "enable_telemetry" {
+  type        = bool
+  default     = true
+  description = <<DESCRIPTION
+This variable controls whether or not telemetry is enabled for the module.
+For more information see <https://aka.ms/avm/telemetryinfo>.
+If it is set to false, then no telemetry will be collected.
+DESCRIPTION
+  nullable    = false
+}
+
+variable "jump_vm_definition" {
   type = object({
     name             = optional(string)
     sku              = optional(string, "Standard_B2s")
@@ -57,17 +70,6 @@ Configuration object for the Build VM to be created for managing the implementat
 - `tags` - (Optional) Map of tags to assign to the Build VM.
 - `enable_telemetry` - (Optional) Whether telemetry is enabled for the Build VM module. Default is true.
 DESCRIPTION
-}
-
-variable "enable_telemetry" {
-  type        = bool
-  default     = true
-  description = <<DESCRIPTION
-This variable controls whether or not telemetry is enabled for the module.
-For more information see <https://aka.ms/avm/telemetryinfo>.
-If it is set to false, then no telemetry will be collected.
-DESCRIPTION
-  nullable    = false
 }
 
 variable "name_prefix" {

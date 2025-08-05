@@ -47,7 +47,7 @@ locals {
     }
 
   }
-  nsg_name = try(var.nsgs_definition.name, null) != null ? var.nsgs_definition.name : (try(var.name_prefix, null) != null ? "${var.name_prefix}-ai-alz-nsg" : "ai-alz-nsg")
+  nsg_name = try(var.nsgs_definition.name, null) != null ? var.nsgs_definition.name : (var.name_prefix != null ? "${var.name_prefix}-ai-alz-nsg" : "ai-alz-nsg")
   nsg_rules = merge(
     local.base_nsg_rules,
     var.nsgs_definition.security_rules

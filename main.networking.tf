@@ -37,6 +37,7 @@ module "nsgs" {
 }
 
 #TODO: Add support for a VWAN hub.
+#TODO: Add the platform landing zone flag as a secondary decision point for the hub vnet peering?
 module "hub_vnet_peering" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm//modules/peering"
   version = "0.9.0"
@@ -136,6 +137,7 @@ module "firewall_policy" {
 module "firewall_network_rule_collection_group" {
   source  = "Azure/avm-res-network-firewallpolicy/azurerm//modules/rule_collection_groups"
   version = "0.3.3"
+  count   = var.flag_platform_landing_zone ? 1 : 0
 
   firewall_policy_rule_collection_group_firewall_policy_id      = module.firewall_policy[0].resource_id
   firewall_policy_rule_collection_group_name                    = local.firewall_policy_rule_collection_group_name
@@ -180,6 +182,8 @@ module "private_dns_zones" {
   resource_group_name   = azurerm_resource_group.this.name
   enable_telemetry      = var.enable_telemetry
   virtual_network_links = local.virtual_network_links
+
+  depends_on = [module.hub_vnet_peering]
 }
 
 module "app_gateway_waf_policy" {

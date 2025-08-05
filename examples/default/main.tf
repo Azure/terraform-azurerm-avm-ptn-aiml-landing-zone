@@ -18,30 +18,38 @@ module "naming" {
   version = "~> 0.3"
 }
 
-#create a sample hub to mimic an existing network landing zone configuration
-module "build" {
-  source = "../../modules/deployment_hub"
+data "http" "ip" {
+  url = "https://api.ipify.org/"
+  retry {
+    attempts     = 5
+    max_delay_ms = 1000
+    min_delay_ms = 500
+  }
+}
 
-  location            = module.regions.regions[random_integer.region_index.result].name
-  resource_group_name = module.naming.resource_group.name_unique
+#create a sample hub to mimic an existing network landing zone configuration
+module "example_hub" {
+  source = "../../modules/example_hub_vnet"
+
+  deployer_ip_address = "${data.http.ip.response_body}/32"
+  location            = "australiaeast"
+  resource_group_name = "default-example-${module.naming.resource_group.name_unique}"
   vnet_definition = {
-    name          = module.naming.virtual_network.name_unique
     address_space = "10.10.0.0/24"
   }
   enable_telemetry = var.enable_telemetry
-  name_prefix      = "${module.naming.resource_group.name_unique}-build"
+  name_prefix      = "${module.naming.resource_group.name_unique}-hub"
 }
 
 module "test" {
   source = "../../"
 
-  location            = "westus3"
-  resource_group_name = "ai-lz-rg-test"
+  location            = "australiaeast"
+  resource_group_name = "ai-lz-rg-default-${substr(module.naming.unique-seed, 0, 5)}"
   vnet_definition = {
-    name                  = "ai-lz-vnet"
-    address_space         = "10.100.0.0/23"
-    dns_servers           = ["10.0.2.4"] #test private dns resolver
-    peer_vnet_resource_id = ""
+    name          = "ai-lz-vnet-default"
+    address_space = "192.168.0.0/23"                                                                 # has to be out of 192.168.0.0/16 currently. Other RFC1918 not supported for foundry capabilityHost injection.
+    dns_servers   = [for key, value in module.example_hub.dns_resolver_inbound_ip_addresses : value] # Use the DNS resolver IPs from the example hub
   }
   ai_foundry_definition = {
     ai_foundry = {
@@ -94,10 +102,16 @@ module "test" {
         enable_diagnostic_settings = false
       }
     }
+
     storage_account_definition = {
       this = {
         enable_diagnostic_settings = false
-
+        shared_access_key_enabled  = true #configured for testing
+        endpoints = {
+          blob = {
+            type = "blob"
+          }
+        }
       }
     }
   }
@@ -154,9 +168,14 @@ module "test" {
   }
   genai_storage_account_definition = {
   }
+  hub_vnet_peering_definition = {
+    peer_vnet_resource_id = module.example_hub.virtual_network_resource_id
+    firewall_ip_address   = module.example_hub.firewall_ip_address
+  }
   ks_ai_search_definition = {
   }
   private_dns_zones = {
+    existing_zones_resource_group_resource_id = module.example_hub.resource_group_resource_id
   }
 }
 

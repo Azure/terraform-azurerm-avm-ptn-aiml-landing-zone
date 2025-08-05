@@ -507,7 +507,6 @@ variable "private_dns_zones" {
     network_links = optional(map(object({
       vnetlinkname     = string
       vnetid           = string
-      autoregistration = optional(bool, false)
       resolutionPolicy = optional(string, "Default")
     })), {})
   })
@@ -520,7 +519,6 @@ Configuration object for Private DNS Zones and their network links.
 - `network_links` - (Optional) Map of network links to create for Private DNS Zones. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
   - `vnetlinkname` - The name of the virtual network link.
   - `vnetid` - The resource ID of the virtual network to link.
-  - `autoregistration` - (Optional) Whether auto-registration is enabled for the link. Default is false.
 DESCRIPTION
 }
 

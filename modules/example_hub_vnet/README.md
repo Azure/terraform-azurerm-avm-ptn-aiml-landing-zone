@@ -1,7 +1,7 @@
 <!-- BEGIN_TF_DOCS -->
-# terraform-azurerm-avm-ptn-aiml-landing-zone
+# example hub vnet for testing
 
-This pattern module creates the full AI/ML landing zone which supports multiple ai project scenarios.
+This sub module creates a basic hub for use in testing the default configuration for the landing zone where the created AI LZA vnet will attach to a hub vnet.
 
 <!-- markdownlint-disable MD033 -->
 ## Requirements
@@ -19,6 +19,7 @@ The following resources are used by this module:
 - [azurerm_bastion_host.bastion](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/bastion_host) (resource)
 - [azurerm_public_ip.bastionpip](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/public_ip) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
+- [random_integer.zone_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 - [random_string.name_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
 - [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 - [azurerm_subscription.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subscription) (data source)
@@ -28,11 +29,11 @@ The following resources are used by this module:
 
 The following input variables are required:
 
-### <a name="input_include_dns_support"></a> [include\_dns\_support](#input\_include\_dns\_support)
+### <a name="input_deployer_ip_address"></a> [deployer\_ip\_address](#input\_deployer\_ip\_address)
 
-Description: n/a
+Description: The Ip address of the compute resource deploying the module. This is used to allow access Key vault for the jump box secrets.
 
-Type: `any`
+Type: `string`
 
 ### <a name="input_location"></a> [location](#input\_location)
 
@@ -77,7 +78,17 @@ object({
 
 The following input variables are optional (have default values):
 
-### <a name="input_buildvm_definition"></a> [buildvm\_definition](#input\_buildvm\_definition)
+### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
+
+Description: This variable controls whether or not telemetry is enabled for the module.  
+For more information see <https://aka.ms/avm/telemetryinfo>.  
+If it is set to false, then no telemetry will be collected.
+
+Type: `bool`
+
+Default: `true`
+
+### <a name="input_jump_vm_definition"></a> [jump\_vm\_definition](#input\_jump\_vm\_definition)
 
 Description: Configuration object for the Build VM to be created for managing the implementation services.
 
@@ -98,16 +109,6 @@ object({
 ```
 
 Default: `{}`
-
-### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
-
-Description: This variable controls whether or not telemetry is enabled for the module.  
-For more information see <https://aka.ms/avm/telemetryinfo>.  
-If it is set to false, then no telemetry will be collected.
-
-Type: `bool`
-
-Default: `true`
 
 ### <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix)
 
@@ -133,9 +134,21 @@ Default: `null`
 
 The following outputs are exported:
 
+### <a name="output_dns_resolver_inbound_ip_addresses"></a> [dns\_resolver\_inbound\_ip\_addresses](#output\_dns\_resolver\_inbound\_ip\_addresses)
+
+Description: The inbound IP address of the DNS resolver in the hub virtual network
+
+### <a name="output_firewall_ip_address"></a> [firewall\_ip\_address](#output\_firewall\_ip\_address)
+
+Description: The IP address of the Azure Firewall in the hub virtual network
+
+### <a name="output_resource_group_resource_id"></a> [resource\_group\_resource\_id](#output\_resource\_group\_resource\_id)
+
+Description: The resource ID of the resource group where the hub virtual network is deployed
+
 ### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
 
-Description: Future resource ID output for the LZA.
+Description: Duplicating the vnet resource ID output to keep the linter happy.
 
 ### <a name="output_virtual_network_resource_id"></a> [virtual\_network\_resource\_id](#output\_virtual\_network\_resource\_id)
 
@@ -163,17 +176,59 @@ Source: Azure/avm-utl-regions/azurerm
 
 Version: 0.5.2
 
-### <a name="module_buildvm"></a> [buildvm](#module\_buildvm)
+### <a name="module_firewall"></a> [firewall](#module\_firewall)
+
+Source: Azure/avm-res-network-azurefirewall/azurerm
+
+Version: 0.3.0
+
+### <a name="module_firewall_network_rule_collection_group"></a> [firewall\_network\_rule\_collection\_group](#module\_firewall\_network\_rule\_collection\_group)
+
+Source: Azure/avm-res-network-firewallpolicy/azurerm//modules/rule_collection_groups
+
+Version: 0.3.3
+
+### <a name="module_firewall_policy"></a> [firewall\_policy](#module\_firewall\_policy)
+
+Source: Azure/avm-res-network-firewallpolicy/azurerm
+
+Version: 0.3.3
+
+### <a name="module_fw_pip"></a> [fw\_pip](#module\_fw\_pip)
+
+Source: Azure/avm-res-network-publicipaddress/azurerm
+
+Version: 0.2.0
+
+### <a name="module_jumpvm"></a> [jumpvm](#module\_jumpvm)
 
 Source: Azure/avm-res-compute-virtualmachine/azurerm
 
 Version: 0.19.3
+
+### <a name="module_log_analytics_workspace"></a> [log\_analytics\_workspace](#module\_log\_analytics\_workspace)
+
+Source: Azure/avm-res-operationalinsights-workspace/azurerm
+
+Version: 0.4.2
 
 ### <a name="module_natgateway"></a> [natgateway](#module\_natgateway)
 
 Source: Azure/avm-res-network-natgateway/azurerm
 
 Version: 0.2.1
+
+### <a name="module_private_dns_zones"></a> [private\_dns\_zones](#module\_private\_dns\_zones)
+
+Source: Azure/avm-res-network-privatednszone/azurerm
+
+Version: 0.3.4
+
+### <a name="module_private_resolver"></a> [private\_resolver](#module\_private\_resolver)
+
+Source: Azure/avm-res-network-dnsresolver/azurerm
+
+Version: 0.8.0
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

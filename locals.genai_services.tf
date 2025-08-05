@@ -1,17 +1,17 @@
 locals {
   genai_app_configuration_default_role_assignments = {}
-  genai_app_configuration_name                     = try(var.genai_app_configuration_definition.name, null) != null ? var.genai_app_configuration_definition.name : (try(var.name_prefix, null) != null ? "${var.name_prefix}-genai-appconfig-${random_string.name_suffix.result}" : "genai-appconfig-${random_string.name_suffix.result}")
+  genai_app_configuration_name                     = try(var.genai_app_configuration_definition.name, null) != null ? var.genai_app_configuration_definition.name : (var.name_prefix != null ? "${var.name_prefix}-genai-appconfig-${random_string.name_suffix.result}" : "genai-appconfig-${random_string.name_suffix.result}")
   genai_app_configuration_role_assignments = merge(
     local.genai_app_configuration_default_role_assignments,
     var.genai_app_configuration_definition.role_assignments
   )
   genai_container_registry_default_role_assignments = {}
-  genai_container_registry_name                     = try(var.genai_container_registry_definition.name, null) != null ? var.genai_container_registry_definition.name : (try(var.name_prefix, null) != null ? "${var.name_prefix}genaicr${random_string.name_suffix.result}" : "genaicr${random_string.name_suffix.result}")
+  genai_container_registry_name                     = try(var.genai_container_registry_definition.name, null) != null ? var.genai_container_registry_definition.name : (var.name_prefix != null ? "${var.name_prefix}genaicr${random_string.name_suffix.result}" : "genaicr${random_string.name_suffix.result}")
   genai_container_registry_role_assignments = merge(
     local.genai_container_registry_default_role_assignments,
     var.genai_container_registry_definition.role_assignments
   )
-  genai_cosmosdb_name = try(var.genai_cosmosdb_definition.name, null) != null ? var.genai_cosmosdb_definition.name : (try(var.name_prefix, null) != null ? "${var.name_prefix}-genai-cosmosdb-${random_string.name_suffix.result}" : "genai-cosmosdb-${random_string.name_suffix.result}")
+  genai_cosmosdb_name = try(var.genai_cosmosdb_definition.name, null) != null ? var.genai_cosmosdb_definition.name : (var.name_prefix != null ? "${var.name_prefix}-genai-cosmosdb-${random_string.name_suffix.result}" : "genai-cosmosdb-${random_string.name_suffix.result}")
   # Handle secondary regions logic:
   # - If null, set to empty list
   # - If empty list, set to paired region details(default?)
@@ -36,7 +36,7 @@ locals {
       principal_id               = data.azurerm_client_config.current.object_id
     }
   }
-  genai_key_vault_name = try(var.genai_key_vault_definition.name, null) != null ? var.genai_key_vault_definition.name : (try(var.name_prefix, null) != null ? "${var.name_prefix}-genai-kv-${random_string.name_suffix.result}" : "genai-kv-${random_string.name_suffix.result}")
+  genai_key_vault_name = try(var.genai_key_vault_definition.name, null) != null ? var.genai_key_vault_definition.name : (var.name_prefix != null ? "${var.name_prefix}-genai-kv-${random_string.name_suffix.result}" : "genai-kv-${random_string.name_suffix.result}")
   genai_key_vault_role_assignments = merge(
     local.genai_key_vault_default_role_assignments,
     var.genai_key_vault_definition.role_assignments
@@ -59,7 +59,7 @@ locals {
       principal_id               = data.azurerm_client_config.current.object_id
     }
   }
-  genai_storage_account_name = try(var.genai_storage_account_definition.name, null) != null ? var.genai_storage_account_definition.name : (try(var.name_prefix, null) != null ? "${var.name_prefix}genaisa${random_string.name_suffix.result}" : "genaisa${random_string.name_suffix.result}")
+  genai_storage_account_name = try(var.genai_storage_account_definition.name, null) != null ? var.genai_storage_account_definition.name : (var.name_prefix != null ? "${var.name_prefix}genaisa${random_string.name_suffix.result}" : "genaisa${random_string.name_suffix.result}")
   genai_storage_account_role_assignments = merge(
     local.genai_storage_account_default_role_assignments,
     var.genai_storage_account_definition.role_assignments
