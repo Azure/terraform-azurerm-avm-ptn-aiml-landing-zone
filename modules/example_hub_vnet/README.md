@@ -17,7 +17,6 @@ The following requirements are needed by this module:
 The following resources are used by this module:
 
 - [azurerm_bastion_host.bastion](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/bastion_host) (resource)
-- [azurerm_public_ip.bastionpip](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/public_ip) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [random_integer.zone_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 - [random_string.name_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
@@ -175,6 +174,12 @@ Version: =0.10.0
 Source: Azure/avm-utl-regions/azurerm
 
 Version: 0.5.2
+
+### <a name="module_bastion_pip"></a> [bastion\_pip](#module\_bastion\_pip)
+
+Source: Azure/avm-res-network-publicipaddress/azurerm
+
+Version: 0.2.0
 
 ### <a name="module_firewall"></a> [firewall](#module\_firewall)
 

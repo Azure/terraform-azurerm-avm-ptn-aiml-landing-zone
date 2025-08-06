@@ -1206,7 +1206,7 @@ object({
     })), [])
     public_network_access_enabled    = optional(bool, false)
     analytical_storage_enabled       = optional(bool, true)
-    automatic_failover_enabled       = optional(bool, false)
+    automatic_failover_enabled       = optional(bool, true)
     local_authentication_disabled    = optional(bool, true)
     partition_merge_enabled          = optional(bool, false)
     multiple_write_locations_enabled = optional(bool, false)
@@ -1216,7 +1216,7 @@ object({
     consistency_policy = optional(object({
       max_interval_in_seconds = optional(number, 300)
       max_staleness_prefix    = optional(number, 100001)
-      consistency_level       = optional(string, "BoundedStaleness")
+      consistency_level       = optional(string, "Session")
     }), {})
     backup = optional(object({
       retention_in_hours  = optional(number)

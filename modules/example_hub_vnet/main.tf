@@ -50,12 +50,15 @@ module "natgateway" {
   }
 }
 
-resource "azurerm_public_ip" "bastionpip" {
-  allocation_method   = "Static"
+module "bastion_pip" {
+  source  = "Azure/avm-res-network-publicipaddress/azurerm"
+  version = "0.2.0"
+
   location            = azurerm_resource_group.this.location
   name                = "${local.bastion_name}-pip"
   resource_group_name = azurerm_resource_group.this.name
-  sku                 = "Standard"
+  enable_telemetry    = var.enable_telemetry
+  zones               = local.region_zones
 }
 
 resource "azurerm_bastion_host" "bastion" {
@@ -65,7 +68,7 @@ resource "azurerm_bastion_host" "bastion" {
 
   ip_configuration {
     name                 = "${local.bastion_name}-ipconf"
-    public_ip_address_id = azurerm_public_ip.bastionpip.id
+    public_ip_address_id = module.bastion_pip.resource_id
     subnet_id            = module.ai_lz_vnet.subnets["AzureBastionSubnet"].resource_id
   }
 }
