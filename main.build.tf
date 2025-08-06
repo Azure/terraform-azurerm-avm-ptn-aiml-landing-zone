@@ -22,7 +22,7 @@ module "buildvm" {
     key_vault_configuration = {
       resource_id = module.avm_res_keyvault_vault.resource_id
       secret_configuration = {
-        name = "azureuser-password-example"
+        name = "azureuser-password"
       }
     }
     password_authentication_disabled = false
