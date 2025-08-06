@@ -1,3 +1,4 @@
+/*
 variable "build_key_vault_definition" {
   type = object({
     name      = optional(string)
@@ -34,7 +35,7 @@ Configuration object for the Azure Key Vault to be created for build services.
 - `tags` - (Optional) Map of tags to assign to the Key Vault.
 DESCRIPTION
 }
-
+*/
 variable "buildvm_definition" {
   type = object({
     name             = optional(string)

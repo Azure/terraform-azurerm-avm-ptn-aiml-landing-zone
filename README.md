@@ -31,7 +31,6 @@ The following resources are used by this module:
 - [random_uuid.telemetry](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
 - [azapi_client_config.telemetry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config) (data source)
 - [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
-- [azurerm_subscription.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subscription) (data source)
 - [modtm_module_source.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/data-sources/module_source) (data source)
 
 <!-- markdownlint-disable MD013 -->
@@ -832,47 +831,6 @@ object({
     sku   = optional(string, "Standard")
     tags  = optional(map(string), {})
     zones = optional(list(string), ["1", "2", "3"])
-  })
-```
-
-Default: `{}`
-
-### <a name="input_build_key_vault_definition"></a> [build\_key\_vault\_definition](#input\_build\_key\_vault\_definition)
-
-Description: Configuration object for the Azure Key Vault to be created for build services.
-
-- `name` - (Optional) The name of the Key Vault. If not provided, a name will be generated.
-- `sku` - (Optional) The SKU of the Key Vault. Default is "standard".
-- `tenant_id` - (Optional) The tenant ID for the Key Vault. If not provided, the current tenant will be used.
-- `role_assignments` - (Optional) Map of role assignments to create on the Key Vault. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
-  - `role_definition_id_or_name` - The role definition ID or name to assign.
-  - `principal_id` - The principal ID to assign the role to.
-  - `description` - (Optional) Description of the role assignment.
-  - `skip_service_principal_aad_check` - (Optional) Whether to skip AAD check for service principal.
-  - `condition` - (Optional) Condition for the role assignment.
-  - `condition_version` - (Optional) Version of the condition.
-  - `delegated_managed_identity_resource_id` - (Optional) Resource ID of the delegated managed identity.
-  - `principal_type` - (Optional) Type of the principal (User, Group, ServicePrincipal).
-- `tags` - (Optional) Map of tags to assign to the Key Vault.
-
-Type:
-
-```hcl
-object({
-    name      = optional(string)
-    sku       = optional(string, "standard")
-    tenant_id = optional(string)
-    role_assignments = optional(map(object({
-      role_definition_id_or_name             = string
-      principal_id                           = string
-      description                            = optional(string, null)
-      skip_service_principal_aad_check       = optional(bool, false)
-      condition                              = optional(string, null)
-      condition_version                      = optional(string, null)
-      delegated_managed_identity_resource_id = optional(string, null)
-      principal_type                         = optional(string, null)
-    })), {})
-    tags = optional(map(string), {})
   })
 ```
 
