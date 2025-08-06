@@ -5,11 +5,38 @@
 This example deploys the version of the module with the platform landing zone flag set to true. In this configuration, the assumption is that a hub Vnet hosting DNS has been provided and that the landing zone will attach to a hub Vnet for all the standard network services. (DNS, Hybrid Connectivity, Firewalls, and etc.)
 
 ```hcl
+terraform {
+  required_version = ">= 1.9, < 2.0"
+
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 4.21"
+    }
+    http = {
+      source  = "hashicorp/http"
+      version = "~> 3.4"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.5"
+    }
+  }
+}
+
+provider "azurerm" {
+  features {
+    resource_group {
+      prevent_deletion_if_contains_resources = false
+    }
+  }
+}
+
 ## Section to provide a random Azure region for the resource group
 # This allows us to randomize the region for the resource group.
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "~> 0.1"
+  version = "0.3.0"
 }
 
 # This allows us to randomize the region for the resource group.
@@ -22,7 +49,7 @@ resource "random_integer" "region_index" {
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "~> 0.3"
+  version = "0.3.0"
 }
 
 data "http" "ip" {
@@ -51,7 +78,7 @@ module "example_hub" {
 module "test" {
   source = "../../"
 
-  location            = "australiaeast"
+  location            = "australiaeast" #temporarily pinning on australiaeast for capacity limits in test subscription.
   resource_group_name = "ai-lz-rg-default-${substr(module.naming.unique-seed, 0, 5)}"
   vnet_definition = {
     name          = "ai-lz-vnet-default"
@@ -193,9 +220,11 @@ module "test" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~> 1.5)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.21)
+
+- <a name="requirement_http"></a> [http](#requirement\_http) (~> 3.4)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 
@@ -243,13 +272,13 @@ Version:
 
 Source: Azure/naming/azurerm
 
-Version: ~> 0.3
+Version: 0.3.0
 
 ### <a name="module_regions"></a> [regions](#module\_regions)
 
 Source: Azure/avm-utl-regions/azurerm
 
-Version: ~> 0.1
+Version: 0.3.0
 
 ### <a name="module_test"></a> [test](#module\_test)
 

@@ -1004,7 +1004,17 @@ Default: `{}`
 
 ### <a name="input_firewall_policy_definition"></a> [firewall\_policy\_definition](#input\_firewall\_policy\_definition)
 
-Description: TODO: Add a variable for the firewall policy definition.
+Description: Configuration object for the Azure Firewall Policy to be deployed.
+
+- `network_policy_rule_collection_group_name` - (Optional) The name of the network policy rule collection group.
+- `network_policy_rule_collection_group_priority` - (Optional) The priority of the network policy rule collection group.
+- `network_rules` - (Optional) List of network rules for the firewall policy.
+  - `name` - The name of the network rule.
+  - `description` - Description of the network rule.
+  - `destination_addresses` - List of destination addresses for the rule.
+  - `destination_ports` - List of destination ports for the rule.
+  - `source_addresses` - List of source addresses for the rule.
+  - `protocols` - List of protocols for the rule (TCP/UDP/ICMP/Any).
 
 Type:
 
@@ -1035,37 +1045,11 @@ Type: `bool`
 
 Default: `true`
 
-### <a name="input_flag_standalone"></a> [flag\_standalone](#input\_flag\_standalone)
-
-Description: n/a
-
-Type:
-
-```hcl
-object({
-    deploy_build_resources = optional(bool, false) #TODO: create a validation rule that only allows this to be true if the platform landing zone is also being deployed
-    testing_config = optional(object({
-      tfvars_filename = optional(string, "test.auto.tfvars")
-    }), {})
-  })
-```
-
-Default:
-
-```json
-{
-  "deploy_build_resources": false,
-  "testing_config": {
-    "tfvars_filename": "test.auto.tfvars"
-  }
-}
-```
-
 ### <a name="input_genai_app_configuration_definition"></a> [genai\_app\_configuration\_definition](#input\_genai\_app\_configuration\_definition)
 
 Description: Configuration object for the Azure App Configuration service to be created for GenAI services.
 
-- `data_plan_proxy` - (Optional) Data plane proxy configuration for private endpoints.
+- `data_plane_proxy` - (Optional) Data plane proxy configuration for private endpoints.
   - `authentication_mode` - The authentication mode for the data plane proxy.
   - `private_link_delegation` - The private link delegation setting.
 - `name` - (Optional) The name of the App Configuration store. If not provided, a name will be generated.
@@ -1176,7 +1160,7 @@ Description: Configuration object for the Azure Cosmos DB account to be created 
 - `consistency_policy` - (Optional) Consistency policy configuration.
   - `max_interval_in_seconds` - (Optional) Maximum staleness interval in seconds. Default is 300.
   - `max_staleness_prefix` - (Optional) Maximum staleness prefix. Default is 100001.
-  - `consistency_level` - (Optional) The consistency level. Default is "BoundedStaleness".
+  - `consistency_level` - (Optional) The consistency level. Default is "Session".
 - `backup` - (Optional) Backup configuration.
   - `retention_in_hours` - (Optional) Backup retention in hours.
   - `interval_in_minutes` - (Optional) Backup interval in minutes.
@@ -1249,6 +1233,12 @@ Default: `{}`
 Description: Configuration object for the Azure Key Vault to be created for GenAI services.
 
 - `name` - (Optional) The name of the Key Vault. If not provided, a name will be generated.
+- `network_acls` - (Optional) Network access control list configuration for the Key Vault.
+  - `bypass` - (Optional) Services that can bypass the network ACLs. Default is "AzureServices".
+  - `default_action` - (Optional) Default action when no rule matches. Default is "Deny".
+  - `ip_rules` - (Optional) List of IP addresses or CIDR blocks to allow access.
+  - `virtual_network_subnet_ids` - (Optional) List of subnet resource IDs to allow access.
+- `public_network_access_enabled` - (Optional) Whether public network access is enabled. Default is false.
 - `sku` - (Optional) The SKU of the Key Vault. Default is "standard".
 - `tenant_id` - (Optional) The tenant ID for the Key Vault. If not provided, the current tenant will be used.
 - `role_assignments` - (Optional) Map of role assignments to create on the Key Vault. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
@@ -1584,6 +1574,7 @@ Description: Configuration object for Private DNS Zones and their network links.
 - `network_links` - (Optional) Map of network links to create for Private DNS Zones. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
   - `vnetlinkname` - The name of the virtual network link.
   - `vnetid` - The resource ID of the virtual network to link.
+  - `resolutionPolicy` - (Optional) The resolution policy for the virtual network link. Default is "Default".
 
 Type:
 

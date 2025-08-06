@@ -12,6 +12,8 @@ The following requirements are needed by this module:
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 3.116, < 5.0)
 
+- <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
+
 ## Resources
 
 The following resources are used by this module:
@@ -21,7 +23,6 @@ The following resources are used by this module:
 - [random_integer.zone_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 - [random_string.name_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
 - [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
-- [azurerm_subscription.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subscription) (data source)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
@@ -56,13 +57,6 @@ Description: Configuration object for the Virtual Network (VNet) to be deployed.
 
 - `name` - (Optional) The name of the Virtual Network. If not provided, a name will be generated.
 - `address_space` - (Required) The address space for the Virtual Network in CIDR notation.
-- `ddos_protection_plan_resource_id` - (Optional) Resource ID of the DDoS Protection Plan to associate with the VNet.
-- `dns_servers` - (Optional) Set of custom DNS server IP addresses for the VNet.
-- `subnets` - (Optional) Map of subnet configurations. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
-  - `enabled` - (Optional) Whether the subnet is enabled. Default is true.
-  - `name` - (Optional) The name of the subnet. If not provided, a name will be generated.
-  - `address_prefix` - (Optional) The address prefix for the subnet in CIDR notation.
-- `peer_vnet_resource_id` - (Optional) Resource ID of a VNet to peer with this VNet.
 
 Type:
 

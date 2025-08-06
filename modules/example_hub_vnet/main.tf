@@ -63,14 +63,13 @@ resource "azurerm_bastion_host" "bastion" {
   location            = azurerm_resource_group.this.location
   name                = local.bastion_name
   resource_group_name = azurerm_resource_group.this.name
+  tags                = var.tags
 
   ip_configuration {
     name                 = "${local.bastion_name}-ipconf"
     public_ip_address_id = module.bastion_pip.resource_id
     subnet_id            = module.ai_lz_vnet.subnets["AzureBastionSubnet"].resource_id
   }
-
-  tags = var.tags
 }
 
 # Add Azure Firewall with a permissive outbound rule for RFC 1918 traffic
