@@ -26,7 +26,7 @@ variable "genai_app_configuration_definition" {
   description = <<DESCRIPTION
 Configuration object for the Azure App Configuration service to be created for GenAI services.
 
-- `data_plan_proxy` - (Optional) Data plane proxy configuration for private endpoints.
+- `data_plane_proxy` - (Optional) Data plane proxy configuration for private endpoints.
   - `authentication_mode` - The authentication mode for the data plane proxy.
   - `private_link_delegation` - The private link delegation setting.
 - `name` - (Optional) The name of the App Configuration store. If not provided, a name will be generated.
@@ -154,7 +154,7 @@ Configuration object for the Azure Cosmos DB account to be created for GenAI ser
 - `consistency_policy` - (Optional) Consistency policy configuration.
   - `max_interval_in_seconds` - (Optional) Maximum staleness interval in seconds. Default is 300.
   - `max_staleness_prefix` - (Optional) Maximum staleness prefix. Default is 100001.
-  - `consistency_level` - (Optional) The consistency level. Default is "BoundedStaleness".
+  - `consistency_level` - (Optional) The consistency level. Default is "Session".
 - `backup` - (Optional) Backup configuration.
   - `retention_in_hours` - (Optional) Backup retention in hours.
   - `interval_in_minutes` - (Optional) Backup interval in minutes.
@@ -203,6 +203,12 @@ variable "genai_key_vault_definition" {
 Configuration object for the Azure Key Vault to be created for GenAI services.
 
 - `name` - (Optional) The name of the Key Vault. If not provided, a name will be generated.
+- `network_acls` - (Optional) Network access control list configuration for the Key Vault.
+  - `bypass` - (Optional) Services that can bypass the network ACLs. Default is "AzureServices".
+  - `default_action` - (Optional) Default action when no rule matches. Default is "Deny".
+  - `ip_rules` - (Optional) List of IP addresses or CIDR blocks to allow access.
+  - `virtual_network_subnet_ids` - (Optional) List of subnet resource IDs to allow access.
+- `public_network_access_enabled` - (Optional) Whether public network access is enabled. Default is false.
 - `sku` - (Optional) The SKU of the Key Vault. Default is "standard".
 - `tenant_id` - (Optional) The tenant ID for the Key Vault. If not provided, the current tenant will be used.
 - `role_assignments` - (Optional) Map of role assignments to create on the Key Vault. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.

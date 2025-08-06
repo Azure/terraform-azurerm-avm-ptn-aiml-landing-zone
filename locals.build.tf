@@ -1,4 +1,5 @@
 locals {
+  /*
   build_key_vault_default_role_assignments = {
     deployment_user_secrets = {
       role_definition_id_or_name = "Key Vault Administrator"
@@ -10,5 +11,6 @@ locals {
     local.build_key_vault_default_role_assignments,
     var.build_key_vault_definition.role_assignments
   )
+  */
   build_vm_name = try(var.buildvm_definition.name, null) != null ? var.buildvm_definition.name : (var.name_prefix != null ? "${var.name_prefix}-build" : "ai-alz-buildvm")
 }

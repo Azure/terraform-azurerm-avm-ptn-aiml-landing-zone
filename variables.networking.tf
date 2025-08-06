@@ -403,7 +403,20 @@ variable "firewall_policy_definition" {
       protocols             = list(string)
     })), null)
   })
-  default = {}
+  default     = {}
+  description = <<DESCRIPTION
+Configuration object for the Azure Firewall Policy to be deployed.
+
+- `network_policy_rule_collection_group_name` - (Optional) The name of the network policy rule collection group.
+- `network_policy_rule_collection_group_priority` - (Optional) The priority of the network policy rule collection group.
+- `network_rules` - (Optional) List of network rules for the firewall policy.
+  - `name` - The name of the network rule.
+  - `description` - Description of the network rule.
+  - `destination_addresses` - List of destination addresses for the rule.
+  - `destination_ports` - List of destination ports for the rule.
+  - `source_addresses` - List of source addresses for the rule.
+  - `protocols` - List of protocols for the rule (TCP/UDP/ICMP/Any).
+DESCRIPTION
 }
 
 variable "hub_vnet_peering_definition" {
@@ -519,6 +532,7 @@ Configuration object for Private DNS Zones and their network links.
 - `network_links` - (Optional) Map of network links to create for Private DNS Zones. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
   - `vnetlinkname` - The name of the virtual network link.
   - `vnetid` - The resource ID of the virtual network to link.
+  - `resolutionPolicy` - (Optional) The resolution policy for the virtual network link. Default is "Default".
 DESCRIPTION
 }
 

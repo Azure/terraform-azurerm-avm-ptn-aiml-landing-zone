@@ -2,6 +2,7 @@ locals {
   ai_foundry_name = try(var.ai_foundry_definition.name, null) != null ? var.ai_foundry_definition.name : (var.name_prefix != null ? "${var.name_prefix}-ai-foundry-${random_string.name_suffix.result}" : "ai-foundry-${random_string.name_suffix.result}")
   foundry_ai_foundry = merge(
     var.ai_foundry_definition.ai_foundry, {
+      name = local.ai_foundry_name
       network_injections = [{
         scenario                   = "agent"
         subnetArmId                = module.ai_lz_vnet.subnets["AIFoundrySubnet"].resource_id
