@@ -177,7 +177,6 @@ module "test" {
     }
   }
   bastion_definition = {
-    zones = [] #Zonal configurations are preview and not supported in westus3
   }
   enable_telemetry           = var.enable_telemetry
   flag_platform_landing_zone = true
