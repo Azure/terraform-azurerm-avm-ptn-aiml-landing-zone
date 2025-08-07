@@ -10,7 +10,28 @@ variable "vnet_definition" {
       address_prefix = optional(string)
       }
     )), {})
-    peer_vnet_resource_id = optional(string)
+    vnet_peering_configuration = optional(object({
+      peer_vnet_resource_id                = optional(string)
+      firewall_ip_address                  = optional(string)
+      name                                 = optional(string)
+      allow_forwarded_traffic              = optional(bool, true)
+      allow_gateway_transit                = optional(bool, true)
+      allow_virtual_network_access         = optional(bool, true)
+      create_reverse_peering               = optional(bool, true)
+      reverse_allow_forwarded_traffic      = optional(bool, false)
+      reverse_allow_gateway_transit        = optional(bool, false)
+      reverse_allow_virtual_network_access = optional(bool, true)
+      reverse_name                         = optional(string)
+      reverse_use_remote_gateways          = optional(bool, false)
+      use_remote_gateways                  = optional(bool, false)
+    }), {})
+    vwan_hub_peering_configuration = optional(object({
+      peer_vwan_hub_resource_id = optional(string)
+      #TODO: Add other connection properties here?
+    }), {})
+
+    #peer_vnet_resource_id = optional(string)
+
   })
   description = <<DESCRIPTION
 Configuration object for the Virtual Network (VNet) to be deployed.
@@ -23,7 +44,23 @@ Configuration object for the Virtual Network (VNet) to be deployed.
   - `enabled` - (Optional) Whether the subnet is enabled. Default is true.
   - `name` - (Optional) The name of the subnet. If not provided, a name will be generated.
   - `address_prefix` - (Optional) The address prefix for the subnet in CIDR notation.
-- `peer_vnet_resource_id` - (Optional) Resource ID of a VNet to peer with this VNet.
+- `vnet_peering_configuration` - (Optional) Configuration for VNet peering.
+  - `peer_vnet_resource_id` - (Optional) Resource ID of the peer VNet.
+  - `firewall_ip_address` - (Optional) IP address of the firewall for routing.
+  - `name` - (Optional) Name of the peering connection.
+  - `allow_forwarded_traffic` - (Optional) Whether forwarded traffic is allowed. Default is true.
+  - `allow_gateway_transit` - (Optional) Whether gateway transit is allowed. Default is true.
+  - `allow_virtual_network_access` - (Optional) Whether virtual network access is allowed. Default is true.
+  - `create_reverse_peering` - (Optional) Whether to create reverse peering. Default is true.
+  - `reverse_allow_forwarded_traffic` - (Optional) Whether reverse forwarded traffic is allowed. Default is false.
+  - `reverse_allow_gateway_transit` - (Optional) Whether reverse gateway transit is allowed. Default is false.
+  - `reverse_allow_virtual_network_access` - (Optional) Whether reverse virtual network access is allowed. Default is true.
+  - `reverse_name` - (Optional) Name of the reverse peering connection.
+  - `reverse_use_remote_gateways` - (Optional) Whether to use remote gateways in reverse direction. Default is false.
+  - `use_remote_gateways` - (Optional) Whether to use remote gateways. Default is false.
+- `vwan_hub_peering_configuration` - (Optional) Configuration for Virtual WAN hub peering.
+  - `peer_vwan_hub_resource_id` - (Optional) Resource ID of the Virtual WAN hub to peer with.
+
 DESCRIPTION
 }
 
@@ -419,6 +456,7 @@ Configuration object for the Azure Firewall Policy to be deployed.
 DESCRIPTION
 }
 
+#TODO move this under the vnet definition variable.
 variable "hub_vnet_peering_definition" {
   type = object({
     peer_vnet_resource_id                = optional(string)

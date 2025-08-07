@@ -25,6 +25,7 @@ The following resources are used by this module:
 
 - [azapi_resource.bing_grounding](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
+- [azurerm_virtual_hub_connection.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_hub_connection) (resource)
 - [modtm_telemetry.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/resources/telemetry) (resource)
 - [random_integer.zone_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 - [random_string.name_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
@@ -66,7 +67,22 @@ Description: Configuration object for the Virtual Network (VNet) to be deployed.
   - `enabled` - (Optional) Whether the subnet is enabled. Default is true.
   - `name` - (Optional) The name of the subnet. If not provided, a name will be generated.
   - `address_prefix` - (Optional) The address prefix for the subnet in CIDR notation.
-- `peer_vnet_resource_id` - (Optional) Resource ID of a VNet to peer with this VNet.
+- `vnet_peering_configuration` - (Optional) Configuration for VNet peering.
+  - `peer_vnet_resource_id` - (Optional) Resource ID of the peer VNet.
+  - `firewall_ip_address` - (Optional) IP address of the firewall for routing.
+  - `name` - (Optional) Name of the peering connection.
+  - `allow_forwarded_traffic` - (Optional) Whether forwarded traffic is allowed. Default is true.
+  - `allow_gateway_transit` - (Optional) Whether gateway transit is allowed. Default is true.
+  - `allow_virtual_network_access` - (Optional) Whether virtual network access is allowed. Default is true.
+  - `create_reverse_peering` - (Optional) Whether to create reverse peering. Default is true.
+  - `reverse_allow_forwarded_traffic` - (Optional) Whether reverse forwarded traffic is allowed. Default is false.
+  - `reverse_allow_gateway_transit` - (Optional) Whether reverse gateway transit is allowed. Default is false.
+  - `reverse_allow_virtual_network_access` - (Optional) Whether reverse virtual network access is allowed. Default is true.
+  - `reverse_name` - (Optional) Name of the reverse peering connection.
+  - `reverse_use_remote_gateways` - (Optional) Whether to use remote gateways in reverse direction. Default is false.
+  - `use_remote_gateways` - (Optional) Whether to use remote gateways. Default is false.
+- `vwan_hub_peering_configuration` - (Optional) Configuration for Virtual WAN hub peering.
+  - `peer_vwan_hub_resource_id` - (Optional) Resource ID of the Virtual WAN hub to peer with.
 
 Type:
 
@@ -82,7 +98,28 @@ object({
       address_prefix = optional(string)
       }
     )), {})
-    peer_vnet_resource_id = optional(string)
+    vnet_peering_configuration = optional(object({
+      peer_vnet_resource_id                = optional(string)
+      firewall_ip_address                  = optional(string)
+      name                                 = optional(string)
+      allow_forwarded_traffic              = optional(bool, true)
+      allow_gateway_transit                = optional(bool, true)
+      allow_virtual_network_access         = optional(bool, true)
+      create_reverse_peering               = optional(bool, true)
+      reverse_allow_forwarded_traffic      = optional(bool, false)
+      reverse_allow_gateway_transit        = optional(bool, false)
+      reverse_allow_virtual_network_access = optional(bool, true)
+      reverse_name                         = optional(string)
+      reverse_use_remote_gateways          = optional(bool, false)
+      use_remote_gateways                  = optional(bool, false)
+    }), {})
+    vwan_hub_peering_configuration = optional(object({
+      peer_vwan_hub_resource_id = optional(string)
+      #TODO: Add other connection properties here?
+    }), {})
+
+    #peer_vnet_resource_id = optional(string)
+
   })
 ```
 
@@ -863,6 +900,7 @@ Default: `{}`
 Description: Configuration object for the Container App Environment to be created for GenAI services.
 
 - `name` - (Optional) The name of the Container App Environment. If not provided, a name will be generated.
+- `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
 - `tags` - (Optional) Map of tags to assign to the Container App Environment.
 - `internal_load_balancer_enabled` - (Optional) Whether the load balancer is internal. Default is true.
 - `log_analytics_workspace_resource_id` - (Optional) Resource ID of the Log Analytics workspace for logging.
@@ -891,6 +929,7 @@ Type:
 ```hcl
 object({
     name                                = optional(string)
+    enable_diagnostic_settings          = optional(bool, true)
     tags                                = optional(map(string), {})
     internal_load_balancer_enabled      = optional(bool, true)
     log_analytics_workspace_resource_id = optional(string)
@@ -1082,6 +1121,7 @@ object({
     sku                           = optional(string, "Premium")
     zone_redundancy_enabled       = optional(bool, true)
     public_network_access_enabled = optional(bool, false)
+    enable_diagnostic_settings    = optional(bool, true)
     tags                          = optional(map(string), {})
     role_assignments = optional(map(object({
       role_definition_id_or_name             = string
@@ -1140,7 +1180,8 @@ Type:
 
 ```hcl
 object({
-    name = optional(string)
+    name                       = optional(string)
+    enable_diagnostic_settings = optional(bool, true)
     secondary_regions = optional(list(object({
       location          = string
       zone_redundant    = optional(bool, true)
@@ -1268,6 +1309,7 @@ Type:
 ```hcl
 object({
     name                          = optional(string)
+    enable_diagnostic_settings    = optional(bool, true)
     account_kind                  = optional(string, "StorageV2")
     account_tier                  = optional(string, "Standard")
     account_replication_type      = optional(string, "GRS")
@@ -1384,6 +1426,7 @@ Type:
 ```hcl
 object({
     name                          = optional(string)
+    enable_diagnostic_settings    = optional(bool, true)
     sku                           = optional(string, "standard")
     local_authentication_enabled  = optional(bool, true)
     partition_count               = optional(number, 1)
@@ -1760,7 +1803,7 @@ Version: 0.4.1
 
 Source: Azure/avm-ptn-aiml-ai-foundry/azurerm
 
-Version: 0.5.0
+Version: 0.5.1
 
 ### <a name="module_fw_pip"></a> [fw\_pip](#module\_fw\_pip)
 

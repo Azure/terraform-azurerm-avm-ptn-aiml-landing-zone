@@ -178,14 +178,16 @@ module "test" {
   }
   bastion_definition = {
   }
+  container_app_environment_definition = {
+    enable_diagnostic_settings = false
+  }
   enable_telemetry           = var.enable_telemetry
   flag_platform_landing_zone = true
-  #flag_standalone = {
-  #  deploy_build_resources = true
-  #}
   genai_container_registry_definition = {
+    enable_diagnostic_settings = false
   }
   genai_cosmosdb_definition = {
+    enable_diagnostic_settings = false
   }
   genai_key_vault_definition = {
     #this is for AVM testing purposes only. Doing this as we don't have an easy for the test runner to be privately connected for testing.
@@ -196,8 +198,10 @@ module "test" {
     }
   }
   genai_storage_account_definition = {
+    enable_diagnostic_settings = false
   }
   ks_ai_search_definition = {
+    enable_diagnostic_settings = false
   }
 }
 ```

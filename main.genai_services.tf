@@ -57,12 +57,12 @@ module "cosmosdb" {
     max_staleness_prefix    = var.genai_cosmosdb_definition.consistency_policy.max_staleness_prefix
   }
   cors_rule = var.genai_cosmosdb_definition.cors_rule
-  diagnostic_settings = {
+  diagnostic_settings = var.genai_cosmosdb_definition.enable_diagnostic_settings ? {
     to_law = {
       name                  = "sendToLogAnalytics-cosmosdb-${random_string.name_suffix.result}"
       workspace_resource_id = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
     }
-  }
+  } : {}
   enable_telemetry = var.enable_telemetry
   geo_locations    = local.genai_cosmosdb_secondary_regions
   ip_range_filter = [
@@ -103,12 +103,12 @@ module "storage_account" {
   account_kind             = var.genai_storage_account_definition.account_kind
   account_replication_type = var.genai_storage_account_definition.account_replication_type
   account_tier             = var.genai_storage_account_definition.account_tier
-  diagnostic_settings_storage_account = {
+  diagnostic_settings_storage_account = var.genai_storage_account_definition.enable_diagnostic_settings ? {
     storage = {
       name                  = "sendToLogAnalytics-sa-${random_string.name_suffix.result}"
       workspace_resource_id = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
     }
-  }
+  } : {}
   enable_telemetry = var.enable_telemetry
   private_endpoints = {
     for endpoint in var.genai_storage_account_definition.endpoint_types :
@@ -135,12 +135,12 @@ module "containerregistry" {
   location            = azurerm_resource_group.this.location
   name                = local.genai_container_registry_name
   resource_group_name = azurerm_resource_group.this.name
-  diagnostic_settings = {
+  diagnostic_settings = var.genai_container_registry_definition.enable_diagnostic_settings ? {
     storage = {
       name                  = "sendToLogAnalytics-acr-${random_string.name_suffix.result}"
       workspace_resource_id = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
     }
-  }
+  } : {}
   enable_telemetry = var.enable_telemetry
   private_endpoints = {
     container_registry = {

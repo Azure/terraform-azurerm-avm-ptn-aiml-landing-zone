@@ -1,6 +1,7 @@
 variable "container_app_environment_definition" {
   type = object({
     name                                = optional(string)
+    enable_diagnostic_settings          = optional(bool, true)
     tags                                = optional(map(string), {})
     internal_load_balancer_enabled      = optional(bool, true)
     log_analytics_workspace_resource_id = optional(string)
@@ -37,6 +38,7 @@ variable "container_app_environment_definition" {
 Configuration object for the Container App Environment to be created for GenAI services.
 
 - `name` - (Optional) The name of the Container App Environment. If not provided, a name will be generated.
+- `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
 - `tags` - (Optional) Map of tags to assign to the Container App Environment.
 - `internal_load_balancer_enabled` - (Optional) Whether the load balancer is internal. Default is true.
 - `log_analytics_workspace_resource_id` - (Optional) Resource ID of the Log Analytics workspace for logging.

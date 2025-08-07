@@ -184,21 +184,34 @@ module "test" {
   }
   bastion_definition = {
   }
+  container_app_environment_definition = {
+    enable_diagnostic_settings = false
+  }
   enable_telemetry           = var.enable_telemetry
   flag_platform_landing_zone = false
   genai_container_registry_definition = {
+    enable_diagnostic_settings = false
   }
   genai_cosmosdb_definition = {
+    enable_diagnostic_settings = false
+    consistency_level          = "Session"
   }
   genai_key_vault_definition = {
+    public_network_access_enabled = true # configured for testing
+    network_acls = {
+      bypass   = "AzureServices"
+      ip_rules = ["${data.http.ip.response_body}/32"] # Allow access from the test runner's IP address
+    }
   }
   genai_storage_account_definition = {
+    enable_diagnostic_settings = false
   }
   hub_vnet_peering_definition = {
     peer_vnet_resource_id = module.example_hub.virtual_network_resource_id
     firewall_ip_address   = module.example_hub.firewall_ip_address
   }
   ks_ai_search_definition = {
+    enable_diagnostic_settings = false
   }
   private_dns_zones = {
     existing_zones_resource_group_resource_id = module.example_hub.resource_group_resource_id

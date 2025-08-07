@@ -55,6 +55,7 @@ variable "genai_container_registry_definition" {
     sku                           = optional(string, "Premium")
     zone_redundancy_enabled       = optional(bool, true)
     public_network_access_enabled = optional(bool, false)
+    enable_diagnostic_settings    = optional(bool, true)
     tags                          = optional(map(string), {})
     role_assignments = optional(map(object({
       role_definition_id_or_name             = string
@@ -90,7 +91,8 @@ DESCRIPTION
 
 variable "genai_cosmosdb_definition" {
   type = object({
-    name = optional(string)
+    name                       = optional(string)
+    enable_diagnostic_settings = optional(bool, true)
     secondary_regions = optional(list(object({
       location          = string
       zone_redundant    = optional(bool, true)
@@ -227,6 +229,7 @@ DESCRIPTION
 variable "genai_storage_account_definition" {
   type = object({
     name                          = optional(string)
+    enable_diagnostic_settings    = optional(bool, true)
     account_kind                  = optional(string, "StorageV2")
     account_tier                  = optional(string, "Standard")
     account_replication_type      = optional(string, "GRS")
