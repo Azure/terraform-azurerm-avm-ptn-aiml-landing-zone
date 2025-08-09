@@ -19,5 +19,25 @@ module "foundry_ptn" {
   law_definition                      = var.ai_foundry_definition.law_definition
   private_endpoint_subnet_resource_id = module.ai_lz_vnet.subnets["PrivateEndpointSubnet"].resource_id
   storage_account_definition          = local.foundry_storage_account_definition
+
+  depends_on = [azapi_resource_action.purge_ai_foundry]
 }
 
+resource "azapi_resource_action" "purge_ai_foundry" {
+  count = var.ai_foundry_definition.purge_on_destroy ? 1 : 0
+
+  method      = "DELETE"
+  resource_id = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/providers/Microsoft.CognitiveServices/locations/${azurerm_resource_group.this.location}/resourceGroups/${azurerm_resource_group.this.name}/deletedAccounts/${local.ai_foundry_name}"
+  type        = "Microsoft.Resources/resourceGroups/deletedAccounts@2021-04-30"
+  when        = "destroy"
+
+  depends_on = [time_sleep.purge_ai_foundry_cooldown]
+}
+
+resource "time_sleep" "purge_ai_foundry_cooldown" {
+  count = var.ai_foundry_definition.purge_on_destroy ? 1 : 0
+
+  destroy_duration = "900s" # 10m
+
+  depends_on = [module.ai_lz_vnet]
+}

@@ -3,7 +3,8 @@
 variable "ai_foundry_definition" {
   type = object({
     # AI Foundry Hub Configuration
-    create_byor = optional(bool, true)
+    create_byor      = optional(bool, true)
+    purge_on_destroy = optional(bool, false)
     ai_foundry = optional(object({
       name                     = optional(string, null)
       disable_local_auth       = optional(bool, false)

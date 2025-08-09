@@ -66,6 +66,7 @@ module "test" {
     address_space = "192.168.0.0/23" # has to be out of 192.168.0.0/16 currently. Other RFC1918 not supported for foundry capabilityHost injection.
   }
   ai_foundry_definition = {
+    purge_on_destroy = true
     ai_foundry = {
       create_ai_agent_service = true
     }

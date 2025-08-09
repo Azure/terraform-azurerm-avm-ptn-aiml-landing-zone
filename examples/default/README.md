@@ -86,6 +86,7 @@ module "test" {
     dns_servers   = [for key, value in module.example_hub.dns_resolver_inbound_ip_addresses : value] # Use the DNS resolver IPs from the example hub
   }
   ai_foundry_definition = {
+    purge_on_destroy = true
     ai_foundry = {
       create_ai_agent_service = true
     }

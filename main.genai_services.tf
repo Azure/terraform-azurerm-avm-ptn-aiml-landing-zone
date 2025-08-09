@@ -35,6 +35,13 @@ module "avm_res_keyvault_vault" {
   depends_on = [module.private_dns_zones, module.hub_vnet_peering]
 }
 
+#moving this outside of the KV AVM module so I can set an implicit dependency from the jump vm module to order deletion properly.
+resource "azurerm_role_assignment" "deployment_user_kv_admin" {
+  principal_id         = data.azurerm_client_config.current.object_id
+  scope                = module.avm_res_keyvault_vault.resource_id
+  role_definition_name = "Key Vault Administrator"
+}
+
 #TODO:
 # validate the defaults for the cosmosdb module
 # create private endpoint config

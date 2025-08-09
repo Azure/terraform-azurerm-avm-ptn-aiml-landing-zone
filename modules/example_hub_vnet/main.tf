@@ -211,6 +211,8 @@ module "jumpvm" {
   enable_telemetry = var.enable_telemetry
   sku_size         = var.jump_vm_definition.sku
   tags             = var.jump_vm_definition.tags
+
+  depends_on = [module.avm_res_keyvault_vault]
 }
 
 module "avm_res_keyvault_vault" {
