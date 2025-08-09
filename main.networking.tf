@@ -36,7 +36,7 @@ module "nsgs" {
   security_rules      = local.nsg_rules
 }
 
-#TODO: Add support for a VWAN hub.
+
 #TODO: Add the platform landing zone flag as a secondary decision point for the hub vnet peering?
 module "hub_vnet_peering" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm//modules/peering"
@@ -62,6 +62,8 @@ module "hub_vnet_peering" {
   }
 }
 
+#TODO: Add the platform landing zone flag as a secondary decision point for the vwan connection?
+#peer_vwan_hub_resource_id
 resource "azurerm_virtual_hub_connection" "this" {
   count = var.vnet_definition.vwan_hub_peering_configuration.peer_vwan_hub_resource_id != null ? 1 : 0
 
@@ -69,7 +71,7 @@ resource "azurerm_virtual_hub_connection" "this" {
   remote_virtual_network_id = module.ai_lz_vnet.resource_id
   virtual_hub_id            = var.vnet_definition.vwan_hub_peering_configuration.peer_vwan_hub_resource_id
 }
-#peer_vwan_hub_resource_id
+
 
 module "firewall_route_table" {
   source  = "Azure/avm-res-network-routetable/azurerm"
@@ -171,16 +173,6 @@ module "azure_bastion" {
   tags  = var.bastion_definition.tags
   zones = var.bastion_definition.zones
 }
-
-#data "azurerm_private_dns_zone" "existing" {
-#  for_each = var.flag_platform_landing_zone ? local.private_dns_zones : {}
-#  name                = each.value.name
-#  resource_group_name = azurerm_resource_group.this.name
-#}
-
-#data "azurerm_subscription" "dns_zones" {
-#  count = var.flag_platform_landing_zone ? 1 : 0
-#}
 
 module "private_dns_zones" {
   source   = "Azure/avm-res-network-privatednszone/azurerm"

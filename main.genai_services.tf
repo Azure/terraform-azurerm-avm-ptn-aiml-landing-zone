@@ -36,6 +36,7 @@ module "avm_res_keyvault_vault" {
 }
 
 #moving this outside of the KV AVM module so I can set an implicit dependency from the jump vm module to order deletion properly.
+#TODO: Review if this permission is too permissive.  Can this be Secrets User instead?
 resource "azurerm_role_assignment" "deployment_user_kv_admin" {
   principal_id         = data.azurerm_client_config.current.object_id
   scope                = module.avm_res_keyvault_vault.resource_id
