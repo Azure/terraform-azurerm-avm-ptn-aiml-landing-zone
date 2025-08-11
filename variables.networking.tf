@@ -456,43 +456,6 @@ Configuration object for the Azure Firewall Policy to be deployed.
 DESCRIPTION
 }
 
-#TODO move this under the vnet definition variable.
-variable "hub_vnet_peering_definition" {
-  type = object({
-    peer_vnet_resource_id                = optional(string)
-    firewall_ip_address                  = optional(string)
-    name                                 = optional(string)
-    allow_forwarded_traffic              = optional(bool, true)
-    allow_gateway_transit                = optional(bool, true)
-    allow_virtual_network_access         = optional(bool, true)
-    create_reverse_peering               = optional(bool, true)
-    reverse_allow_forwarded_traffic      = optional(bool, false)
-    reverse_allow_gateway_transit        = optional(bool, false)
-    reverse_allow_virtual_network_access = optional(bool, true)
-    reverse_name                         = optional(string)
-    reverse_use_remote_gateways          = optional(bool, false)
-    use_remote_gateways                  = optional(bool, false)
-  })
-  default     = {}
-  description = <<DESCRIPTION
-Configuration object for VNet peering with a hub network.
-
-- `peer_vnet_resource_id` - (Optional) Resource ID of the hub VNet to peer with.
-- `firewall_ip_address` - (Optional) IP address of the firewall in the hub VNet for routing configuration.
-- `name` - (Optional) The name of the peering connection. If not provided, a name will be generated.
-- `allow_forwarded_traffic` - (Optional) Whether forwarded traffic is allowed across the peering. Default is true.
-- `allow_gateway_transit` - (Optional) Whether gateway transit is allowed. Default is true.
-- `allow_virtual_network_access` - (Optional) Whether virtual network access is allowed. Default is true.
-- `create_reverse_peering` - (Optional) Whether to create the reverse peering connection. Default is true.
-- `reverse_allow_forwarded_traffic` - (Optional) Whether forwarded traffic is allowed in the reverse direction. Default is false.
-- `reverse_allow_gateway_transit` - (Optional) Whether gateway transit is allowed in the reverse direction. Default is false.
-- `reverse_allow_virtual_network_access` - (Optional) Whether virtual network access is allowed in the reverse direction. Default is true.
-- `reverse_name` - (Optional) The name of the reverse peering connection.
-- `reverse_use_remote_gateways` - (Optional) Whether to use remote gateways in the reverse direction. Default is false.
-- `use_remote_gateways` - (Optional) Whether to use remote gateways. Default is false.
-DESCRIPTION
-}
-
 variable "nsgs_definition" {
   type = object({
     name = optional(string)
