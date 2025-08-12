@@ -30,8 +30,6 @@ variable "vnet_definition" {
       #TODO: Add other connection properties here?
     }), {})
 
-    #peer_vnet_resource_id = optional(string)
-
   })
   description = <<DESCRIPTION
 Configuration object for the Virtual Network (VNet) to be deployed.

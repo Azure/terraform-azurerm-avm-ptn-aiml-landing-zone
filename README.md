@@ -123,8 +123,6 @@ object({
       #TODO: Add other connection properties here?
     }), {})
 
-    #peer_vnet_resource_id = optional(string)
-
   })
 ```
 
@@ -1769,7 +1767,7 @@ Version: 0.4.1
 
 Source: Azure/avm-ptn-aiml-ai-foundry/azurerm
 
-Version: 0.5.1
+Version: 0.6.0
 
 ### <a name="module_fw_pip"></a> [fw\_pip](#module\_fw\_pip)
 
