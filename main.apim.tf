@@ -2,7 +2,7 @@
 
 module "apim" {
   source  = "Azure/avm-res-apimanagement-service/azurerm"
-  version = "0.0.3"
+  version = "0.0.5"
 
   location                   = azurerm_resource_group.this.location
   name                       = local.apim_name

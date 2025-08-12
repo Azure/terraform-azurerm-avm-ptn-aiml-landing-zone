@@ -1677,7 +1677,7 @@ Version: =0.7.1
 
 Source: Azure/avm-res-apimanagement-service/azurerm
 
-Version: 0.0.3
+Version: 0.0.5
 
 ### <a name="module_app_configuration"></a> [app\_configuration](#module\_app\_configuration)
 
