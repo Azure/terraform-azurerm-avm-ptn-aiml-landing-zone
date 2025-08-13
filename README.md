@@ -96,7 +96,7 @@ object({
     name                             = optional(string)
     address_space                    = string
     ddos_protection_plan_resource_id = optional(string)
-    dns_servers                      = optional(set(string))
+    dns_servers                      = optional(set(string), [])
     subnets = optional(map(object({
       enabled        = optional(bool, true)
       name           = optional(string)
