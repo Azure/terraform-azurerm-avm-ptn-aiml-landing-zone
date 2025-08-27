@@ -31,11 +31,6 @@ locals {
     ] : var.genai_cosmosdb_definition.secondary_regions
   )
   genai_key_vault_default_role_assignments = {
-    #TODO: revisit whether there should be any default data role assignments for the deployment user.
-    #deployment_user_secrets = {
-    #  role_definition_id_or_name = "Key Vault Administrator"
-    #  principal_id               = data.azurerm_client_config.current.object_id
-    #}
   }
   genai_key_vault_name = try(var.genai_key_vault_definition.name, null) != null ? var.genai_key_vault_definition.name : (var.name_prefix != null ? "${var.name_prefix}-genai-kv-${random_string.name_suffix.result}" : "genai-kv-${random_string.name_suffix.result}")
   genai_key_vault_role_assignments = merge(
@@ -43,22 +38,6 @@ locals {
     var.genai_key_vault_definition.role_assignments
   )
   genai_storage_account_default_role_assignments = {
-    #deployment_user_blob = {
-    #  role_definition_id_or_name = "Storage Blob Data Owner"
-    #  principal_id               = data.azurerm_client_config.current.object_id
-    #}
-    #deployment_user_file = {
-    #  role_definition_id_or_name = "Storage File Data Privileged Contributor"
-    #  principal_id               = data.azurerm_client_config.current.object_id
-    #}
-    #deployment_user_queue = {
-    #  role_definition_id_or_name = "Storage Queue Data Contributor"
-    #  principal_id               = data.azurerm_client_config.current.object_id
-    #}
-    #deployment_user_table = {
-    #  role_definition_id_or_name = "Storage Table Data Contributor"
-    #  principal_id               = data.azurerm_client_config.current.object_id
-    #}
   }
   genai_storage_account_name = try(var.genai_storage_account_definition.name, null) != null ? var.genai_storage_account_definition.name : (var.name_prefix != null ? "${var.name_prefix}genaisa${random_string.name_suffix.result}" : "genaisa${random_string.name_suffix.result}")
   genai_storage_account_role_assignments = merge(

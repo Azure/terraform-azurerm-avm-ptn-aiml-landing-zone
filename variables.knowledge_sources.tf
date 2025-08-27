@@ -1,5 +1,6 @@
 variable "ks_ai_search_definition" {
   type = object({
+    deploy                        = optional(bool, true)
     name                          = optional(string)
     enable_diagnostic_settings    = optional(bool, true)
     sku                           = optional(string, "standard")
@@ -25,6 +26,7 @@ variable "ks_ai_search_definition" {
   description = <<DESCRIPTION
 Configuration object for the Azure AI Search service to be created as part of the enterprise and public knowledge services.
 
+- `deploy` - (Optional) Deploy the AI Search service. Default is true.
 - `name` - (Optional) The name of the AI Search service. If not provided, a name will be generated.
 - `sku` - (Optional) The SKU of the AI Search service. Default is "standard".
 - `local_authentication_enabled` - (Optional) Whether local authentication is enabled. Default is true.
@@ -48,14 +50,16 @@ DESCRIPTION
 
 variable "ks_bing_grounding_definition" {
   type = object({
-    name = optional(string)
-    sku  = optional(string, "G1")
-    tags = optional(map(string), {})
+    deploy = optional(bool, true)
+    name   = optional(string)
+    sku    = optional(string, "G1")
+    tags   = optional(map(string), {})
   })
   default     = {}
   description = <<DESCRIPTION
 Configuration object for the Bing Grounding service to be created as part of the enterprise and public knowledge services.
 
+- `deploy` - (Optional) Deploy the Bing Ground service. Default is true.
 - `name` - (Optional) The name of the Bing Grounding service. If not provided, a name will be generated.
 - `sku` - (Optional) The SKU of the Bing Grounding service. Default is "G1".
 - `tags` - (Optional) Map of tags to assign to the Bing Grounding service.

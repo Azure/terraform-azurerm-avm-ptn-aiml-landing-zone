@@ -107,7 +107,7 @@ module "fw_pip" {
 module "firewall" {
   source  = "Azure/avm-res-network-azurefirewall/azurerm"
   version = "0.3.0"
-  count   = var.flag_platform_landing_zone ? 1 : 0
+  count   = var.flag_platform_landing_zone && var.firewall_definition.deploy ? 1 : 0
 
   firewall_sku_name   = var.firewall_definition.sku
   firewall_sku_tier   = var.firewall_definition.tier
@@ -160,7 +160,7 @@ module "firewall_network_rule_collection_group" {
 module "azure_bastion" {
   source  = "Azure/avm-res-network-bastionhost/azurerm"
   version = "0.7.2"
-  count   = var.flag_platform_landing_zone ? 1 : 0
+  count   = var.flag_platform_landing_zone && var.bastion_definition.deploy ? 1 : 0
 
   location            = azurerm_resource_group.this.location
   name                = local.bastion_name
@@ -203,6 +203,7 @@ module "app_gateway_waf_policy" {
 module "application_gateway" {
   source  = "Azure/avm-res-network-applicationgateway/azurerm"
   version = "0.4.2"
+  count   = var.app_gateway_definition.deploy ? 1 : 0
 
   backend_address_pools = var.app_gateway_definition.backend_address_pools
   backend_http_settings = var.app_gateway_definition.backend_http_settings

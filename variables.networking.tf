@@ -64,6 +64,7 @@ DESCRIPTION
 
 variable "app_gateway_definition" {
   type = object({
+    deploy       = optional(bool, true)
     name         = optional(string)
     http2_enable = optional(bool, true)
     authentication_certificate = optional(map(object({
@@ -266,6 +267,7 @@ variable "app_gateway_definition" {
   description = <<DESCRIPTION
 Configuration object for the Azure Application Gateway to be deployed.
 
+- `deploy` - (Optional) Deploy the application gateway. Default is true.
 - `name` - (Optional) The name of the Application Gateway. If not provided, a name will be generated.
 - `http2_enable` - (Optional) Whether HTTP/2 is enabled. Default is true.
 - `authentication_certificate` - (Optional) Map of authentication certificates for backend authentication.
@@ -388,15 +390,17 @@ DESCRIPTION
 
 variable "bastion_definition" {
   type = object({
-    name  = optional(string)
-    sku   = optional(string, "Standard")
-    tags  = optional(map(string), {})
-    zones = optional(list(string), ["1", "2", "3"])
+    deploy = optional(bool, true)
+    name   = optional(string)
+    sku    = optional(string, "Standard")
+    tags   = optional(map(string), {})
+    zones  = optional(list(string), ["1", "2", "3"])
   })
   default     = {}
   description = <<DESCRIPTION
 Configuration object for the Azure Bastion service to be deployed.
 
+- `deploy` - (Optional) Deploy the bastion service? Default is true.
 - `name` - (Optional) The name of the Bastion service. If not provided, a name will be generated.
 - `sku` - (Optional) The SKU of the Bastion service. Default is "Standard".
 - `tags` - (Optional) Map of tags to assign to the Bastion service.
@@ -406,16 +410,18 @@ DESCRIPTION
 
 variable "firewall_definition" {
   type = object({
-    name  = optional(string)
-    sku   = optional(string, "AZFW_VNet")
-    tier  = optional(string, "Standard")
-    zones = optional(list(string), ["1", "2", "3"])
-    tags  = optional(map(string), {})
+    deploy = optional(bool, true)
+    name   = optional(string)
+    sku    = optional(string, "AZFW_VNet")
+    tier   = optional(string, "Standard")
+    zones  = optional(list(string), ["1", "2", "3"])
+    tags   = optional(map(string), {})
   })
   default     = {}
   description = <<DESCRIPTION
 Configuration object for the Azure Firewall to be deployed.
 
+- `deploy` - (Optional) Deploy the Azure Firewall? Default is true.
 - `name` - (Optional) The name of the Azure Firewall. If not provided, a name will be generated.
 - `sku` - (Optional) The SKU of the Azure Firewall. Default is "AZFW_VNet".
 - `tier` - (Optional) The tier of the Azure Firewall. Default is "Standard".

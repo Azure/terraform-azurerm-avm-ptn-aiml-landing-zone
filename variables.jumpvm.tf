@@ -1,5 +1,6 @@
 variable "jumpvm_definition" {
   type = object({
+    deploy           = optional(bool, true)
     name             = optional(string)
     sku              = optional(string, "Standard_B2s")
     tags             = optional(map(string), {})

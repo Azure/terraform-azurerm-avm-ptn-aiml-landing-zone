@@ -1,6 +1,7 @@
 module "search_service" {
   source  = "Azure/avm-res-search-searchservice/azurerm"
   version = "0.1.5"
+  count   = var.ks_ai_search_definition.deploy ? 1 : 0
 
   location            = azurerm_resource_group.this.location
   name                = local.ks_ai_search_name
@@ -29,6 +30,8 @@ module "search_service" {
 }
 
 resource "azapi_resource" "bing_grounding" {
+  count = var.ks_bing_grounding_definition.deploy ? 1 : 0
+
   location  = "global"
   name      = local.ks_bing_grounding_name
   parent_id = azurerm_resource_group.this.id
@@ -39,12 +42,9 @@ resource "azapi_resource" "bing_grounding" {
       name = var.ks_bing_grounding_definition.sku
     }
   }
-  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  #create_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  #delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  #read_headers              = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  create_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers              = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   schema_validation_enabled = false
   tags                      = var.ks_bing_grounding_definition.tags
   update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null

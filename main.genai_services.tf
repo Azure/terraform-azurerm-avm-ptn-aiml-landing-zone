@@ -49,6 +49,7 @@ resource "azurerm_role_assignment" "deployment_user_kv_admin" {
 module "cosmosdb" {
   source  = "Azure/avm-res-documentdb-databaseaccount/azurerm"
   version = "0.8.0"
+  count   = var.genai_cosmosdb_definition.deploy ? 1 : 0
 
   location                   = azurerm_resource_group.this.location
   name                       = local.genai_cosmosdb_name
@@ -103,6 +104,7 @@ module "cosmosdb" {
 module "storage_account" {
   source  = "Azure/avm-res-storage-storageaccount/azurerm"
   version = "0.6.3"
+  count   = var.genai_storage_account_definition.deploy ? 1 : 0
 
   location                 = azurerm_resource_group.this.location
   name                     = local.genai_storage_account_name
@@ -139,6 +141,7 @@ module "storage_account" {
 module "containerregistry" {
   source  = "Azure/avm-res-containerregistry-registry/azurerm"
   version = "0.4.0"
+  count   = var.genai_container_registry_definition.deploy ? 1 : 0
 
   location            = azurerm_resource_group.this.location
   name                = local.genai_container_registry_name
@@ -167,6 +170,7 @@ module "containerregistry" {
 module "app_configuration" {
   source  = "Azure/avm-res-appconfiguration-configurationstore/azure"
   version = "0.4.1"
+  count   = var.genai_app_configuration_definition.deploy ? 1 : 0
 
   location                        = azurerm_resource_group.this.location
   name                            = local.genai_app_configuration_name

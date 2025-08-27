@@ -8,7 +8,7 @@ resource "random_integer" "zone_index" {
 module "jumpvm" {
   source  = "Azure/avm-res-compute-virtualmachine/azurerm"
   version = "0.19.3"
-  count   = var.flag_platform_landing_zone ? 1 : 0
+  count   = var.flag_platform_landing_zone && var.jumpvm_definition.deploy ? 1 : 0
 
   location = azurerm_resource_group.this.location
   name     = local.jump_vm_name
@@ -42,4 +42,6 @@ module "jumpvm" {
 # feature toggle if not required
 # credential to vault (ordering issues)
 ## Move the private endpoint for the vault outside the avm module ?
+# Consider adding options for different OS versions
+
 

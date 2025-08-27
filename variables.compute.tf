@@ -1,5 +1,6 @@
 variable "container_app_environment_definition" {
   type = object({
+    deploy                              = optional(bool, true)
     name                                = optional(string)
     enable_diagnostic_settings          = optional(bool, true)
     tags                                = optional(map(string), {})
@@ -37,6 +38,7 @@ variable "container_app_environment_definition" {
   description = <<DESCRIPTION
 Configuration object for the Container App Environment to be created for GenAI services.
 
+- `deploy` - (Optional) Whether to deploy the Container App Environment. Default is true.
 - `name` - (Optional) The name of the Container App Environment. If not provided, a name will be generated.
 - `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
 - `tags` - (Optional) Map of tags to assign to the Container App Environment.

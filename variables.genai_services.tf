@@ -5,6 +5,7 @@ variable "genai_app_configuration_definition" {
       authentication_mode     = string
       private_link_delegation = string
     }), null)
+    deploy                        = optional(bool, true)
     name                          = optional(string)
     local_auth_enabled            = optional(bool, false)
     purge_protection_enabled      = optional(bool, true)
@@ -29,6 +30,7 @@ Configuration object for the Azure App Configuration service to be created for G
 - `data_plane_proxy` - (Optional) Data plane proxy configuration for private endpoints.
   - `authentication_mode` - The authentication mode for the data plane proxy.
   - `private_link_delegation` - The private link delegation setting.
+- `deploy` - (Optional) Whether to deploy the App Configuration store. Default is true.
 - `name` - (Optional) The name of the App Configuration store. If not provided, a name will be generated.
 - `local_auth_enabled` - (Optional) Whether local authentication is enabled. Default is false.
 - `purge_protection_enabled` - (Optional) Whether purge protection is enabled. Default is true.
@@ -51,6 +53,7 @@ DESCRIPTION
 # Add georeplication support for Container Registry?
 variable "genai_container_registry_definition" {
   type = object({
+    deploy                        = optional(bool, true)
     name                          = optional(string)
     sku                           = optional(string, "Premium")
     zone_redundancy_enabled       = optional(bool, true)
@@ -72,6 +75,7 @@ variable "genai_container_registry_definition" {
   description = <<DESCRIPTION
 Configuration object for the Azure Container Registry to be created for GenAI services.
 
+- `deploy` - (Optional) Whether to deploy the Container Registry. Default is true.
 - `name` - (Optional) The name of the Container Registry. If not provided, a name will be generated.
 - `sku` - (Optional) The SKU of the Container Registry. Default is "Premium".
 - `zone_redundancy_enabled` - (Optional) Whether zone redundancy is enabled. Default is true.
@@ -91,6 +95,7 @@ DESCRIPTION
 
 variable "genai_cosmosdb_definition" {
   type = object({
+    deploy                     = optional(bool, true)
     name                       = optional(string)
     enable_diagnostic_settings = optional(bool, true)
     secondary_regions = optional(list(object({
@@ -132,14 +137,12 @@ variable "genai_cosmosdb_definition" {
       exposed_headers    = set(string)
       max_age_in_seconds = optional(number, null)
     }), null)
-
-
-
   })
   default     = {}
   description = <<DESCRIPTION
 Configuration object for the Azure Cosmos DB account to be created for GenAI services.
 
+- `deploy` - (Optional) Whether to deploy the Cosmos DB account. Default is true.
 - `name` - (Optional) The name of the Cosmos DB account. If not provided, a name will be generated.
 - `secondary_regions` - (Optional) List of secondary regions for geo-replication.
   - `location` - The Azure region for the secondary location.
@@ -228,6 +231,7 @@ DESCRIPTION
 
 variable "genai_storage_account_definition" {
   type = object({
+    deploy                        = optional(bool, true)
     name                          = optional(string)
     enable_diagnostic_settings    = optional(bool, true)
     account_kind                  = optional(string, "StorageV2")
@@ -256,6 +260,7 @@ variable "genai_storage_account_definition" {
   description = <<DESCRIPTION
 Configuration object for the Azure Storage Account to be created for GenAI services.
 
+- `deploy` - (Optional) Whether to deploy the Storage Account. Default is true.
 - `name` - (Optional) The name of the Storage Account. If not provided, a name will be generated.
 - `account_kind` - (Optional) The kind of storage account. Default is "StorageV2".
 - `account_tier` - (Optional) The performance tier of the storage account. Default is "Standard".
