@@ -1,0 +1,51 @@
+name: Deploy Standalone Example to Azure
+
+on:
+  workflow_dispatch:
+    inputs:
+      subscription_id:
+        description: 'Azure Subscription ID'
+        required: true
+      resource_group:
+        description: 'Resource Group Name'
+        required: true
+      location:
+        description: 'Azure Region'
+        required: true
+      platform_landing_zone:
+        description: 'Platform Landing Zone Flag'
+        required: false
+        default: 'false'
+  issues:
+    types: [opened, edited]
+
+jobs:
+  deploy:
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'issues' && contains(github.event.issue.title, '[Deploy Standalone]'))
+    runs-on: ubuntu-latest
+    env:
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      ARM_SUBSCRIPTION_ID: ${{ github.event.inputs.subscription_id || github.event.issue.body.subscription_id }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      TF_VAR_resource_group_name: ${{ github.event.inputs.resource_group || github.event.issue.body.resource_group }}
+      TF_VAR_location: ${{ github.event.inputs.location || github.event.issue.body.location }}
+      TF_VAR_flag_platform_landing_zone: ${{ github.event.inputs.platform_landing_zone || github.event.issue.body.platform_landing_zone }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: examples/standalone
+
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
+        working-directory: examples/standalone
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve tfplan
+        working-directory: examples/standalone

@@ -1,0 +1,37 @@
+name: Deploy Standalone Example
+description: Trigger deployment of the standalone Terraform template to Azure.
+title: "[Deploy Standalone] <your deployment name>"
+labels: ["deployment", "terraform", "azure"]
+body:
+  - type: input
+    id: subscription_id
+    attributes:
+      label: Azure Subscription ID
+      description: Enter your Azure Subscription ID.
+      placeholder: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+    validations:
+      required: true
+  - type: input
+    id: resource_group
+    attributes:
+      label: Resource Group Name
+      description: Name of the resource group to deploy to.
+      placeholder: "ai-lz-rg-standalone"
+    validations:
+      required: true
+  - type: input
+    id: location
+    attributes:
+      label: Azure Region
+      description: Region for deployment (e.g., australiaeast).
+      placeholder: "australiaeast"
+    validations:
+      required: true
+  - type: input
+    id: platform_landing_zone
+    attributes:
+      label: Platform Landing Zone Flag
+      description: Set to true or false.
+      placeholder: "false"
+    validations:
+      required: false
