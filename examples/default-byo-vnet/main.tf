@@ -78,17 +78,20 @@ module "test" {
   source = "../../"
 
   location            = "swedencentral"
-  resource_group_name = "ai-lz-rg-standalone-byo-vnet-${substr(module.naming.unique-seed, 0, 5)}"
-  flag_platform_landing_zone = true
+  resource_group_name = "ai-lz-rg-default-byo-vnet-${substr(module.naming.unique-seed, 0, 5)}"
+  flag_platform_landing_zone = false
+  tags = {
+    SecurityControl = "Ignore"
+  }
   byo_vnet_definition = {
     byo                 = true
     name                = data.azurerm_virtual_network.existing_vnet.name
     resource_group_name = data.azurerm_virtual_network.existing_vnet.resource_group_name
   }
   vnet_definition = { # Fix so this is not needed
-    name          = "ai-lz-vnet-standalone"
+    name          = "ai-lz-vnet-default"
     address_space = "192.168.0.0/23" # has to be out of 192.168.0.0/16 currently. Other RFC1918 not supported for foundry capabilityHost injection.
-    resource_group_name = "ai-lz-rg-standalone-byo-vnet-${substr(module.naming.unique-seed, 0, 5)}"
+    resource_group_name = "ai-lz-rg-default-byo-vnet-${substr(module.naming.unique-seed, 0, 5)}"
   }
   ai_foundry_definition = {
     purge_on_destroy = true
@@ -201,7 +204,6 @@ module "test" {
     enable_diagnostic_settings = false
   }
   enable_telemetry           = var.enable_telemetry
-  flag_platform_landing_zone = true
   genai_container_registry_definition = {
     enable_diagnostic_settings = false
   }
