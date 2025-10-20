@@ -18,6 +18,7 @@ terraform {
 }
 
 provider "azurerm" {
+  subscription_id = var.subscription_id
   features {
     resource_group {
       prevent_deletion_if_contains_resources = false
@@ -62,32 +63,23 @@ data "http" "ip" {
   }
 }
 
-# This section demonstrates the Bring Your Own (BYO) VNet pattern for the AI/ML landing zone
-# It imports an existing virtual network into the module's state and references it via data source
-
-
-# Data source to retrieve information about the existing virtual network
-# This provides the module with network configuration details from the imported VNet
-# Used in conjunction with the import block to enable BYO VNet scenarios
-data "azurerm_virtual_network" "existing_vnet" {
-  name                = var.byo_vnet_name
-  resource_group_name = var.byo_vnet_resource_group_name
-}
-
 module "test" {
   source = "../../"
 
   location            = "swedencentral"
   resource_group_name = "ai-lz-rg-standalone-byo-vnet-${substr(module.naming.unique-seed, 0, 5)}"
   byo_vnet_definition = {
-    byo                 = true
-    name                = data.azurerm_virtual_network.existing_vnet.name
-    resource_group_name = data.azurerm_virtual_network.existing_vnet.resource_group_name
+    resource_id         = var.byo_vnet_id
+    name                = var.byo_vnet_name
+    resource_group_name = var.byo_vnet_resource_group_name
   }
-  vnet_definition = { # Fix so this is not needed
-    name          = "ai-lz-vnet-standalone"
-    address_space = "192.168.0.0/23" # has to be out of 192.168.0.0/16 currently. Other RFC1918 not supported for foundry capabilityHost injection.
-    resource_group_name = "ai-lz-rg-standalone-byo-vnet-${substr(module.naming.unique-seed, 0, 5)}"
+  #vnet_definition = { # Fix so this is not needed
+  #  name          = "ai-lz-vnet-standalone"
+  #  address_space = "192.168.0.0/23" # has to be out of 192.168.0.0/16 currently. Other RFC1918 not supported for foundry capabilityHost injection.
+  #  resource_group_name = "ai-lz-rg-standalone-byo-vnet-${substr(module.naming.unique-seed, 0, 5)}"
+  #}
+  tags = {
+    SecurityControl = "Ignore"
   }
   ai_foundry_definition = {
     purge_on_destroy = true

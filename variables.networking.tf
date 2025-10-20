@@ -66,12 +66,15 @@ DESCRIPTION
 
 variable "byo_vnet_definition" {
   type = object({
-    byo                 = bool
+    resource_id         = string
     name                = string
     resource_group_name = string
   })
   default     = null
-  description = "Configuration for using an existing Virtual Network (VNet) instead of creating a new one. Specify the name and resource group name of the existing VNet. If provided, the `vnet_definition` variable will be ignored."
+  description = <<DESCRIPTION
+   Configuration for using an existing Virtual Network (VNet) instead of creating a new one. Specify the name and resource group name of the existing VNet.
+   If provided, the `vnet_definition` variable will be ignored.
+   DESCRIPTION
 }
 
 variable "app_gateway_definition" {
