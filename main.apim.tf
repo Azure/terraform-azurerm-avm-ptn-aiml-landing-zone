@@ -25,7 +25,7 @@ module "apim" {
   private_endpoints = {
     endpoint1 = {
       private_dns_zone_resource_ids = var.flag_platform_landing_zone ? [module.private_dns_zones.apim_zone.resource_id] : [local.private_dns_zones_existing.apim_zone.resource_id]
-      subnet_resource_id            = module.ai_lz_vnet.subnets["PrivateEndpointSubnet"].resource_id
+      subnet_resource_id            = local.subnet_ids["PrivateEndpointSubnet"]
     }
   }
   protocols                     = var.apim_definition.protocols

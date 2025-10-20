@@ -3,6 +3,7 @@
 module "ai_lz_vnet" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
   version = "=0.7.1"
+  count   = var.byo_vnet_definition.byo ? 0 : 1
 
   address_space       = [var.vnet_definition.address_space]
   location            = azurerm_resource_group.this.location
@@ -24,6 +25,37 @@ module "ai_lz_vnet" {
   enable_telemetry = var.enable_telemetry
   name             = local.vnet_name
   subnets          = local.deployed_subnets
+}
+
+data "azurerm_virtual_network" "ai_lz_vnet" {
+    count               = var.byo_vnet_definition.byo ? 1 : 0
+    name                = var.byo_vnet_definition.name
+    resource_group_name = var.byo_vnet_definition.resource_group_name
+}
+
+resource "azurerm_subnet" "byo" {
+  for_each             = local.deployed_subnets # --Add condition--clear
+  name                 = each.value.name
+  resource_group_name  = var.byo_vnet_definition.resource_group_name
+  virtual_network_name = var.byo_vnet_definition.name
+  address_prefixes     = each.value.address_prefixes
+
+  dynamic "delegation" {
+    for_each = try(each.value.delegation, [])
+    content {
+      name = delegation.value.name
+      service_delegation {
+        name    = delegation.value.service_delegation.name
+        actions = try(delegation.value.service_delegation.actions, null)
+      }
+    }
+  }
+}
+
+# Unified locals
+locals {
+  vnet_resource_id = var.byo_vnet_definition.byo ? data.azurerm_virtual_network.ai_lz_vnet[0].id : module.ai_lz_vnet[0].resource_id
+  subnet_ids = var.byo_vnet_definition.byo ? { for k, v in azurerm_subnet.byo : k => v.id } : { for k, v in module.ai_lz_vnet[0].subnets : k => v.resource_id }
 }
 
 module "nsgs" {
@@ -58,7 +90,7 @@ module "hub_vnet_peering" {
   reverse_use_remote_gateways          = var.vnet_definition.vnet_peering_configuration.reverse_use_remote_gateways
   use_remote_gateways                  = var.vnet_definition.vnet_peering_configuration.use_remote_gateways
   virtual_network = {
-    resource_id = module.ai_lz_vnet.resource_id
+    resource_id = local.vnet_resource_id
   }
 }
 
@@ -68,7 +100,7 @@ resource "azurerm_virtual_hub_connection" "this" {
   count = var.vnet_definition.vwan_hub_peering_configuration.peer_vwan_hub_resource_id != null ? 1 : 0
 
   name                      = "${local.vnet_name}-to-${basename(var.vnet_definition.vwan_hub_peering_configuration.peer_vwan_hub_resource_id)}"
-  remote_virtual_network_id = module.ai_lz_vnet.resource_id
+  remote_virtual_network_id = local.vnet_resource_id
   virtual_hub_id            = var.vnet_definition.vwan_hub_peering_configuration.peer_vwan_hub_resource_id
 }
 
@@ -126,7 +158,7 @@ module "firewall" {
   firewall_ip_configuration = [
     {
       name                 = "${local.firewall_name}-ipconfig1"
-      subnet_id            = module.ai_lz_vnet.subnets["AzureFirewallSubnet"].resource_id
+      subnet_id            = local.subnet_ids["AzureFirewallSubnet"]
       public_ip_address_id = module.fw_pip[0].resource_id
     }
   ]
@@ -167,7 +199,7 @@ module "azure_bastion" {
   resource_group_name = azurerm_resource_group.this.name
   enable_telemetry    = var.enable_telemetry
   ip_configuration = {
-    subnet_id = module.ai_lz_vnet.subnets["AzureBastionSubnet"].resource_id
+    subnet_id = local.subnet_ids["AzureBastionSubnet"]
   }
   sku   = var.bastion_definition.sku
   tags  = var.bastion_definition.tags
@@ -209,7 +241,7 @@ module "application_gateway" {
   backend_http_settings = var.app_gateway_definition.backend_http_settings
   frontend_ports        = var.app_gateway_definition.frontend_ports
   gateway_ip_configuration = {
-    subnet_id = module.ai_lz_vnet.subnets["AppGatewaySubnet"].resource_id
+    subnet_id = local.subnet_ids["AppGatewaySubnet"]
   }
   http_listeners                     = var.app_gateway_definition.http_listeners
   location                           = azurerm_resource_group.this.location

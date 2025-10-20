@@ -4,6 +4,7 @@ variable "vnet_definition" {
     address_space                    = string
     ddos_protection_plan_resource_id = optional(string)
     dns_servers                      = optional(set(string), [])
+    resource_group_name              = optional(string)
     subnets = optional(map(object({
       enabled        = optional(bool, true)
       name           = optional(string)
@@ -29,8 +30,9 @@ variable "vnet_definition" {
       peer_vwan_hub_resource_id = optional(string)
       #TODO: Add other connection properties here?
     }), {})
-
   })
+  default = null
+  
   description = <<DESCRIPTION
 Configuration object for the Virtual Network (VNet) to be deployed.
 
@@ -60,6 +62,16 @@ Configuration object for the Virtual Network (VNet) to be deployed.
   - `peer_vwan_hub_resource_id` - (Optional) Resource ID of the Virtual WAN hub to peer with.
 
 DESCRIPTION
+}
+
+variable "byo_vnet_definition" {
+  type = object({
+    byo                 = bool
+    name                = string
+    resource_group_name = string
+  })
+  default     = null
+  description = "Configuration for using an existing Virtual Network (VNet) instead of creating a new one. Specify the name and resource group name of the existing VNet. If provided, the `vnet_definition` variable will be ignored."
 }
 
 variable "app_gateway_definition" {

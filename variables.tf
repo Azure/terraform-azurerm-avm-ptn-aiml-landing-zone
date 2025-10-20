@@ -66,3 +66,4 @@ Map of tags to be assigned to all resources created by this module.
 Tags are key-value pairs that help organize and manage Azure resources. These tags will be applied to all resources created by the module, enabling consistent resource governance, cost tracking, and operational management across the AI/ML landing zone infrastructure.
 DESCRIPTION
 }
+

@@ -9,7 +9,7 @@ locals {
   default_virtual_network_link = {
     alz_vnet_link = {
       vnetlinkname      = "${local.vnet_name}-link"
-      vnetid            = module.ai_lz_vnet.resource_id
+      vnetid            = local.vnet_resource_id
       autoregistration  = false
       resolution_policy = var.private_dns_zones.allow_internet_resolution_fallback == false ? "Default" : "NxDomainRedirect"
     }
