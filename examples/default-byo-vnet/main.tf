@@ -73,7 +73,7 @@ module "test" {
     name                = var.byo_vnet_name
     resource_group_name = var.byo_vnet_resource_group_name
   }
-  #vnet_definition = { # Fix so this is not needed
+  #vnet_definition = {
   #  name          = "ai-lz-vnet-standalone"
   #  address_space = "192.168.0.0/23" # has to be out of 192.168.0.0/16 currently. Other RFC1918 not supported for foundry capabilityHost injection.
   #  resource_group_name = "ai-lz-rg-standalone-byo-vnet-${substr(module.naming.unique-seed, 0, 5)}"
