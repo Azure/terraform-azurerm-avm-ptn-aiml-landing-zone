@@ -76,11 +76,6 @@ module "test" {
   private_dns_zones = {
     "existing_zones_resource_group_resource_id" = var.existing_zones_resource_group_resource_id
   }
-  #vnet_definition = {
-  #  name          = "ai-lz-vnet-standalone"
-  #  address_space = "192.168.0.0/23" # has to be out of 192.168.0.0/16 currently. Other RFC1918 not supported for foundry capabilityHost injection.
-  #  resource_group_name = "ai-lz-rg-standalone-byo-vnet-${substr(module.naming.unique-seed, 0, 5)}"
-  #}
   tags = {
     SecurityControl = "Ignore"
   }
