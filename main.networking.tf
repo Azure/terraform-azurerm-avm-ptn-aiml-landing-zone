@@ -58,8 +58,8 @@ module "byo_subnets" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm//modules/subnet"
   version = "0.15.0"
 
-  for_each = var.byo_vnet_definition != null ? local.deployed_subnets : tomap({})
-
+  for_each = { for k, v in local.deployed_subnets : k => v if var.byo_vnet_definition != null }
+  
   # Direct VNet resource id (module not instantiated when BYO is null due to empty for_each)
   parent_id        = var.byo_vnet_definition.resource_id
   name             = each.value.name
@@ -85,7 +85,7 @@ module "nsgs" {
 
   location            = azurerm_resource_group.this.location
   name                = local.nsg_name
-  resource_group_name = var.byo_vnet_definition.resource_group_name != null ? var.byo_vnet_definition.resource_group_name : azurerm_resource_group.this.name
+  resource_group_name = var.byo_vnet_definition != null ? var.byo_vnet_definition.resource_group_name : azurerm_resource_group.this.name
   security_rules      = local.nsg_rules
 }
 
@@ -96,20 +96,20 @@ module "hub_vnet_peering" {
   version = "0.9.0"
   count   = var.vnet_definition != null && try(var.vnet_definition.vnet_peering_configuration.peer_vnet_resource_id, null) != null ? 1 : 0
 
-  allow_forwarded_traffic      = try(var.vnet_definition.vnet_peering_configuration.allow_forwarded_traffic, true)
-  allow_gateway_transit        = try(var.vnet_definition.vnet_peering_configuration.allow_gateway_transit, true)
-  allow_virtual_network_access = try(var.vnet_definition.vnet_peering_configuration.allow_virtual_network_access, true)
-  create_reverse_peering       = try(var.vnet_definition.vnet_peering_configuration.create_reverse_peering, true)
-  name                         = try(var.vnet_definition.vnet_peering_configuration.name, "${local.vnet_name}-local-to-remote")
+  allow_forwarded_traffic      = var.vnet_definition.vnet_peering_configuration.allow_forwarded_traffic
+  allow_gateway_transit        = var.vnet_definition.vnet_peering_configuration.allow_gateway_transit
+  allow_virtual_network_access = var.vnet_definition.vnet_peering_configuration.allow_virtual_network_access
+  create_reverse_peering       = var.vnet_definition.vnet_peering_configuration.create_reverse_peering
+  name                         = var.vnet_definition.vnet_peering_configuration.name != null ? var.vnet_definition.vnet_peering_configuration.name : "${local.vnet_name}-local-to-remote"
   remote_virtual_network = {
     resource_id = var.vnet_definition.vnet_peering_configuration.peer_vnet_resource_id
   }
-  reverse_allow_forwarded_traffic      = try(var.vnet_definition.vnet_peering_configuration.reverse_allow_forwarded_traffic, false)
-  reverse_allow_gateway_transit        = try(var.vnet_definition.vnet_peering_configuration.reverse_allow_gateway_transit, false)
-  reverse_allow_virtual_network_access = try(var.vnet_definition.vnet_peering_configuration.reverse_allow_virtual_network_access, true)
-  reverse_name                         = try(var.vnet_definition.vnet_peering_configuration.reverse_name, "${local.vnet_name}-remote-to-local")
-  reverse_use_remote_gateways          = try(var.vnet_definition.vnet_peering_configuration.reverse_use_remote_gateways, false)
-  use_remote_gateways                  = try(var.vnet_definition.vnet_peering_configuration.use_remote_gateways, false)
+  reverse_allow_forwarded_traffic      = var.vnet_definition.vnet_peering_configuration.reverse_allow_forwarded_traffic
+  reverse_allow_gateway_transit        = var.vnet_definition.vnet_peering_configuration.reverse_allow_gateway_transit
+  reverse_allow_virtual_network_access = var.vnet_definition.vnet_peering_configuration.reverse_allow_virtual_network_access
+  reverse_name                         = var.vnet_definition.vnet_peering_configuration.reverse_name != null ? var.vnet_definition.vnet_peering_configuration.reverse_name : "${local.vnet_name}-remote-to-local"
+  reverse_use_remote_gateways          = var.vnet_definition.vnet_peering_configuration.reverse_use_remote_gateways
+  use_remote_gateways                  = var.vnet_definition.vnet_peering_configuration.use_remote_gateways
   virtual_network = {
     resource_id = local.vnet_resource_id
   }
@@ -132,7 +132,7 @@ module "firewall_route_table" {
 
   location                      = azurerm_resource_group.this.location
   name                          = local.route_table_name
-  resource_group_name = var.byo_vnet_definition.resource_group_name != null ? var.byo_vnet_definition.resource_group_name : azurerm_resource_group.this.name
+  resource_group_name = var.byo_vnet_definition != null ? var.byo_vnet_definition.resource_group_name : azurerm_resource_group.this.name
   bgp_route_propagation_enabled = true
   routes = {
     azure_firewall = {
@@ -151,7 +151,7 @@ module "fw_pip" {
 
   location            = azurerm_resource_group.this.location
   name                = "${local.firewall_name}-pip"
-  resource_group_name = var.byo_vnet_definition.resource_group_name != null ? var.byo_vnet_definition.resource_group_name : azurerm_resource_group.this.name
+  resource_group_name = var.byo_vnet_definition != null ? var.byo_vnet_definition.resource_group_name : azurerm_resource_group.this.name
   enable_telemetry    = var.enable_telemetry
   zones               = var.firewall_definition.zones
 }
@@ -165,7 +165,7 @@ module "firewall" {
   firewall_sku_tier   = var.firewall_definition.tier
   location            = azurerm_resource_group.this.location
   name                = local.firewall_name
-  resource_group_name = var.byo_vnet_definition.resource_group_name != null ? var.byo_vnet_definition.resource_group_name : azurerm_resource_group.this.name
+  resource_group_name = var.byo_vnet_definition != null ? var.byo_vnet_definition.resource_group_name : azurerm_resource_group.this.name
   diagnostic_settings = {
     to_law = {
       name                  = "sendToLogAnalytics-fwpip-${random_string.name_suffix.result}"
@@ -192,7 +192,7 @@ module "firewall_policy" {
 
   location            = azurerm_resource_group.this.location
   name                = "${local.firewall_name}-policy"
-  resource_group_name = var.byo_vnet_definition.resource_group_name != null ? var.byo_vnet_definition.resource_group_name : azurerm_resource_group.this.name
+  resource_group_name = var.byo_vnet_definition != null ? var.byo_vnet_definition.resource_group_name : azurerm_resource_group.this.name
   enable_telemetry    = var.enable_telemetry
 }
 
@@ -216,7 +216,7 @@ module "azure_bastion" {
 
   location            = azurerm_resource_group.this.location
   name                = local.bastion_name
-  resource_group_name = var.byo_vnet_definition.resource_group_name != null ? var.byo_vnet_definition.resource_group_name : azurerm_resource_group.this.name
+  resource_group_name = var.byo_vnet_definition != null ? var.byo_vnet_definition.resource_group_name : azurerm_resource_group.this.name
   enable_telemetry    = var.enable_telemetry
   ip_configuration = {
     subnet_id = local.subnet_ids["AzureBastionSubnet"]
