@@ -1,6 +1,6 @@
 variable "apim_definition" {
   type = object({
-    deploy          = optional(bool, false)
+    deploy          = optional(bool, true)
     name            = optional(string)
     publisher_email = string
     publisher_name  = string
