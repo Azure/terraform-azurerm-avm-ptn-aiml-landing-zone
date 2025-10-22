@@ -33,27 +33,6 @@ data "azurerm_virtual_network" "ai_lz_vnet" {
     resource_group_name = var.byo_vnet_definition.resource_group_name
 }
 
-/*
-resource "azurerm_subnet" "byo" {
-  for_each             = var.byo_vnet_definition != null ? local.deployed_subnets : tomap({})
-  name                 = each.value.name
-  resource_group_name  = var.byo_vnet_definition.resource_group_name
-  virtual_network_name = var.byo_vnet_definition.name
-  address_prefixes     = each.value.address_prefixes
-
-  dynamic "delegation" {
-    for_each = try(each.value.delegation, [])
-    content {
-      name = delegation.value.name
-      service_delegation {
-        name    = delegation.value.service_delegation.name
-        actions = try(delegation.value.service_delegation.actions, null)
-      }
-    }
-  }
-}
-*/
-
 module "byo_subnets" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm//modules/subnet"
   version = "0.15.0"
@@ -69,15 +48,6 @@ module "byo_subnets" {
   network_security_group            = try(each.value.network_security_group, null)
   route_table                       = try(each.value.route_table, null)
 }
-
-/*
-# Unified locals
-locals {
-  vnet_resource_id   = var.byo_vnet_definition != null ? data.azurerm_virtual_network.ai_lz_vnet[0].id : module.ai_lz_vnet[0].resource_id
-  subnet_ids = var.byo_vnet_definition != null ? { for key, m in module.byo_subnets : key => try(m.resource_id, m.id) } : { for key, s in module.ai_lz_vnet[0].subnets : key => s.resource_id }
-  vnet_address_space = var.byo_vnet_definition != null ? data.azurerm_virtual_network.ai_lz_vnet[0].address_space[0] : (var.vnet_definition != null ? var.vnet_definition.address_space : "")
-}
-*/
 
 module "nsgs" {
   source  = "Azure/avm-res-network-networksecuritygroup/azurerm"
