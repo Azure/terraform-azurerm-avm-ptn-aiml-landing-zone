@@ -4,7 +4,6 @@ variable "vnet_definition" {
     address_space                    = string
     ddos_protection_plan_resource_id = optional(string)
     dns_servers                      = optional(set(string), [])
-    resource_group_name              = optional(string)
     subnets = optional(map(object({
       enabled        = optional(bool, true)
       name           = optional(string)
@@ -79,7 +78,7 @@ variable "byo_vnet_definition" {
 
 variable "app_gateway_definition" {
   type = object({
-    deploy       = optional(bool, true)
+    deploy       = optional(bool, false)
     name         = optional(string)
     http2_enable = optional(bool, true)
     authentication_certificate = optional(map(object({
