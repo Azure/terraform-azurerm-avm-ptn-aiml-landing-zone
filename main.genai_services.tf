@@ -19,7 +19,7 @@ module "avm_res_keyvault_vault" {
   private_endpoints = {
     primary = {
       private_dns_zone_resource_ids = var.flag_platform_landing_zone ? [module.private_dns_zones.key_vault_zone.resource_id] : [local.private_dns_zones_existing.key_vault_zone.resource_id]
-      subnet_resource_id            = module.ai_lz_vnet.subnets["PrivateEndpointSubnet"].resource_id
+      subnet_resource_id            = local.subnet_ids["PrivateEndpointSubnet"]
     }
   }
   public_network_access_enabled = var.genai_key_vault_definition.public_network_access_enabled
@@ -86,7 +86,7 @@ module "cosmosdb" {
   partition_merge_enabled               = var.genai_cosmosdb_definition.partition_merge_enabled
   private_endpoints = {
     "sql" = {
-      subnet_resource_id            = module.ai_lz_vnet.subnets["PrivateEndpointSubnet"].resource_id
+      subnet_resource_id            = local.subnet_ids["PrivateEndpointSubnet"]
       subresource_name              = "sql"
       private_dns_zone_resource_ids = var.flag_platform_landing_zone ? [module.private_dns_zones.cosmos_sql_zone.resource_id] : [local.private_dns_zones_existing.cosmos_sql_zone.resource_id]
     }
@@ -102,11 +102,12 @@ module "cosmosdb" {
 # removing for testing PE DNS zone strategy when platform flag is false
 
 module "storage_account" {
-  source  = "Azure/avm-res-storage-storageaccount/azurerm"
-  version = "0.6.3"
+  source = "github.com/Azure/terraform-azurerm-avm-res-storage-storageaccount"
+  #version = "0.6.4"
   count   = var.genai_storage_account_definition.deploy ? 1 : 0
 
   location                 = azurerm_resource_group.this.location
+  local_user_enabled       = false
   name                     = local.genai_storage_account_name
   resource_group_name      = azurerm_resource_group.this.name
   access_tier              = var.genai_storage_account_definition.access_tier
@@ -125,7 +126,7 @@ module "storage_account" {
     endpoint => {
       name                          = "${local.genai_storage_account_name}-${endpoint}-pe"
       private_dns_zone_resource_ids = var.flag_platform_landing_zone ? [module.private_dns_zones["storage_${lower(endpoint)}_zone"].resource_id] : [local.private_dns_zones_existing["storage_${lower(endpoint)}_zone"].resource_id]
-      subnet_resource_id            = module.ai_lz_vnet.subnets["PrivateEndpointSubnet"].resource_id
+      subnet_resource_id            = local.subnet_ids["PrivateEndpointSubnet"]
       subresource_name              = endpoint
     }
   }
@@ -156,7 +157,7 @@ module "containerregistry" {
   private_endpoints = {
     container_registry = {
       private_dns_zone_resource_ids = var.flag_platform_landing_zone ? [module.private_dns_zones.container_registry_zone.resource_id] : [local.private_dns_zones_existing.container_registry_zone.resource_id]
-      subnet_resource_id            = module.ai_lz_vnet.subnets["PrivateEndpointSubnet"].resource_id
+      subnet_resource_id            = local.subnet_ids["PrivateEndpointSubnet"]
     }
   }
   public_network_access_enabled = var.genai_container_registry_definition.public_network_access_enabled
@@ -181,7 +182,7 @@ module "app_configuration" {
   private_endpoints = {
     app_configuration = {
       private_dns_zone_resource_ids = var.flag_platform_landing_zone ? [module.private_dns_zones.app_configuration_zone.resource_id] : [local.private_dns_zones_existing.app_configuration_zone.resource_id]
-      subnet_resource_id            = module.ai_lz_vnet.subnets["PrivateEndpointSubnet"].resource_id
+      subnet_resource_id            = local.subnet_ids["PrivateEndpointSubnet"]
     }
   }
   role_assignments           = local.genai_app_configuration_role_assignments

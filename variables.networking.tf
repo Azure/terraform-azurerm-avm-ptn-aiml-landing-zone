@@ -29,8 +29,9 @@ variable "vnet_definition" {
       peer_vwan_hub_resource_id = optional(string)
       #TODO: Add other connection properties here?
     }), {})
-
   })
+  default = null
+  
   description = <<DESCRIPTION
 Configuration object for the Virtual Network (VNet) to be deployed.
 
@@ -62,9 +63,22 @@ Configuration object for the Virtual Network (VNet) to be deployed.
 DESCRIPTION
 }
 
+variable "byo_vnet_definition" {
+  type = object({
+    resource_id         = string
+    name                = string
+    resource_group_name = string
+  })
+  default     = null
+  description = <<DESCRIPTION
+   Configuration for using an existing Virtual Network (VNet) instead of creating a new one. Specify the name and resource group name of the existing VNet.
+   If provided, the `vnet_definition` variable will be ignored.
+   DESCRIPTION
+}
+
 variable "app_gateway_definition" {
   type = object({
-    deploy       = optional(bool, true)
+    deploy       = optional(bool, false)
     name         = optional(string)
     http2_enable = optional(bool, true)
     authentication_certificate = optional(map(object({

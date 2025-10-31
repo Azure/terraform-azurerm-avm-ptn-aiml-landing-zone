@@ -11,7 +11,7 @@ module "buildvm" {
       ip_configurations = {
         ip_configuration_1 = {
           name                          = "${local.build_vm_name}-nic1-ipconfig1"
-          private_ip_subnet_resource_id = module.ai_lz_vnet.subnets["DevOpsBuildSubnet"].resource_id
+          private_ip_subnet_resource_id = local.subnet_ids["DevOpsBuildSubnet"]
         }
       }
     }

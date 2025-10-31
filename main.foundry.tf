@@ -17,7 +17,7 @@ module "foundry_ptn" {
   enable_telemetry                    = var.enable_telemetry
   key_vault_definition                = local.foundry_key_vault_definition
   law_definition                      = var.ai_foundry_definition.law_definition
-  private_endpoint_subnet_resource_id = module.ai_lz_vnet.subnets["PrivateEndpointSubnet"].resource_id
+  private_endpoint_subnet_resource_id = local.subnet_ids["PrivateEndpointSubnet"]
   storage_account_definition          = local.foundry_storage_account_definition
 
   depends_on = [azapi_resource_action.purge_ai_foundry]

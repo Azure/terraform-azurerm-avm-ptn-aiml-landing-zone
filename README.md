@@ -60,9 +60,27 @@ This resource group will contain all the AI/ML landing zone infrastructure compo
 
 Type: `string`
 
+### Network configuration (choose one)
+
+Exactly one of the following network inputs MUST be provided:
+
+- `vnet_definition` – Supply this to have the module create and manage a new Virtual Network and (optionally) its subnets and peering.
+- `byo_vnet_definition` – Supply this to point the module at an existing Virtual Network you already manage externally.
+
+Rules:
+- Provide one and only one: they are mutually exclusive.
+- If both are set, `byo_vnet_definition` takes precedence and the module WILL NOT create a new VNet.
+- If neither is set, the configuration is invalid and apply will fail.
+
+Quick decision guide:
+- Need the module to stand up a fresh network: use `vnet_definition`.
+- Integrating into an existing network often provided by the central network team: use `byo_vnet_definition`.
+
+See the "Network Configuration Selection" section below for full details and examples.
+
 ### <a name="input_vnet_definition"></a> [vnet\_definition](#input\_vnet\_definition)
 
-Description: Configuration object for the Virtual Network (VNet) to be deployed.
+Description: Configuration object for the Virtual Network (VNet) to be deployed. Conditionally required: must be provided when `byo_vnet_definition` is not provided. Mutually exclusive with `byo_vnet_definition`.
 
 - `name` - (Optional) The name of the Virtual Network. If not provided, a name will be generated.
 - `address_space` - (Required) The address space for the Virtual Network in CIDR notation.
@@ -124,6 +142,46 @@ object({
     }), {})
 
   })
+```
+
+### <a name="input_byo_vnet_definition"></a> [byo_vnet_definition](#input_byo_vnet_definition)
+
+Description: Configuration object for referencing and extending an existing (Bring Your Own) Virtual Network. Conditionally required: must be provided when `vnet_definition` is not provided. Mutually exclusive with `vnet_definition`.
+
+Supplying `byo_vnet_definition` tells the module to:
+* Skip creation of the base Virtual Network resource.
+* Attach (create) any required subnets declared by the module (e.g., AzureFirewallSubnet, AzureBastionSubnet, AppGatewaySubnet) using the existing VNet as the parent.
+* Place dependent network resources (NSGs, route tables, firewall, bastion, application gateway, etc.) into the BYO VNet's resource group when applicable.
+* Continue to create firewall policy, bastion, and other resources if their respective definition variables enable them.
+
+Important notes:
+* The existing VNet must already have an address space large enough to accommodate the subnet prefixes the module will add.
+* The module does not modify VNet-level settings such as DNS servers or DDoS plan when BYO is used.
+* If both `vnet_definition` and `byo_vnet_definition` are set, BYO takes precedence and the defined VNet will be ignored.
+
+Fields:
+* `resource_id` - (Required) Full resource ID of the existing Virtual Network.
+* `name` - (Required) Name of the existing Virtual Network (used for data lookups and naming derivations).
+* `resource_group_name` - (Required) Name of the resource group containing the existing Virtual Network.
+
+Type:
+
+```hcl
+object({
+  resource_id         = string
+  name                = string
+  resource_group_name = string
+})
+```
+
+Example (BYO VNet):
+
+```hcl
+byo_vnet_definition = {
+  resource_id         = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/network-rg/providers/Microsoft.Network/virtualNetworks/shared-hub-vnet"
+  name                = "shared-hub-vnet"
+  resource_group_name = "network-rg"
+}
 ```
 
 ## Optional Inputs
@@ -2017,3 +2075,19 @@ Version: 0.6.3
 
 The software may collect information about you and your use of the software and send it to Microsoft. Microsoft may use this information to provide services and improve our products and services. You may turn off the telemetry as described in the repository. There are also some features in the software that may enable you and Microsoft to collect data from users of your applications. If you use these features, you must comply with applicable law, including providing appropriate notices to users of your applications together with a copy of Microsoft’s privacy statement. Our privacy statement is located at <https://go.microsoft.com/fwlink/?LinkID=824704>. You can learn more about data collection and use in the help documentation and our privacy statement. Your use of the software operates as your consent to these practices.
 <!-- END_TF_DOCS -->
+## Network Configuration Selection
+
+You must provide exactly one of the following virtual network inputs to the module:
+
+1. `vnet_definition` – Use this when you want the module to CREATE and manage a new VNet.
+2. `byo_vnet_definition` – Use this when you want to REUSE an existing (Bring Your Own) VNet that was provisioned outside this module.
+
+If both are `null`, deployment will fail later when dependent resources try to reference the VNet. If both are set, the existing VNet ( `byo_vnet_definition` ) takes precedence and the new VNet is not created.
+
+### Decision Guide
+
+| Scenario | Choose | Notes |
+|----------|--------|-------|
+| Greenfield AI/ML landing zone | `vnet_definition` | Module creates VNet, subnets, optional peering |
+| Existing enterprise hub/spoke or platform landing zone | `byo_vnet_definition` | Integrates with pre-existing network fabric; only subnets (child module) and network-dependent resources are added |
+| Central team owns networking and gives you a VNet ID | `byo_vnet_definition` | Provide `resource_id`, `name`, and `resource_group_name` |

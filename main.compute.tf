@@ -15,7 +15,7 @@ module "container_apps_managed_environment" {
   } : {}
   enable_telemetry                   = var.enable_telemetry
   infrastructure_resource_group_name = "rg-managed-${azurerm_resource_group.this.name}"
-  infrastructure_subnet_id           = module.ai_lz_vnet.subnets["ContainerAppEnvironmentSubnet"].resource_id
+  infrastructure_subnet_id           = local.subnet_ids["ContainerAppEnvironmentSubnet"]
   internal_load_balancer_enabled     = var.container_app_environment_definition.internal_load_balancer_enabled
   log_analytics_workspace = {
     resource_id = local.cae_log_analytics_workspace_resource_id
