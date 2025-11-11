@@ -95,6 +95,7 @@ module "vnet" {
   version = "=0.15.0"
 
   location      = azurerm_resource_group.vnet_rg.location
+  parent_id     = azurerm_resource_group.vnet_rg.id
   address_space = ["10.0.0.0/16"]
   dns_servers = {
     dns_servers = [for key, value in module.example_hub.dns_resolver_inbound_ip_addresses : value]
@@ -112,7 +113,6 @@ module "vnet" {
       reverse_allow_virtual_network_access = true
     }
   }
-  resource_group_name = azurerm_resource_group.vnet_rg.name
 }
 
 module "test" {
