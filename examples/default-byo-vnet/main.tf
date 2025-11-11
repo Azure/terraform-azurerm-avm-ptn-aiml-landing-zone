@@ -68,14 +68,44 @@ resource "azurerm_resource_group" "vnet_rg" {
   name     = module.naming.resource_group.name_unique
 }
 
+#create a sample hub to mimic an existing network landing zone configuration
+module "example_hub" {
+  source = "../../modules/example_hub_vnet"
+
+  deployer_ip_address = "${data.http.ip.response_body}/32"
+  location            = "australiaeast"
+  resource_group_name = "default-example-${module.naming.resource_group.name_unique}"
+  vnet_definition = {
+    address_space = "10.10.0.0/24"
+  }
+  enable_telemetry = var.enable_telemetry
+  name_prefix      = "${module.naming.resource_group.name_unique}-hub"
+}
+
+#create a BYO vnet and peer to the hub
 module "vnet" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "=0.8.1"
+  version = "=0.15.0"
 
-  address_space       = ["10.0.0.0/16"]
-  location            = azurerm_resource_group.vnet_rg.location
+  location      = azurerm_resource_group.vnet_rg.location
+  address_space = ["10.0.0.0/16"]
+  dns_servers = {
+    dns_servers = [for key, value in module.example_hub.dns_resolver_inbound_ip_addresses : value]
+  }
+  name = module.naming.virtual_network.name_unique
+  peerings = {
+    peertovnet1 = {
+      name                                 = "${module.naming.virtual_network_peering.name_unique}-vnet2-to-vnet1"
+      remote_virtual_network_resource_id   = module.example_hub.virtual_network_resource_id
+      allow_forwarded_traffic              = true
+      allow_gateway_transit                = true
+      allow_virtual_network_access         = true
+      create_reverse_peering               = true
+      reverse_name                         = "${module.naming.virtual_network_peering.name_unique}-vnet1-to-vnet2"
+      reverse_allow_virtual_network_access = true
+    }
+  }
   resource_group_name = azurerm_resource_group.vnet_rg.name
-  name                = module.naming.virtual_network.name_unique
 }
 
 module "test" {
@@ -218,6 +248,9 @@ module "test" {
   }
   ks_ai_search_definition = {
     enable_diagnostic_settings = false
+  }
+  private_dns_zones = {
+    existing_zones_resource_group_resource_id = module.example_hub.resource_group_resource_id
   }
   tags = {
     SecurityControl = "Ignore"

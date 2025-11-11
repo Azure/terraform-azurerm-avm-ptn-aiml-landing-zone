@@ -2069,9 +2069,9 @@ Version: 0.1.5
 
 ### <a name="module_storage_account"></a> [storage\_account](#module\_storage\_account)
 
-Source: github.com/Azure/terraform-azurerm-avm-res-storage-storageaccount
+Source: Azure/avm-res-storage-storageaccount/azurerm
 
-Version:
+Version: 0.6.6
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection
