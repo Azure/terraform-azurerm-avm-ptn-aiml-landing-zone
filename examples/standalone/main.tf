@@ -4,7 +4,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.21"
+      version = ">= 3.116, < 5.0"
     }
     http = {
       source  = "hashicorp/http"
@@ -48,7 +48,7 @@ resource "random_integer" "region_index" {
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "0.3.0"
+  version = "0.4.2"
 }
 
 # Get the deployer IP address to allow for public write to the key vault. This is to make sure the tests run.

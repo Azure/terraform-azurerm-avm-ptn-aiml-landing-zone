@@ -1,7 +1,7 @@
 variable "vnet_definition" {
   type = object({
     name                             = optional(string)
-    address_space                    = string
+    address_space                    = optional(string, "10.0.0.0/20")
     ddos_protection_plan_resource_id = optional(string)
     dns_servers                      = optional(set(string), [])
     subnets = optional(map(object({
@@ -30,16 +30,14 @@ variable "vnet_definition" {
       #TODO: Add other connection properties here?
     }), {})
   })
-  default = null
-  
   description = <<DESCRIPTION
 Configuration object for the Virtual Network (VNet) to be deployed.
 
 - `name` - (Optional) The name of the Virtual Network. If not provided, a name will be generated.
-- `address_space` - (Required) The address space for the Virtual Network in CIDR notation.
+- `address_space` - (Optional) The address space for the Virtual Network in CIDR notation. Defaults to 10.0.0.0/20 if none provided.
 - `ddos_protection_plan_resource_id` - (Optional) Resource ID of the DDoS Protection Plan to associate with the VNet.
 - `dns_servers` - (Optional) Set of custom DNS server IP addresses for the VNet.
-- `subnets` - (Optional) Map of subnet configurations. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+- `subnets` - (Optional) Map of subnet configurations that can be used to override the default subnet configurations. The map key must match the desired subnet name to override the default configuration.
   - `enabled` - (Optional) Whether the subnet is enabled. Default is true.
   - `name` - (Optional) The name of the subnet. If not provided, a name will be generated.
   - `address_prefix` - (Optional) The address prefix for the subnet in CIDR notation.
@@ -61,19 +59,6 @@ Configuration object for the Virtual Network (VNet) to be deployed.
   - `peer_vwan_hub_resource_id` - (Optional) Resource ID of the Virtual WAN hub to peer with.
 
 DESCRIPTION
-}
-
-variable "byo_vnet_definition" {
-  type = object({
-    resource_id         = string
-    name                = string
-    resource_group_name = string
-  })
-  default     = null
-  description = <<DESCRIPTION
-   Configuration for using an existing Virtual Network (VNet) instead of creating a new one. Specify the name and resource group name of the existing VNet.
-   If provided, the `vnet_definition` variable will be ignored.
-   DESCRIPTION
 }
 
 variable "app_gateway_definition" {
@@ -404,11 +389,12 @@ DESCRIPTION
 
 variable "bastion_definition" {
   type = object({
-    deploy = optional(bool, true)
-    name   = optional(string)
-    sku    = optional(string, "Standard")
-    tags   = optional(map(string), {})
-    zones  = optional(list(string), ["1", "2", "3"])
+    deploy              = optional(bool, true)
+    name                = optional(string)
+    sku                 = optional(string, "Standard")
+    tags                = optional(map(string), {})
+    zones               = optional(list(string), ["1", "2", "3"])
+    resource_group_name = optional(string)
   })
   default     = {}
   description = <<DESCRIPTION
@@ -419,17 +405,55 @@ Configuration object for the Azure Bastion service to be deployed.
 - `sku` - (Optional) The SKU of the Bastion service. Default is "Standard".
 - `tags` - (Optional) Map of tags to assign to the Bastion service.
 - `zones` - (Optional) List of availability zones for the Bastion service. Default is ["1", "2", "3"].
+- `resource_group_name` - (Optional) The name of the resource group to deploy the Bastion service into. If not provided, the module's resource group will be used.
 DESCRIPTION
+}
+
+variable "byo_vnet_definition" {
+  type = object({
+    resource_id = string
+    subnets = optional(map(object({
+      enabled        = optional(bool, true)
+      name           = optional(string)
+      address_prefix = optional(string)
+      }
+    )), {})
+  })
+  default     = null
+  description = <<DESCRIPTION
+Configuration for using an existing Virtual Network (VNet) instead of creating a new one. Specify the name and resource group name of the existing VNet. The module will add subnets to the existing vNet during deployment.
+   If provided, the `vnet_definition` variable will be ignored. Note: The BYO vnet should not have subnets pre-created in it as the module will attempt to create the subnets and could cause conflicts or flapping behavior.
+   - `resource_id` - The resource ID of the existing VNet.
+   - `subnets` - (Optional) Map of subnet configurations that can be used to override the default subnet configurations. The map key must match the desired subnet name to override the default configuration.
+      - `enabled` - (Optional) Whether the subnet is enabled. Default is true.
+      - `name` - (Optional) The name of the subnet. If not provided, a name will be generated.
+      - `address_prefix` - (Optional) The address prefix for the subnet in CIDR notation.
+
+DESCRIPTION
+
+  validation {
+    condition     = var.byo_vnet_definition == null || var.vnet_definition.ddos_protection_plan_resource_id == null
+    error_message = "When using a BYO VNet (byo_vnet_definition is not null), vnet_definition.ddos_protection_plan_resource_id must not be specified. DDoS protection should be configured on the existing VNet."
+  }
+  validation {
+    condition     = var.byo_vnet_definition == null || try(var.vnet_definition.vnet_peering_configuration.peer_vnet_resource_id, null) == null
+    error_message = "When using a BYO VNet (byo_vnet_definition is not null), vnet_definition.vnet_peering_configuration.peer_vnet_resource_id must not be specified. VNet peering should be configured on the existing VNet."
+  }
+  validation {
+    condition     = var.byo_vnet_definition == null || try(var.vnet_definition.vwan_hub_peering_configuration.peer_vwan_hub_resource_id, null) == null
+    error_message = "When using a BYO VNet (byo_vnet_definition is not null), vnet_definition.vwan_hub_peering_configuration.peer_vwan_hub_resource_id must not be specified. VWAN hub connection should be configured on the existing VNet."
+  }
 }
 
 variable "firewall_definition" {
   type = object({
-    deploy = optional(bool, true)
-    name   = optional(string)
-    sku    = optional(string, "AZFW_VNet")
-    tier   = optional(string, "Standard")
-    zones  = optional(list(string), ["1", "2", "3"])
-    tags   = optional(map(string), {})
+    deploy              = optional(bool, true)
+    name                = optional(string)
+    sku                 = optional(string, "AZFW_VNet")
+    tier                = optional(string, "Standard")
+    zones               = optional(list(string), ["1", "2", "3"])
+    tags                = optional(map(string), {})
+    resource_group_name = optional(string)
   })
   default     = {}
   description = <<DESCRIPTION
@@ -441,6 +465,7 @@ Configuration object for the Azure Firewall to be deployed.
 - `tier` - (Optional) The tier of the Azure Firewall. Default is "Standard".
 - `zones` - (Optional) List of availability zones for the Azure Firewall. Default is ["1", "2", "3"].
 - `tags` - (Optional) Map of tags to assign to the Azure Firewall.
+- `resource_group_name` - (Optional) The name of the resource group to deploy the Azure Firewall into. If not provided, the module's resource group will be used.
 DESCRIPTION
 }
 
@@ -457,6 +482,7 @@ variable "firewall_policy_definition" {
       source_addresses      = list(string)
       protocols             = list(string)
     })), null)
+    resource_group_name = optional(string)
   })
   default     = {}
   description = <<DESCRIPTION
@@ -471,6 +497,7 @@ Configuration object for the Azure Firewall Policy to be deployed.
   - `destination_ports` - List of destination ports for the rule.
   - `source_addresses` - List of source addresses for the rule.
   - `protocols` - List of protocols for the rule (TCP/UDP/ICMP/Any).
+- `resource_group_name` - (Optional) The name of the resource group to deploy the Firewall Policy into. If not provided, the module's resource group will be used.
 DESCRIPTION
 }
 
@@ -501,6 +528,7 @@ variable "nsgs_definition" {
         update = optional(string)
       }))
     })))
+    resource_group_name = optional(string)
   })
   default     = {}
   description = <<DESCRIPTION
@@ -529,6 +557,7 @@ Configuration object for Network Security Groups (NSGs) to be deployed.
     - `delete` - (Optional) Delete timeout.
     - `read` - (Optional) Read timeout.
     - `update` - (Optional) Update timeout.
+  - `resource_group_name` - (Optional) The name of the resource group to deploy the NSG into. If not provided, the module's resource group will be used.
 DESCRIPTION
 }
 

@@ -5,10 +5,10 @@ module "ai_lz_vnet" {
   version = "=0.7.1"
   count   = var.byo_vnet_definition != null ? 0 : 1
 
-  address_space       = var.vnet_definition != null ? [var.vnet_definition.address_space] : ["10.0.0.0/16"]
+  address_space       = [var.vnet_definition.address_space]
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
-  ddos_protection_plan = var.vnet_definition != null && var.vnet_definition.ddos_protection_plan_resource_id != null ? {
+  ddos_protection_plan = var.vnet_definition.ddos_protection_plan_resource_id != null ? {
     id     = var.vnet_definition.ddos_protection_plan_resource_id
     enable = true
   } : null
@@ -20,7 +20,7 @@ module "ai_lz_vnet" {
     }
   }
   dns_servers = {
-    dns_servers = var.vnet_definition != null ? var.vnet_definition.dns_servers : null # Null or []
+    dns_servers = var.vnet_definition.dns_servers
   }
   enable_telemetry = var.enable_telemetry
   name             = local.vnet_name
@@ -28,25 +28,24 @@ module "ai_lz_vnet" {
 }
 
 data "azurerm_virtual_network" "ai_lz_vnet" {
-    count   = var.byo_vnet_definition != null ? 1 : 0
-    name                = var.byo_vnet_definition.name
-    resource_group_name = var.byo_vnet_definition.resource_group_name
+  count = var.byo_vnet_definition != null ? 1 : 0
+
+  name                = basename(var.byo_vnet_definition.resource_id)
+  resource_group_name = split("/", var.byo_vnet_definition.resource_id)[4]
 }
 
 module "byo_subnets" {
-  source  = "Azure/avm-res-network-virtualnetwork/azurerm//modules/subnet"
-  version = "0.15.0"
-
+  source   = "Azure/avm-res-network-virtualnetwork/azurerm//modules/subnet"
+  version  = "0.15.0"
   for_each = { for k, v in local.deployed_subnets : k => v if var.byo_vnet_definition != null }
-  
-  # Direct VNet resource id (module not instantiated when BYO is null due to empty for_each)
-  parent_id        = var.byo_vnet_definition.resource_id
-  name             = each.value.name
-  address_prefixes = each.value.address_prefixes
 
-  delegations                       = try(each.value.delegations, try(each.value.delegation, null), null)
-  network_security_group            = try(each.value.network_security_group, null)
-  route_table                       = try(each.value.route_table, null)
+  # Direct VNet resource id (module not instantiated when BYO is null due to empty for_each)
+  parent_id              = var.byo_vnet_definition.resource_id
+  address_prefixes       = each.value.address_prefixes
+  delegations            = try(each.value.delegations, try(each.value.delegation, null), null)
+  name                   = each.value.name
+  network_security_group = try(each.value.network_security_group, null)
+  route_table            = try(each.value.route_table, null)
 }
 
 module "nsgs" {
@@ -55,7 +54,7 @@ module "nsgs" {
 
   location            = azurerm_resource_group.this.location
   name                = local.nsg_name
-  resource_group_name = var.byo_vnet_definition != null ? var.byo_vnet_definition.resource_group_name : azurerm_resource_group.this.name
+  resource_group_name = var.nsgs_definition.resource_group_name != null ? var.nsgs_definition.resource_group_name : azurerm_resource_group.this.name
   security_rules      = local.nsg_rules
 }
 
@@ -64,7 +63,7 @@ module "nsgs" {
 module "hub_vnet_peering" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm//modules/peering"
   version = "0.9.0"
-  count   = var.vnet_definition != null && try(var.vnet_definition.vnet_peering_configuration.peer_vnet_resource_id, null) != null ? 1 : 0
+  count   = var.byo_vnet_definition == null && try(var.vnet_definition.vnet_peering_configuration.peer_vnet_resource_id, null) != null ? 1 : 0
 
   allow_forwarded_traffic      = var.vnet_definition.vnet_peering_configuration.allow_forwarded_traffic
   allow_gateway_transit        = var.vnet_definition.vnet_peering_configuration.allow_gateway_transit
@@ -88,7 +87,7 @@ module "hub_vnet_peering" {
 #TODO: Add the platform landing zone flag as a secondary decision point for the vwan connection?
 #peer_vwan_hub_resource_id
 resource "azurerm_virtual_hub_connection" "this" {
-  count = var.vnet_definition != null && try(var.vnet_definition.vwan_hub_peering_configuration.peer_vwan_hub_resource_id, null) != null ? 1 : 0
+  count = var.byo_vnet_definition == null && try(var.vnet_definition.vwan_hub_peering_configuration.peer_vwan_hub_resource_id, null) != null ? 1 : 0
 
   name                      = "${local.vnet_name}-to-${basename(var.vnet_definition.vwan_hub_peering_configuration.peer_vwan_hub_resource_id)}"
   remote_virtual_network_id = local.vnet_resource_id
@@ -102,7 +101,7 @@ module "firewall_route_table" {
 
   location                      = azurerm_resource_group.this.location
   name                          = local.route_table_name
-  resource_group_name = var.byo_vnet_definition != null ? var.byo_vnet_definition.resource_group_name : azurerm_resource_group.this.name
+  resource_group_name           = var.firewall_definition.resource_group_name != null ? var.firewall_definition.resource_group_name : azurerm_resource_group.this.name
   bgp_route_propagation_enabled = true
   routes = var.use_internet_routing ? {
     internet_route = {
@@ -127,7 +126,7 @@ module "fw_pip" {
 
   location            = azurerm_resource_group.this.location
   name                = "${local.firewall_name}-pip"
-  resource_group_name = var.byo_vnet_definition != null ? var.byo_vnet_definition.resource_group_name : azurerm_resource_group.this.name
+  resource_group_name = var.firewall_definition.resource_group_name != null ? var.firewall_definition.resource_group_name : azurerm_resource_group.this.name
   enable_telemetry    = var.enable_telemetry
   zones               = var.firewall_definition.zones
 }
@@ -141,7 +140,7 @@ module "firewall" {
   firewall_sku_tier   = var.firewall_definition.tier
   location            = azurerm_resource_group.this.location
   name                = local.firewall_name
-  resource_group_name = var.byo_vnet_definition != null ? var.byo_vnet_definition.resource_group_name : azurerm_resource_group.this.name
+  resource_group_name = var.firewall_definition.resource_group_name != null ? var.firewall_definition.resource_group_name : azurerm_resource_group.this.name
   diagnostic_settings = {
     to_law = {
       name                  = "sendToLogAnalytics-fwpip-${random_string.name_suffix.result}"
@@ -168,7 +167,7 @@ module "firewall_policy" {
 
   location            = azurerm_resource_group.this.location
   name                = "${local.firewall_name}-policy"
-  resource_group_name = var.byo_vnet_definition != null ? var.byo_vnet_definition.resource_group_name : azurerm_resource_group.this.name
+  resource_group_name = var.firewall_policy_definition.resource_group_name != null ? var.firewall_policy_definition.resource_group_name : azurerm_resource_group.this.name
   enable_telemetry    = var.enable_telemetry
 }
 
@@ -192,7 +191,7 @@ module "azure_bastion" {
 
   location            = azurerm_resource_group.this.location
   name                = local.bastion_name
-  resource_group_name = var.byo_vnet_definition != null ? var.byo_vnet_definition.resource_group_name : azurerm_resource_group.this.name
+  resource_group_name = var.bastion_definition.resource_group_name != null ? var.bastion_definition.resource_group_name : azurerm_resource_group.this.name
   enable_telemetry    = var.enable_telemetry
   ip_configuration = {
     subnet_id = local.subnet_ids["AzureBastionSubnet"]

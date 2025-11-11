@@ -4,7 +4,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.21"
+      version = ">= 3.116, < 5.0"
     }
     http = {
       source  = "hashicorp/http"
@@ -18,7 +18,6 @@ terraform {
 }
 
 provider "azurerm" {
-  subscription_id = var.subscription_id
   features {
     resource_group {
       prevent_deletion_if_contains_resources = false
@@ -63,22 +62,28 @@ data "http" "ip" {
   }
 }
 
+# Add a vnet in a separate resource group
+resource "azurerm_resource_group" "vnet_rg" {
+  location = "australiaeast"
+  name     = module.naming.resource_group.name_unique
+}
+
+module "vnet" {
+  source  = "Azure/avm-res-network-virtualnetwork/azurerm"
+  version = "=0.8.1"
+
+  address_space       = ["10.0.0.0/16"]
+  location            = azurerm_resource_group.vnet_rg.location
+  resource_group_name = azurerm_resource_group.vnet_rg.name
+  name                = module.naming.virtual_network.name_unique
+}
+
 module "test" {
   source = "../../"
 
   location            = "swedencentral"
   resource_group_name = "ai-lz-rg-standalone-byo-vnet-${substr(module.naming.unique-seed, 0, 5)}"
-  byo_vnet_definition = {
-    resource_id         = var.byo_vnet_id
-    name                = var.byo_vnet_name
-    resource_group_name = var.byo_vnet_resource_group_name
-  }
-  private_dns_zones = {
-    "existing_zones_resource_group_resource_id" = var.existing_zones_resource_group_resource_id
-  }
-  tags = {
-    SecurityControl = "Ignore"
-  }
+  vnet_definition     = {} # Required input set to an Empty Object to use a BYO VNet
   ai_foundry_definition = {
     purge_on_destroy = true
     ai_foundry = {
@@ -186,6 +191,9 @@ module "test" {
   }
   bastion_definition = {
   }
+  byo_vnet_definition = {
+    resource_id = module.vnet.resource_id
+  }
   container_app_environment_definition = {
     enable_diagnostic_settings = false
   }
@@ -210,5 +218,8 @@ module "test" {
   }
   ks_ai_search_definition = {
     enable_diagnostic_settings = false
+  }
+  tags = {
+    SecurityControl = "Ignore"
   }
 }

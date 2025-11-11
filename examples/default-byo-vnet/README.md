@@ -11,7 +11,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.21"
+      version = ">= 3.116, < 5.0"
     }
     http = {
       source  = "hashicorp/http"
@@ -25,7 +25,6 @@ terraform {
 }
 
 provider "azurerm" {
-  subscription_id = var.subscription_id
   features {
     resource_group {
       prevent_deletion_if_contains_resources = false
@@ -70,11 +69,28 @@ data "http" "ip" {
   }
 }
 
+# Add a vnet in a separate resource group
+resource "azurerm_resource_group" "vnet_rg" {
+  location = "australiaeast"
+  name     = module.naming.resource_group.name_unique
+}
+
+module "vnet" {
+  source  = "Azure/avm-res-network-virtualnetwork/azurerm"
+  version = "=0.8.1"
+
+  address_space       = ["10.0.0.0/16"]
+  location            = azurerm_resource_group.vnet_rg.location
+  resource_group_name = azurerm_resource_group.vnet_rg.name
+  name                = module.naming.virtual_network.name_unique
+}
+
 module "test" {
   source = "../../"
 
   location            = "swedencentral"
   resource_group_name = "ai-lz-rg-standalone-byo-vnet-${substr(module.naming.unique-seed, 0, 5)}"
+  vnet_definition     = {} # Required input set to an Empty Object to use a BYO VNet
   ai_foundry_definition = {
     purge_on_destroy = true
     ai_foundry = {
@@ -183,9 +199,7 @@ module "test" {
   bastion_definition = {
   }
   byo_vnet_definition = {
-    resource_id         = var.byo_vnet_id
-    name                = var.byo_vnet_name
-    resource_group_name = var.byo_vnet_resource_group_name
+    resource_id = module.vnet.resource_id
   }
   container_app_environment_definition = {
     enable_diagnostic_settings = false
@@ -212,9 +226,6 @@ module "test" {
   ks_ai_search_definition = {
     enable_diagnostic_settings = false
   }
-  private_dns_zones = {
-    "existing_zones_resource_group_resource_id" = var.existing_zones_resource_group_resource_id
-  }
   tags = {
     SecurityControl = "Ignore"
   }
@@ -228,7 +239,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.21)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 3.116, < 5.0)
 
 - <a name="requirement_http"></a> [http](#requirement\_http) (~> 3.4)
 
@@ -238,48 +249,14 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
+- [azurerm_resource_group.vnet_rg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 - [http_http.ip](https://registry.terraform.io/providers/hashicorp/http/latest/docs/data-sources/http) (data source)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
 
-The following input variables are required:
-
-### <a name="input_byo_vnet_id"></a> [byo\_vnet\_id](#input\_byo\_vnet\_id)
-
-Description: The ID of an existing Virtual Network to deploy resources into.  
-For more information about Azure Virtual Networks see <https://docs.microsoft.com/azure/virtual-network/virtual-networks-overview>.
-
-Type: `string`
-
-### <a name="input_byo_vnet_name"></a> [byo\_vnet\_name](#input\_byo\_vnet\_name)
-
-Description: The name of an existing Virtual Network to deploy resources into.  
-For more information about Azure Virtual Networks see <https://docs.microsoft.com/azure/virtual-network/virtual-networks-overview>.
-
-Type: `string`
-
-### <a name="input_byo_vnet_resource_group_name"></a> [byo\_vnet\_resource\_group\_name](#input\_byo\_vnet\_resource\_group\_name)
-
-Description: The name of the resource group that contains the existing Virtual Network.  
-For more information about Azure Resource Groups see <https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/>.
-
-Type: `string`
-
-### <a name="input_existing_zones_resource_group_resource_id"></a> [existing\_zones\_resource\_group\_resource\_id](#input\_existing\_zones\_resource\_group\_resource\_id)
-
-Description: The ID of the resource group that contains the existing private DNS zones.  
-For more information about Azure Resource Groups see <https://learn.microsoft.com/en-us/azure/dns/dns-zones-records>.
-
-Type: `string`
-
-### <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id)
-
-Description: The ID of the subscription that contains the existing Virtual Network.  
-For more information about Azure Subscriptions see <https://learn.microsoft.com/en-us/azure/cost-management-billing/manage/understand-subscriptions>.
-
-Type: `string`
+No required inputs.
 
 ## Optional Inputs
 
@@ -320,6 +297,12 @@ Version: 0.3.0
 Source: ../../
 
 Version:
+
+### <a name="module_vnet"></a> [vnet](#module\_vnet)
+
+Source: Azure/avm-res-network-virtualnetwork/azurerm
+
+Version: =0.8.1
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

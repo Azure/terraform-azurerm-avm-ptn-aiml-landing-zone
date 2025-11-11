@@ -104,10 +104,9 @@ module "cosmosdb" {
 module "storage_account" {
   source = "github.com/Azure/terraform-azurerm-avm-res-storage-storageaccount"
   #version = "0.6.4"
-  count   = var.genai_storage_account_definition.deploy ? 1 : 0
+  count = var.genai_storage_account_definition.deploy ? 1 : 0
 
   location                 = azurerm_resource_group.this.location
-  local_user_enabled       = false
   name                     = local.genai_storage_account_name
   resource_group_name      = azurerm_resource_group.this.name
   access_tier              = var.genai_storage_account_definition.access_tier
@@ -120,7 +119,8 @@ module "storage_account" {
       workspace_resource_id = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
     }
   } : {}
-  enable_telemetry = var.enable_telemetry
+  enable_telemetry   = var.enable_telemetry
+  local_user_enabled = false
   private_endpoints = {
     for endpoint in var.genai_storage_account_definition.endpoint_types :
     endpoint => {

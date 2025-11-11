@@ -37,6 +37,7 @@ The following resources are used by this module:
 - [time_sleep.purge_ai_foundry_cooldown](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
 - [azapi_client_config.telemetry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config) (data source)
 - [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
+- [azurerm_virtual_network.ai_lz_vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/virtual_network) (data source)
 - [modtm_module_source.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/data-sources/module_source) (data source)
 
 <!-- markdownlint-disable MD013 -->
@@ -60,33 +61,15 @@ This resource group will contain all the AI/ML landing zone infrastructure compo
 
 Type: `string`
 
-### Network configuration (choose one)
-
-Exactly one of the following network inputs MUST be provided:
-
-- `vnet_definition` – Supply this to have the module create and manage a new Virtual Network and (optionally) its subnets and peering.
-- `byo_vnet_definition` – Supply this to point the module at an existing Virtual Network you already manage externally.
-
-Rules:
-- Provide one and only one: they are mutually exclusive.
-- If both are set, `byo_vnet_definition` takes precedence and the module WILL NOT create a new VNet.
-- If neither is set, the configuration is invalid and apply will fail.
-
-Quick decision guide:
-- Need the module to stand up a fresh network: use `vnet_definition`.
-- Integrating into an existing network often provided by the central network team: use `byo_vnet_definition`.
-
-See the "Network Configuration Selection" section below for full details and examples.
-
 ### <a name="input_vnet_definition"></a> [vnet\_definition](#input\_vnet\_definition)
 
-Description: Configuration object for the Virtual Network (VNet) to be deployed. Conditionally required: must be provided when `byo_vnet_definition` is not provided. Mutually exclusive with `byo_vnet_definition`.
+Description: Configuration object for the Virtual Network (VNet) to be deployed.
 
 - `name` - (Optional) The name of the Virtual Network. If not provided, a name will be generated.
-- `address_space` - (Required) The address space for the Virtual Network in CIDR notation.
+- `address_space` - (Optional) The address space for the Virtual Network in CIDR notation. Defaults to 10.0.0.0/20 if none provided.
 - `ddos_protection_plan_resource_id` - (Optional) Resource ID of the DDoS Protection Plan to associate with the VNet.
 - `dns_servers` - (Optional) Set of custom DNS server IP addresses for the VNet.
-- `subnets` - (Optional) Map of subnet configurations. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+- `subnets` - (Optional) Map of subnet configurations that can be used to override the default subnet configurations. The map key must match the desired subnet name to override the default configuration.
   - `enabled` - (Optional) Whether the subnet is enabled. Default is true.
   - `name` - (Optional) The name of the subnet. If not provided, a name will be generated.
   - `address_prefix` - (Optional) The address prefix for the subnet in CIDR notation.
@@ -112,7 +95,7 @@ Type:
 ```hcl
 object({
     name                             = optional(string)
-    address_space                    = string
+    address_space                    = optional(string, "10.0.0.0/20")
     ddos_protection_plan_resource_id = optional(string)
     dns_servers                      = optional(set(string), [])
     subnets = optional(map(object({
@@ -140,48 +123,7 @@ object({
       peer_vwan_hub_resource_id = optional(string)
       #TODO: Add other connection properties here?
     }), {})
-
   })
-```
-
-### <a name="input_byo_vnet_definition"></a> [byo_vnet_definition](#input_byo_vnet_definition)
-
-Description: Configuration object for referencing and extending an existing (Bring Your Own) Virtual Network. Conditionally required: must be provided when `vnet_definition` is not provided. Mutually exclusive with `vnet_definition`.
-
-Supplying `byo_vnet_definition` tells the module to:
-* Skip creation of the base Virtual Network resource.
-* Attach (create) any required subnets declared by the module (e.g., AzureFirewallSubnet, AzureBastionSubnet, AppGatewaySubnet) using the existing VNet as the parent.
-* Place dependent network resources (NSGs, route tables, firewall, bastion, application gateway, etc.) into the BYO VNet's resource group when applicable.
-* Continue to create firewall policy, bastion, and other resources if their respective definition variables enable them.
-
-Important notes:
-* The existing VNet must already have an address space large enough to accommodate the subnet prefixes the module will add.
-* The module does not modify VNet-level settings such as DNS servers or DDoS plan when BYO is used.
-* If both `vnet_definition` and `byo_vnet_definition` are set, BYO takes precedence and the defined VNet will be ignored.
-
-Fields:
-* `resource_id` - (Required) Full resource ID of the existing Virtual Network.
-* `name` - (Required) Name of the existing Virtual Network (used for data lookups and naming derivations).
-* `resource_group_name` - (Required) Name of the resource group containing the existing Virtual Network.
-
-Type:
-
-```hcl
-object({
-  resource_id         = string
-  name                = string
-  resource_group_name = string
-})
-```
-
-Example (BYO VNet):
-
-```hcl
-byo_vnet_definition = {
-  resource_id         = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/network-rg/providers/Microsoft.Network/virtualNetworks/shared-hub-vnet"
-  name                = "shared-hub-vnet"
-  resource_group_name = "network-rg"
-}
 ```
 
 ## Optional Inputs
@@ -885,7 +827,7 @@ Type:
 
 ```hcl
 object({
-    deploy       = optional(bool, true)
+    deploy       = optional(bool, false)
     name         = optional(string)
     http2_enable = optional(bool, true)
     authentication_certificate = optional(map(object({
@@ -1097,16 +1039,18 @@ Description: Configuration object for the Azure Bastion service to be deployed.
 - `sku` - (Optional) The SKU of the Bastion service. Default is "Standard".
 - `tags` - (Optional) Map of tags to assign to the Bastion service.
 - `zones` - (Optional) List of availability zones for the Bastion service. Default is ["1", "2", "3"].
+- `resource_group_name` - (Optional) The name of the resource group to deploy the Bastion service into. If not provided, the module's resource group will be used.
 
 Type:
 
 ```hcl
 object({
-    deploy = optional(bool, true)
-    name   = optional(string)
-    sku    = optional(string, "Standard")
-    tags   = optional(map(string), {})
-    zones  = optional(list(string), ["1", "2", "3"])
+    deploy              = optional(bool, true)
+    name                = optional(string)
+    sku                 = optional(string, "Standard")
+    tags                = optional(map(string), {})
+    zones               = optional(list(string), ["1", "2", "3"])
+    resource_group_name = optional(string)
   })
 ```
 
@@ -1135,6 +1079,32 @@ object({
 ```
 
 Default: `{}`
+
+### <a name="input_byo_vnet_definition"></a> [byo\_vnet\_definition](#input\_byo\_vnet\_definition)
+
+Description: Configuration for using an existing Virtual Network (VNet) instead of creating a new one. Specify the name and resource group name of the existing VNet. The module will add subnets to the existing vNet during deployment.  
+   If provided, the `vnet_definition` variable will be ignored. Note: The BYO vnet should not have subnets pre-created in it as the module will attempt to create the subnets and could cause conflicts or flapping behavior.
+   - `resource_id` - The resource ID of the existing VNet.
+   - `subnets` - (Optional) Map of subnet configurations that can be used to override the default subnet configurations. The map key must match the desired subnet name to override the default configuration.
+      - `enabled` - (Optional) Whether the subnet is enabled. Default is true.
+      - `name` - (Optional) The name of the subnet. If not provided, a name will be generated.
+      - `address_prefix` - (Optional) The address prefix for the subnet in CIDR notation.
+
+Type:
+
+```hcl
+object({
+    resource_id = string
+    subnets = optional(map(object({
+      enabled        = optional(bool, true)
+      name           = optional(string)
+      address_prefix = optional(string)
+      }
+    )), {})
+  })
+```
+
+Default: `null`
 
 ### <a name="input_container_app_environment_definition"></a> [container\_app\_environment\_definition](#input\_container\_app\_environment\_definition)
 
@@ -1228,17 +1198,19 @@ Description: Configuration object for the Azure Firewall to be deployed.
 - `tier` - (Optional) The tier of the Azure Firewall. Default is "Standard".
 - `zones` - (Optional) List of availability zones for the Azure Firewall. Default is ["1", "2", "3"].
 - `tags` - (Optional) Map of tags to assign to the Azure Firewall.
+- `resource_group_name` - (Optional) The name of the resource group to deploy the Azure Firewall into. If not provided, the module's resource group will be used.
 
 Type:
 
 ```hcl
 object({
-    deploy = optional(bool, true)
-    name   = optional(string)
-    sku    = optional(string, "AZFW_VNet")
-    tier   = optional(string, "Standard")
-    zones  = optional(list(string), ["1", "2", "3"])
-    tags   = optional(map(string), {})
+    deploy              = optional(bool, true)
+    name                = optional(string)
+    sku                 = optional(string, "AZFW_VNet")
+    tier                = optional(string, "Standard")
+    zones               = optional(list(string), ["1", "2", "3"])
+    tags                = optional(map(string), {})
+    resource_group_name = optional(string)
   })
 ```
 
@@ -1257,6 +1229,7 @@ Description: Configuration object for the Azure Firewall Policy to be deployed.
   - `destination_ports` - List of destination ports for the rule.
   - `source_addresses` - List of source addresses for the rule.
   - `protocols` - List of protocols for the rule (TCP/UDP/ICMP/Any).
+- `resource_group_name` - (Optional) The name of the resource group to deploy the Firewall Policy into. If not provided, the module's resource group will be used.
 
 Type:
 
@@ -1272,6 +1245,7 @@ object({
       source_addresses      = list(string)
       protocols             = list(string)
     })), null)
+    resource_group_name = optional(string)
   })
 ```
 
@@ -1748,6 +1722,7 @@ Description: Configuration object for Network Security Groups (NSGs) to be deplo
     - `delete` - (Optional) Delete timeout.
     - `read` - (Optional) Read timeout.
     - `update` - (Optional) Update timeout.
+  - `resource_group_name` - (Optional) The name of the resource group to deploy the NSG into. If not provided, the module's resource group will be used.
 
 Type:
 
@@ -1778,6 +1753,7 @@ object({
         update = optional(string)
       }))
     })))
+    resource_group_name = optional(string)
   })
 ```
 
@@ -1995,6 +1971,12 @@ Source: Azure/avm-res-compute-virtualmachine/azurerm
 
 Version: 0.19.3
 
+### <a name="module_byo_subnets"></a> [byo\_subnets](#module\_byo\_subnets)
+
+Source: Azure/avm-res-network-virtualnetwork/azurerm//modules/subnet
+
+Version: 0.15.0
+
 ### <a name="module_container_apps_managed_environment"></a> [container\_apps\_managed\_environment](#module\_container\_apps\_managed\_environment)
 
 Source: Azure/avm-res-app-managedenvironment/azurerm
@@ -2087,28 +2069,12 @@ Version: 0.1.5
 
 ### <a name="module_storage_account"></a> [storage\_account](#module\_storage\_account)
 
-Source: Azure/avm-res-storage-storageaccount/azurerm
+Source: github.com/Azure/terraform-azurerm-avm-res-storage-storageaccount
 
-Version: 0.6.3
+Version:
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection
 
 The software may collect information about you and your use of the software and send it to Microsoft. Microsoft may use this information to provide services and improve our products and services. You may turn off the telemetry as described in the repository. There are also some features in the software that may enable you and Microsoft to collect data from users of your applications. If you use these features, you must comply with applicable law, including providing appropriate notices to users of your applications together with a copy of Microsoft’s privacy statement. Our privacy statement is located at <https://go.microsoft.com/fwlink/?LinkID=824704>. You can learn more about data collection and use in the help documentation and our privacy statement. Your use of the software operates as your consent to these practices.
 <!-- END_TF_DOCS -->
-## Network Configuration Selection
-
-You must provide exactly one of the following virtual network inputs to the module:
-
-1. `vnet_definition` – Use this when you want the module to CREATE and manage a new VNet.
-2. `byo_vnet_definition` – Use this when you want to REUSE an existing (Bring Your Own) VNet that was provisioned outside this module.
-
-If both are `null`, deployment will fail later when dependent resources try to reference the VNet. If both are set, the existing VNet ( `byo_vnet_definition` ) takes precedence and the new VNet is not created.
-
-### Decision Guide
-
-| Scenario | Choose | Notes |
-|----------|--------|-------|
-| Greenfield AI/ML landing zone | `vnet_definition` | Module creates VNet, subnets, optional peering |
-| Existing enterprise hub/spoke or platform landing zone | `byo_vnet_definition` | Integrates with pre-existing network fabric; only subnets (child module) and network-dependent resources are added |
-| Central team owns networking and gives you a VNet ID | `byo_vnet_definition` | Provide `resource_id`, `name`, and `resource_group_name` |
