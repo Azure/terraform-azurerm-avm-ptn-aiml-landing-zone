@@ -104,7 +104,13 @@ module "firewall_route_table" {
   name                          = local.route_table_name
   resource_group_name = var.byo_vnet_definition != null ? var.byo_vnet_definition.resource_group_name : azurerm_resource_group.this.name
   bgp_route_propagation_enabled = true
-  routes = {
+  routes = var.use_internet_routing ? {
+    internet_route = {
+      name           = "default-to-internet"
+      address_prefix = "0.0.0.0/0"
+      next_hop_type  = "Internet"
+    }
+    } : {
     azure_firewall = {
       name                   = "default-to-firewall"
       address_prefix         = "0.0.0.0/0"

@@ -207,6 +207,9 @@ module "test" {
   }
   enable_telemetry           = var.enable_telemetry
   flag_platform_landing_zone = false
+  # Note: When flag_platform_landing_zone = true, you can enable direct internet routing
+  # for Azure Application Gateway v2 compatibility by setting:
+  # use_internet_routing = true
   genai_container_registry_definition = {
     enable_diagnostic_settings = false
   }

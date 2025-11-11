@@ -1820,6 +1820,27 @@ Type: `map(string)`
 
 Default: `null`
 
+### <a name="input_use_internet_routing"></a> [use\_internet\_routing](#input\_use\_internet\_routing)
+
+Description: Use direct internet routing instead of firewall routing for subnets when platform landing zone is enabled.
+
+When set to true and `flag_platform_landing_zone` is true, route tables will use NextHopType = "Internet"  
+for 0.0.0.0/0 traffic instead of NextHopType = "VirtualAppliance" routing through the Azure Firewall.
+
+This setting is particularly useful for Azure Application Gateway v2 deployments that require direct  
+internet connectivity and cannot use virtual appliance routing.
+
+**Security Considerations**: Enabling this setting bypasses the Azure Firewall for internet-bound traffic  
+from associated subnets, which may impact security posture. Ensure proper network security group rules  
+are in place when using this option.
+
+**Compatibility**: This setting only applies when `flag_platform_landing_zone = true`. When
+`flag_platform_landing_zone = false`, no route tables are created regardless of this setting.
+
+Type: `bool`
+
+Default: `false`
+
 ### <a name="input_waf_policy_definition"></a> [waf\_policy\_definition](#input\_waf\_policy\_definition)
 
 Description: Configuration object for the Web Application Firewall (WAF) Policy to be deployed.
