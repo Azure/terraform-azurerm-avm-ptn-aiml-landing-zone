@@ -1,6 +1,7 @@
 variable "vnet_definition" {
   type = object({
     name                             = optional(string)
+    existing_vnet_resource_id        = optional(string)
     address_space                    = optional(string, "10.0.0.0/20")
     ddos_protection_plan_resource_id = optional(string)
     dns_servers                      = optional(set(string), [])
@@ -34,14 +35,15 @@ variable "vnet_definition" {
 Configuration object for the Virtual Network (VNet) to be deployed.
 
 - `name` - (Optional) The name of the Virtual Network. If not provided, a name will be generated.
+- `existing_vnet_resource_id` - (Optional) Resource ID of an existing Virtual Network to use. If provided, no new VNet will be created. The module will add subnets to the existing vNet during deployment so ensure that the deployer account has sufficient permissions to create subnets.
 - `address_space` - (Optional) The address space for the Virtual Network in CIDR notation. Defaults to 10.0.0.0/20 if none provided.
-- `ddos_protection_plan_resource_id` - (Optional) Resource ID of the DDoS Protection Plan to associate with the VNet.
+- `ddos_protection_plan_resource_id` - (Optional) Resource ID of the DDoS Protection Plan to associate with the VNet. This is not used for BYO vnet configurations as that is assumed to be handled outside the module.
 - `dns_servers` - (Optional) Set of custom DNS server IP addresses for the VNet.
-- `subnets` - (Optional) Map of subnet configurations that can be used to override the default subnet configurations. The map key must match the desired subnet name to override the default configuration.
+- `subnets` - (Optional) Map of subnet configurations that can be used to override the default subnet configurations. The map key must match the desired subnet usage to override the default configuration.
   - `enabled` - (Optional) Whether the subnet is enabled. Default is true.
   - `name` - (Optional) The name of the subnet. If not provided, a name will be generated.
   - `address_prefix` - (Optional) The address prefix for the subnet in CIDR notation.
-- `vnet_peering_configuration` - (Optional) Configuration for VNet peering.
+- `vnet_peering_configuration` - (Optional) Configuration for VNet peering. This is not used for BYO vnet configurations as that is assumed to be handled outside the module.
   - `peer_vnet_resource_id` - (Optional) Resource ID of the peer VNet.
   - `firewall_ip_address` - (Optional) IP address of the firewall for routing.
   - `name` - (Optional) Name of the peering connection.
@@ -407,42 +409,6 @@ Configuration object for the Azure Bastion service to be deployed.
 - `zones` - (Optional) List of availability zones for the Bastion service. Default is ["1", "2", "3"].
 - `resource_group_name` - (Optional) The name of the resource group to deploy the Bastion service into. If not provided, the module's resource group will be used.
 DESCRIPTION
-}
-
-variable "byo_vnet_definition" {
-  type = object({
-    resource_id = string
-    subnets = optional(map(object({
-      enabled        = optional(bool, true)
-      name           = optional(string)
-      address_prefix = optional(string)
-      }
-    )), {})
-  })
-  default     = null
-  description = <<DESCRIPTION
-Configuration for using an existing Virtual Network (VNet) instead of creating a new one. Specify the name and resource group name of the existing VNet. The module will add subnets to the existing vNet during deployment.
-   If provided, the `vnet_definition` variable will be ignored. Note: The BYO vnet should not have subnets pre-created in it as the module will attempt to create the subnets and could cause conflicts or flapping behavior.
-   - `resource_id` - The resource ID of the existing VNet.
-   - `subnets` - (Optional) Map of subnet configurations that can be used to override the default subnet configurations. The map key must match the desired subnet name to override the default configuration.
-      - `enabled` - (Optional) Whether the subnet is enabled. Default is true.
-      - `name` - (Optional) The name of the subnet. If not provided, a name will be generated.
-      - `address_prefix` - (Optional) The address prefix for the subnet in CIDR notation.
-
-DESCRIPTION
-
-  validation {
-    condition     = var.byo_vnet_definition == null || var.vnet_definition.ddos_protection_plan_resource_id == null
-    error_message = "When using a BYO VNet (byo_vnet_definition is not null), vnet_definition.ddos_protection_plan_resource_id must not be specified. DDoS protection should be configured on the existing VNet."
-  }
-  validation {
-    condition     = var.byo_vnet_definition == null || try(var.vnet_definition.vnet_peering_configuration.peer_vnet_resource_id, null) == null
-    error_message = "When using a BYO VNet (byo_vnet_definition is not null), vnet_definition.vnet_peering_configuration.peer_vnet_resource_id must not be specified. VNet peering should be configured on the existing VNet."
-  }
-  validation {
-    condition     = var.byo_vnet_definition == null || try(var.vnet_definition.vwan_hub_peering_configuration.peer_vwan_hub_resource_id, null) == null
-    error_message = "When using a BYO VNet (byo_vnet_definition is not null), vnet_definition.vwan_hub_peering_configuration.peer_vwan_hub_resource_id must not be specified. VWAN hub connection should be configured on the existing VNet."
-  }
 }
 
 variable "firewall_definition" {
