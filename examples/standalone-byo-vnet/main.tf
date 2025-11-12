@@ -85,7 +85,9 @@ module "test" {
 
   location            = "swedencentral"
   resource_group_name = "ai-lz-rg-standalone-byo-vnet-${substr(module.naming.unique-seed, 0, 5)}"
-  vnet_definition     = {} # Required input set to an Empty Object to use a BYO VNet
+  vnet_definition = {
+    existing_vnet_resource_id = module.vnet.resource_id
+  }
   ai_foundry_definition = {
     purge_on_destroy = true
     ai_foundry = {
@@ -192,9 +194,6 @@ module "test" {
     }
   }
   bastion_definition = {
-  }
-  byo_vnet_definition = {
-    resource_id = module.vnet.resource_id
   }
   container_app_environment_definition = {
     enable_diagnostic_settings = false
