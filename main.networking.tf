@@ -31,7 +31,7 @@ data "azurerm_virtual_network" "ai_lz_vnet" {
   count = length(var.vnet_definition.existing_byo_vnet) > 0 ? 1 : 0
 
   name                = try(basename(values(var.vnet_definition.existing_byo_vnet)[0].vnet_resource_id), "")
-  resource_group_name = split("/", try(values(var.vnet_definition.existing_byo_vnet)[0].vnet_resource_id, ""), "/n/o/t/u/s/e/d")[4]
+  resource_group_name = split("/", try(values(var.vnet_definition.existing_byo_vnet)[0].vnet_resource_id, "/n/o/t/u/s/e/d"))[4]
 }
 
 module "byo_subnets" {
