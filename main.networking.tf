@@ -30,8 +30,8 @@ module "ai_lz_vnet" {
 data "azurerm_virtual_network" "ai_lz_vnet" {
   count = length(var.vnet_definition.existing_byo_vnet) > 0 ? 1 : 0
 
-  name                = basename(var.vnet_definition.existing_vnet_resource_id)
-  resource_group_name = split("/", var.vnet_definition.existing_vnet_resource_id)[4]
+  name                = try(basename(values(var.vnet_definition.existing_byo_vnet)[0].vnet_resource_id), "")
+  resource_group_name = split("/", try(values(var.vnet_definition.existing_byo_vnet)[0].vnet_resource_id, ""), "/n/o/t/u/s/e/d")[4]
 }
 
 module "byo_subnets" {
@@ -40,7 +40,7 @@ module "byo_subnets" {
   for_each = { for k, v in local.deployed_subnets : k => v if length(var.vnet_definition.existing_byo_vnet) > 0 }
 
   # Direct VNet resource id (module not instantiated when BYO is null due to empty for_each)
-  parent_id              = var.vnet_definition.existing_vnet_resource_id
+  parent_id              = values(var.vnet_definition.existing_byo_vnet)[0].vnet_resource_id
   address_prefixes       = each.value.address_prefixes
   delegations            = try(each.value.delegations, try(each.value.delegation, null), null)
   name                   = each.value.name

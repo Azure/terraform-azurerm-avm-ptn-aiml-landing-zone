@@ -114,7 +114,11 @@ module "test" {
   location            = "swedencentral"
   resource_group_name = "ai-lz-rg-standalone-byo-vnet-${substr(module.naming.unique-seed, 0, 5)}"
   vnet_definition = {
-    existing_vnet_resource_id = module.vnet.resource_id
+    existing_byo_vnet = {
+      this_vnet = {
+        vnet_resource_id = module.vnet.resource_id
+      }
+    }
   }
   ai_foundry_definition = {
     purge_on_destroy = true
