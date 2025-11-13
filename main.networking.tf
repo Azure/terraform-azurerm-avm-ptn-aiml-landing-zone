@@ -3,7 +3,7 @@
 module "ai_lz_vnet" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
   version = "=0.7.1"
-  count   = var.vnet_definition.existing_vnet_resource_id != null ? 0 : 1
+  count   = length(var.vnet_definition.existing_byo_vnet) > 0 ? 0 : 1
 
   address_space       = [var.vnet_definition.address_space]
   location            = azurerm_resource_group.this.location
@@ -28,7 +28,7 @@ module "ai_lz_vnet" {
 }
 
 data "azurerm_virtual_network" "ai_lz_vnet" {
-  count = var.vnet_definition.existing_vnet_resource_id != null ? 1 : 0
+  count = length(var.vnet_definition.existing_byo_vnet) > 0 ? 1 : 0
 
   name                = basename(var.vnet_definition.existing_vnet_resource_id)
   resource_group_name = split("/", var.vnet_definition.existing_vnet_resource_id)[4]
@@ -37,7 +37,7 @@ data "azurerm_virtual_network" "ai_lz_vnet" {
 module "byo_subnets" {
   source   = "Azure/avm-res-network-virtualnetwork/azurerm//modules/subnet"
   version  = "0.15.0"
-  for_each = { for k, v in local.deployed_subnets : k => v if var.vnet_definition.existing_vnet_resource_id != null }
+  for_each = { for k, v in local.deployed_subnets : k => v if length(var.vnet_definition.existing_byo_vnet) > 0 }
 
   # Direct VNet resource id (module not instantiated when BYO is null due to empty for_each)
   parent_id              = var.vnet_definition.existing_vnet_resource_id
@@ -63,7 +63,7 @@ module "nsgs" {
 module "hub_vnet_peering" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm//modules/peering"
   version = "0.9.0"
-  count   = var.vnet_definition.existing_vnet_resource_id == null && try(var.vnet_definition.vnet_peering_configuration.peer_vnet_resource_id, null) != null ? 1 : 0
+  count   = length(var.vnet_definition.existing_byo_vnet) == 0 && try(var.vnet_definition.vnet_peering_configuration.peer_vnet_resource_id, null) != null ? 1 : 0
 
   allow_forwarded_traffic      = var.vnet_definition.vnet_peering_configuration.allow_forwarded_traffic
   allow_gateway_transit        = var.vnet_definition.vnet_peering_configuration.allow_gateway_transit
@@ -87,7 +87,7 @@ module "hub_vnet_peering" {
 #TODO: Add the platform landing zone flag as a secondary decision point for the vwan connection?
 #peer_vwan_hub_resource_id
 resource "azurerm_virtual_hub_connection" "this" {
-  count = var.vnet_definition.existing_vnet_resource_id == null && try(var.vnet_definition.vwan_hub_peering_configuration.peer_vwan_hub_resource_id, null) != null ? 1 : 0
+  count = length(var.vnet_definition.existing_byo_vnet) == 0 && try(var.vnet_definition.vwan_hub_peering_configuration.peer_vwan_hub_resource_id, null) != null ? 1 : 0
 
   name                      = "${local.vnet_name}-to-${basename(var.vnet_definition.vwan_hub_peering_configuration.peer_vwan_hub_resource_id)}"
   remote_virtual_network_id = local.vnet_resource_id

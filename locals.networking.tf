@@ -88,7 +88,7 @@ locals {
     }
   } : {}
   route_table_name = "${local.vnet_name}-firewall-route-table"
-  subnet_ids       = var.vnet_definition.existing_vnet_resource_id != null ? { for key, m in module.byo_subnets : key => try(m.resource_id, m.id) } : { for key, s in module.ai_lz_vnet[0].subnets : key => s.resource_id }
+  subnet_ids       = length(var.vnet_definition.existing_byo_vnet) > 0 ? { for key, m in module.byo_subnets : key => try(m.resource_id, m.id) } : { for key, s in module.ai_lz_vnet[0].subnets : key => s.resource_id }
   subnets = {
     AzureBastionSubnet = {
       enabled          = var.flag_platform_landing_zone == true ? try(local.subnets_definition["AzureBastionSubnet"].enabled, true) : try(local.subnets_definition["AzureBastionSubnet"].enabled, false)
@@ -201,9 +201,9 @@ locals {
   }
   subnets_definition    = var.vnet_definition.subnets
   virtual_network_links = merge(local.default_virtual_network_link, var.private_dns_zones.network_links)
-  vnet_address_space    = var.vnet_definition.existing_vnet_resource_id != null ? data.azurerm_virtual_network.ai_lz_vnet[0].address_space[0] : var.vnet_definition.address_space
-  vnet_name             = var.vnet_definition.existing_vnet_resource_id != null ? basename(var.vnet_definition.existing_vnet_resource_id) : (try(var.vnet_definition.name, null) != null ? var.vnet_definition.name : (var.name_prefix != null ? "${var.name_prefix}-vnet" : "ai-alz-vnet"))
-  vnet_resource_id      = var.vnet_definition.existing_vnet_resource_id != null ? data.azurerm_virtual_network.ai_lz_vnet[0].id : module.ai_lz_vnet[0].resource_id
+  vnet_address_space    = length(var.vnet_definition.existing_byo_vnet) > 0 ? data.azurerm_virtual_network.ai_lz_vnet[0].address_space[0] : var.vnet_definition.address_space
+  vnet_name             = length(var.vnet_definition.existing_byo_vnet) > 0 ? basename(var.vnet_definition.existing_vnet_resource_id) : (try(var.vnet_definition.name, null) != null ? var.vnet_definition.name : (var.name_prefix != null ? "${var.name_prefix}-vnet" : "ai-alz-vnet"))
+  vnet_resource_id      = length(var.vnet_definition.existing_byo_vnet) > 0 ? data.azurerm_virtual_network.ai_lz_vnet[0].id : module.ai_lz_vnet[0].resource_id
   #web_application_firewall_managed_rules = var.waf_policy_definition.managed_rules == null ? {
   #  managed_rule_set = tomap({
   #    owasp = {
