@@ -164,9 +164,9 @@ module "private_dns_zones" {
   version  = "0.4.2"
   for_each = local.private_dns_zones
 
-  domain_name         = each.value.name
-  enable_telemetry    = var.enable_telemetry
-  resource_group_name = azurerm_resource_group.this.name
+  domain_name      = each.value.name
+  parent_id        = azurerm_resource_group.this.id
+  enable_telemetry = var.enable_telemetry
   virtual_network_links = {
     alz_vnet_link = {
       vnetlinkname      = "${module.ai_lz_vnet.name}-link"

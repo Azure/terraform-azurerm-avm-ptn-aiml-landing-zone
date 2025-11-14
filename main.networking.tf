@@ -65,23 +65,19 @@ module "hub_vnet_peering" {
   version = "0.15.0"
   count   = length(var.vnet_definition.existing_byo_vnet) == 0 && try(var.vnet_definition.vnet_peering_configuration.peer_vnet_resource_id, null) != null ? 1 : 0
 
-  allow_forwarded_traffic      = var.vnet_definition.vnet_peering_configuration.allow_forwarded_traffic
-  allow_gateway_transit        = var.vnet_definition.vnet_peering_configuration.allow_gateway_transit
-  allow_virtual_network_access = var.vnet_definition.vnet_peering_configuration.allow_virtual_network_access
-  create_reverse_peering       = var.vnet_definition.vnet_peering_configuration.create_reverse_peering
-  name                         = var.vnet_definition.vnet_peering_configuration.name != null ? var.vnet_definition.vnet_peering_configuration.name : "${local.vnet_name}-local-to-remote"
-  remote_virtual_network = {
-    resource_id = var.vnet_definition.vnet_peering_configuration.peer_vnet_resource_id
-  }
+  parent_id                            = local.vnet_resource_id
+  allow_forwarded_traffic              = var.vnet_definition.vnet_peering_configuration.allow_forwarded_traffic
+  allow_gateway_transit                = var.vnet_definition.vnet_peering_configuration.allow_gateway_transit
+  allow_virtual_network_access         = var.vnet_definition.vnet_peering_configuration.allow_virtual_network_access
+  create_reverse_peering               = var.vnet_definition.vnet_peering_configuration.create_reverse_peering
+  name                                 = var.vnet_definition.vnet_peering_configuration.name != null ? var.vnet_definition.vnet_peering_configuration.name : "${local.vnet_name}-local-to-remote"
+  remote_virtual_network_id            = var.vnet_definition.vnet_peering_configuration.peer_vnet_resource_id
   reverse_allow_forwarded_traffic      = var.vnet_definition.vnet_peering_configuration.reverse_allow_forwarded_traffic
   reverse_allow_gateway_transit        = var.vnet_definition.vnet_peering_configuration.reverse_allow_gateway_transit
   reverse_allow_virtual_network_access = var.vnet_definition.vnet_peering_configuration.reverse_allow_virtual_network_access
   reverse_name                         = var.vnet_definition.vnet_peering_configuration.reverse_name != null ? var.vnet_definition.vnet_peering_configuration.reverse_name : "${local.vnet_name}-remote-to-local"
   reverse_use_remote_gateways          = var.vnet_definition.vnet_peering_configuration.reverse_use_remote_gateways
   use_remote_gateways                  = var.vnet_definition.vnet_peering_configuration.use_remote_gateways
-  virtual_network = {
-    resource_id = local.vnet_resource_id
-  }
 }
 
 #TODO: Add the platform landing zone flag as a secondary decision point for the vwan connection?
@@ -207,8 +203,8 @@ module "private_dns_zones" {
   for_each = var.flag_platform_landing_zone ? local.private_dns_zones : {}
 
   domain_name           = each.value.name
+  parent_id             = azurerm_resource_group.this.id
   enable_telemetry      = var.enable_telemetry
-  resource_group_name   = azurerm_resource_group.this.name
   virtual_network_links = local.virtual_network_links
 
   depends_on = [module.hub_vnet_peering]
