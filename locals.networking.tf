@@ -126,7 +126,7 @@ locals {
       network_security_group = {
         id = module.nsgs.resource_id
       }
-      delegation = [{
+      delegations = [{
         name = "AppGatewaySubnetDelegation"
         service_delegation = {
           name = "Microsoft.Network/applicationGateways"
@@ -154,7 +154,7 @@ locals {
       network_security_group = {
         id = module.nsgs.resource_id
       }
-      delegation = [{
+      delegations = [{
         name = "AgentServiceDelegation"
         service_delegation = {
           name    = "Microsoft.App/environments"
@@ -174,7 +174,7 @@ locals {
       }
     }
     ContainerAppEnvironmentSubnet = {
-      delegation = [{
+      delegations = [{
         name = "ContainerAppEnvironmentSubnetDelegation"
         service_delegation = {
           name = "Microsoft.App/environments"

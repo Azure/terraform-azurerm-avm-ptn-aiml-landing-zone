@@ -82,7 +82,7 @@ resource "azurerm_resource_group" "vnet_rg" {
 
 module "vnet" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "=0.15.0"
+  version = "=0.16.0"
 
   location      = azurerm_resource_group.vnet_rg.location
   parent_id     = azurerm_resource_group.vnet_rg.id
@@ -311,7 +311,7 @@ Version:
 
 Source: Azure/avm-res-network-virtualnetwork/azurerm
 
-Version: =0.15.0
+Version: =0.16.0
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

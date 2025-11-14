@@ -1901,7 +1901,7 @@ The following Modules are called:
 
 Source: Azure/avm-res-network-virtualnetwork/azurerm
 
-Version: =0.15.0
+Version: =0.16.0
 
 ### <a name="module_apim"></a> [apim](#module\_apim)
 
@@ -1955,7 +1955,7 @@ Version: 0.20.0
 
 Source: Azure/avm-res-network-virtualnetwork/azurerm//modules/subnet
 
-Version: 0.15.0
+Version: 0.16.0
 
 ### <a name="module_container_apps_managed_environment"></a> [container\_apps\_managed\_environment](#module\_container\_apps\_managed\_environment)
 
@@ -2015,7 +2015,7 @@ Version: 0.2.0
 
 Source: Azure/avm-res-network-virtualnetwork/azurerm//modules/peering
 
-Version: 0.15.0
+Version: 0.16.0
 
 ### <a name="module_jumpvm"></a> [jumpvm](#module\_jumpvm)
 

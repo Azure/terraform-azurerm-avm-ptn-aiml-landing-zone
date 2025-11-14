@@ -89,7 +89,7 @@ module "example_hub" {
 #create a BYO vnet and peer to the hub
 module "vnet" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "=0.15.0"
+  version = "=0.16.0"
 
   location      = azurerm_resource_group.vnet_rg.location
   parent_id     = azurerm_resource_group.vnet_rg.id
