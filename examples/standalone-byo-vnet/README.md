@@ -84,10 +84,10 @@ module "vnet" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
   version = "=0.15.0"
 
-  location            = azurerm_resource_group.vnet_rg.location
-  address_space       = ["192.168.0.0/20"] # has to be out of 192.168.0.0/16 currently. Other RFC1918 not supported for foundry capabilityHost injection.
-  name                = module.naming.virtual_network.name_unique
-  resource_group_name = azurerm_resource_group.vnet_rg.name
+  location      = azurerm_resource_group.vnet_rg.location
+  parent_id     = azurerm_resource_group.vnet_rg.id
+  address_space = ["192.168.0.0/20"] # has to be out of 192.168.0.0/16 currently. Other RFC1918 not supported for foundry capabilityHost injection.
+  name          = module.naming.virtual_network.name_unique
 }
 
 

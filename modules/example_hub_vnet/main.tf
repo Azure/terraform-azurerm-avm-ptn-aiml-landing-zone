@@ -4,8 +4,6 @@ data "azurerm_client_config" "current" {}
 module "avm_utl_regions" {
   source  = "Azure/avm-utl-regions/azurerm"
   version = "0.9.2"
-
-  recommended_filter = false
 }
 
 resource "random_string" "name_suffix" {
@@ -25,12 +23,12 @@ module "ai_lz_vnet" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
   version = "=0.15.0"
 
-  location            = azurerm_resource_group.this.location
-  address_space       = [var.vnet_definition.address_space]
-  enable_telemetry    = var.enable_telemetry
-  name                = local.vnet_name
-  resource_group_name = azurerm_resource_group.this.name
-  subnets             = local.deployed_subnets
+  location         = azurerm_resource_group.this.location
+  parent_id        = azurerm_resource_group.this.id
+  address_space    = [var.vnet_definition.address_space]
+  enable_telemetry = var.enable_telemetry
+  name             = local.vnet_name
+  subnets          = local.deployed_subnets
 }
 
 module "natgateway" {

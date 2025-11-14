@@ -6,6 +6,7 @@ module "ai_lz_vnet" {
   count   = length(var.vnet_definition.existing_byo_vnet) > 0 ? 0 : 1
 
   location      = azurerm_resource_group.this.location
+  parent_id     = azurerm_resource_group.this.id
   address_space = [var.vnet_definition.address_space]
   ddos_protection_plan = var.vnet_definition.ddos_protection_plan_resource_id != null ? {
     id     = var.vnet_definition.ddos_protection_plan_resource_id
@@ -21,10 +22,9 @@ module "ai_lz_vnet" {
   dns_servers = {
     dns_servers = var.vnet_definition.dns_servers
   }
-  enable_telemetry    = var.enable_telemetry
-  name                = local.vnet_name
-  resource_group_name = azurerm_resource_group.this.name
-  subnets             = local.deployed_subnets
+  enable_telemetry = var.enable_telemetry
+  name             = local.vnet_name
+  subnets          = local.deployed_subnets
 }
 
 data "azurerm_virtual_network" "ai_lz_vnet" {

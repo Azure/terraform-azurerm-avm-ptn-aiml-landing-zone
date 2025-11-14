@@ -1937,7 +1937,7 @@ Version: =0.10.2
 
 Source: Azure/avm-utl-regions/azurerm
 
-Version: 0.5.2
+Version: 0.9.2
 
 ### <a name="module_azure_bastion"></a> [azure\_bastion](#module\_azure\_bastion)
 
