@@ -5,7 +5,7 @@ variable "vnet_definition" {
       vnet_resource_id = string
       }
     )), {})
-    address_space                    = optional(string, "10.0.0.0/20")
+    address_space                    = optional(string, "192.168.0.0/20")
     ddos_protection_plan_resource_id = optional(string)
     dns_servers                      = optional(set(string), [])
     subnets = optional(map(object({
@@ -40,7 +40,7 @@ Configuration object for the Virtual Network (VNet) to be deployed.
 - `name` - (Optional) The name of the Virtual Network. If not provided, a name will be generated.
 - `existing_byo_vnet` - (Optional) Map to configure use of an existing Virtual Network (BYO VNet). If provided, no new VNet will be created. The module will add subnets to the existing VNet during deployment, so ensure that the deployer account has sufficient permissions to create subnets. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
   - `vnet_resource_id` - Resource ID of the existing Virtual Network to use.
-- `address_space` - (Optional) The address space for the Virtual Network in CIDR notation. Defaults to 10.0.0.0/20 if none provided. Not used when `existing_byo_vnet` is configured.
+- `address_space` - (Optional) The address space for the Virtual Network in CIDR notation. Defaults to 192.168.0.0/20 if none provided. Not used when `existing_byo_vnet` is configured.
 - `ddos_protection_plan_resource_id` - (Optional) Resource ID of the DDoS Protection Plan to associate with the VNet. This is not used for BYO VNet configurations as that is assumed to be handled outside the module.
 - `dns_servers` - (Optional) Set of custom DNS server IP addresses for the VNet.
 - `subnets` - (Optional) Map of subnet configurations that can be used to override the default subnet configurations. The map key must match the desired subnet usage to override the default configuration.

@@ -42,7 +42,7 @@ provider "azurerm" {
 # This allows us to randomize the region for the resource group.
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.3.0"
+  version = "0.9.2"
 }
 
 # This allows us to randomize the region for the resource group.
@@ -69,14 +69,36 @@ data "http" "ip" {
   }
 }
 
+locals {
+  location = "australiaeast" #temporarily pinning on australiaeast for capacity limits in test subscription.
+}
+
+module "vm_sku" {
+  source  = "Azure/avm-utl-sku-finder/azapi"
+  version = "0.3.0"
+
+  location      = azurerm_resource_group.this_rg.location
+  cache_results = true
+  vm_filters = {
+    min_vcpus                      = 2
+    max_vcpus                      = 2
+    encryption_at_host_supported   = true
+    accelerated_networking_enabled = true
+    premium_io_supported           = true
+    location_zone                  = random_integer.zone_index.result
+  }
+
+  depends_on = [random_integer.zone_index]
+}
+
 module "test" {
   source = "../../"
 
-  location            = "australiaeast" #temporarily pinning on australiaeast for capacity limits in test subscription.
+  location            = "australiaeast"
   resource_group_name = "ai-lz-rg-standalone-${substr(module.naming.unique-seed, 0, 5)}"
   vnet_definition = {
     name          = "ai-lz-vnet-standalone"
-    address_space = "192.168.0.0/23" # has to be out of 192.168.0.0/16 currently. Other RFC1918 not supported for foundry capabilityHost injection.
+    address_space = "192.168.0.0/20" # has to be out of 192.168.0.0/16 currently. Other RFC1918 not supported for foundry capabilityHost injection.
   }
   ai_foundry_definition = {
     purge_on_destroy = true
@@ -97,6 +119,7 @@ module "test" {
         }
       }
     }
+
     ai_projects = {
       project_1 = {
         name                       = "project-1"
@@ -114,17 +137,24 @@ module "test" {
         }
       }
     }
+
     ai_search_definition = {
       this = {
         enable_diagnostic_settings = false
       }
     }
+
+    buildvm_definition = {
+      sku = module.vm_sku.sku
+    }
+
     cosmosdb_definition = {
       this = {
         enable_diagnostic_settings = false
         consistency_level          = "Session"
       }
     }
+
     key_vault_definition = {
       this = {
         enable_diagnostic_settings = false
@@ -273,13 +303,19 @@ Version: 0.4.2
 
 Source: Azure/avm-utl-regions/azurerm
 
-Version: 0.3.0
+Version: 0.9.2
 
 ### <a name="module_test"></a> [test](#module\_test)
 
 Source: ../../
 
 Version:
+
+### <a name="module_vm_sku"></a> [vm\_sku](#module\_vm\_sku)
+
+Source: Azure/avm-utl-sku-finder/azapi
+
+Version: 0.3.0
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

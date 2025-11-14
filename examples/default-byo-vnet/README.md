@@ -38,11 +38,15 @@ provider "azurerm" {
   }
 }
 
+locals {
+  location = "australiaeast"
+}
+
 ## Section to provide a random Azure region for the resource group
 # This allows us to randomize the region for the resource group.
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.3.0"
+  version = "0.9.2"
 }
 
 # This allows us to randomize the region for the resource group.
@@ -55,7 +59,7 @@ resource "random_integer" "region_index" {
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "0.3.0"
+  version = "0.4.2"
 }
 
 # Get the deployer IP address to allow for public write to the key vault. This is to make sure the tests run.
@@ -71,7 +75,7 @@ data "http" "ip" {
 
 # Add a vnet in a separate resource group
 resource "azurerm_resource_group" "vnet_rg" {
-  location = "australiaeast"
+  location = local.location
   name     = module.naming.resource_group.name_unique
 }
 
@@ -80,7 +84,7 @@ module "example_hub" {
   source = "../../modules/example_hub_vnet"
 
   deployer_ip_address = "${data.http.ip.response_body}/32"
-  location            = "australiaeast"
+  location            = local.location
   resource_group_name = "default-example-${module.naming.resource_group.name_unique}"
   vnet_definition = {
     address_space = "10.10.0.0/24"
@@ -96,7 +100,7 @@ module "vnet" {
 
   location      = azurerm_resource_group.vnet_rg.location
   parent_id     = azurerm_resource_group.vnet_rg.id
-  address_space = ["10.0.0.0/16"]
+  address_space = ["192.168.0.0/20"] # has to be out of 192.168.0.0/16 currently. Other RFC1918 not supported for foundry capabilityHost injection.
   dns_servers = {
     dns_servers = [for key, value in module.example_hub.dns_resolver_inbound_ip_addresses : value]
   }
@@ -118,7 +122,7 @@ module "vnet" {
 module "test" {
   source = "../../"
 
-  location            = "swedencentral"
+  location            = local.location
   resource_group_name = "ai-lz-rg-standalone-byo-vnet-${substr(module.naming.unique-seed, 0, 5)}"
   vnet_definition = {
     existing_byo_vnet = {
@@ -326,13 +330,13 @@ Version:
 
 Source: Azure/naming/azurerm
 
-Version: 0.3.0
+Version: 0.4.2
 
 ### <a name="module_regions"></a> [regions](#module\_regions)
 
 Source: Azure/avm-utl-regions/azurerm
 
-Version: 0.3.0
+Version: 0.9.2
 
 ### <a name="module_test"></a> [test](#module\_test)
 

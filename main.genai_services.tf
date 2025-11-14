@@ -1,6 +1,6 @@
 module "avm_res_keyvault_vault" {
   source  = "Azure/avm-res-keyvault-vault/azurerm"
-  version = "=0.10.0"
+  version = "=0.10.2"
 
   location            = azurerm_resource_group.this.location
   name                = local.genai_key_vault_name
@@ -48,7 +48,7 @@ resource "azurerm_role_assignment" "deployment_user_kv_admin" {
 # create private endpoint config
 module "cosmosdb" {
   source  = "Azure/avm-res-documentdb-databaseaccount/azurerm"
-  version = "0.8.0"
+  version = "0.10.0"
   count   = var.genai_cosmosdb_definition.deploy ? 1 : 0
 
   location                   = azurerm_resource_group.this.location
@@ -141,7 +141,7 @@ module "storage_account" {
 
 module "containerregistry" {
   source  = "Azure/avm-res-containerregistry-registry/azurerm"
-  version = "0.4.0"
+  version = "0.5.0"
   count   = var.genai_container_registry_definition.deploy ? 1 : 0
 
   location            = azurerm_resource_group.this.location
@@ -170,7 +170,7 @@ module "containerregistry" {
 
 module "app_configuration" {
   source  = "Azure/avm-res-appconfiguration-configurationstore/azure"
-  version = "0.4.1"
+  version = "0.5.1"
   count   = var.genai_app_configuration_definition.deploy ? 1 : 0
 
   location                        = azurerm_resource_group.this.location

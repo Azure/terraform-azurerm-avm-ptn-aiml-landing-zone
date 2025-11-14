@@ -2,12 +2,11 @@
 
 module "ai_lz_vnet" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "=0.7.1"
+  version = "=0.15.0"
   count   = length(var.vnet_definition.existing_byo_vnet) > 0 ? 0 : 1
 
-  address_space       = [var.vnet_definition.address_space]
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
+  location      = azurerm_resource_group.this.location
+  address_space = [var.vnet_definition.address_space]
   ddos_protection_plan = var.vnet_definition.ddos_protection_plan_resource_id != null ? {
     id     = var.vnet_definition.ddos_protection_plan_resource_id
     enable = true
@@ -22,9 +21,10 @@ module "ai_lz_vnet" {
   dns_servers = {
     dns_servers = var.vnet_definition.dns_servers
   }
-  enable_telemetry = var.enable_telemetry
-  name             = local.vnet_name
-  subnets          = local.deployed_subnets
+  enable_telemetry    = var.enable_telemetry
+  name                = local.vnet_name
+  resource_group_name = azurerm_resource_group.this.name
+  subnets             = local.deployed_subnets
 }
 
 data "azurerm_virtual_network" "ai_lz_vnet" {
@@ -50,7 +50,7 @@ module "byo_subnets" {
 
 module "nsgs" {
   source  = "Azure/avm-res-network-networksecuritygroup/azurerm"
-  version = "0.4.0"
+  version = "0.5.0"
 
   location            = azurerm_resource_group.this.location
   name                = local.nsg_name
@@ -62,7 +62,7 @@ module "nsgs" {
 #TODO: Add the platform landing zone flag as a secondary decision point for the hub vnet peering?
 module "hub_vnet_peering" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm//modules/peering"
-  version = "0.9.0"
+  version = "0.15.0"
   count   = length(var.vnet_definition.existing_byo_vnet) == 0 && try(var.vnet_definition.vnet_peering_configuration.peer_vnet_resource_id, null) != null ? 1 : 0
 
   allow_forwarded_traffic      = var.vnet_definition.vnet_peering_configuration.allow_forwarded_traffic
@@ -133,7 +133,7 @@ module "fw_pip" {
 
 module "firewall" {
   source  = "Azure/avm-res-network-azurefirewall/azurerm"
-  version = "0.3.0"
+  version = "0.4.0"
   count   = var.flag_platform_landing_zone && var.firewall_definition.deploy ? 1 : 0
 
   firewall_sku_name   = var.firewall_definition.sku
@@ -203,12 +203,12 @@ module "azure_bastion" {
 
 module "private_dns_zones" {
   source   = "Azure/avm-res-network-privatednszone/azurerm"
-  version  = "0.3.4"
+  version  = "0.4.2"
   for_each = var.flag_platform_landing_zone ? local.private_dns_zones : {}
 
   domain_name           = each.value.name
-  resource_group_name   = azurerm_resource_group.this.name
   enable_telemetry      = var.enable_telemetry
+  resource_group_name   = azurerm_resource_group.this.name
   virtual_network_links = local.virtual_network_links
 
   depends_on = [module.hub_vnet_peering]
