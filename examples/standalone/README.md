@@ -77,9 +77,10 @@ module "vm_sku" {
   source  = "Azure/avm-utl-sku-finder/azapi"
   version = "0.3.0"
 
-  location      = azurerm_resource_group.this_rg.location
+  location      = local.location
   cache_results = true
   vm_filters = {
+    cpu_architecture_type          = "x64"
     min_vcpus                      = 2
     max_vcpus                      = 2
     encryption_at_host_supported   = true
@@ -94,7 +95,7 @@ module "vm_sku" {
 module "test" {
   source = "../../"
 
-  location            = "australiaeast"
+  location            = local.location
   resource_group_name = "ai-lz-rg-standalone-${substr(module.naming.unique-seed, 0, 5)}"
   vnet_definition = {
     name          = "ai-lz-vnet-standalone"
