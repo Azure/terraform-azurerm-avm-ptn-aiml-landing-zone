@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - initial
     paths:
       - 'deploy/**'
 
@@ -42,14 +43,14 @@ jobs:
     - name: Terraform Init
       run: |
         # If you have a remote backend, uncomment and configure the following lines:
-        # terraform init \
-        #   -backend-config="resource_group_name=${{ secrets.TF_BACKEND_RG }}" \
-        #   -backend-config="storage_account_name=${{ secrets.TF_BACKEND_SA }}" \
-        #   -backend-config="container_name=${{ secrets.TF_BACKEND_CONTAINER }}" \
-        #   -backend-config="key=terraform.tfstate"
+        terraform init \
+          -backend-config="resource_group_name=${{ secrets.TF_BACKEND_RG }}" \
+          -backend-config="storage_account_name=${{ secrets.TF_BACKEND_SA }}" \
+          -backend-config="container_name=${{ secrets.TF_BACKEND_CONTAINER }}" \
+          -backend-config="key=terraform.tfstate"
 
         # For local testing or if no backend is configured in main.tf:
-        terraform init
+        # terraform init
       env:
         TF_BACKEND_RG: ${{ secrets.TF_BACKEND_RG }}
         TF_BACKEND_SA: ${{ secrets.TF_BACKEND_SA }}
@@ -59,5 +60,5 @@ jobs:
       run: terraform plan -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" -out=tfplan
 
     - name: Terraform Apply
-      if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+      if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/initial') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
       run: terraform apply -auto-approve tfplan
