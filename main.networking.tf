@@ -4,7 +4,7 @@ module "ai_lz_vnet" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
   version = "=0.7.1"
 
-  address_space       = [var.vnet_definition.address_space]
+  address_space       = var.vnet_definition.address_space
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
   ddos_protection_plan = var.vnet_definition.ddos_protection_plan_resource_id != null ? {

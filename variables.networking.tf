@@ -1,7 +1,7 @@
 variable "vnet_definition" {
   type = object({
     name                             = optional(string)
-    address_space                    = string
+    address_space                    = list(string)
     ddos_protection_plan_resource_id = optional(string)
     dns_servers                      = optional(set(string), [])
     subnets = optional(map(object({

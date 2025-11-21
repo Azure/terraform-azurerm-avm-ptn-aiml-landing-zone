@@ -15,7 +15,7 @@ locals {
     "appgw_rule01" = {
       name                         = "Allow-AppGW_Management"
       access                       = "Allow"
-      destination_address_prefixes = try(var.vnet_definition.subnets["AppGatewaySubnet"].address_prefix, null) != null ? [var.vnet_definition.subnets["AppGatewaySubnet"].address_prefix] : [cidrsubnet(var.vnet_definition.address_space, 4, 5)]
+      destination_address_prefixes = try(var.vnet_definition.subnets["AppGatewaySubnet"].address_prefix, null) != null ? [var.vnet_definition.subnets["AppGatewaySubnet"].address_prefix] : [cidrsubnet(var.vnet_definition.address_space[0], 4, 5)]
       destination_port_range       = "65200-65535"
       direction                    = "Inbound"
       priority                     = 110
@@ -26,7 +26,7 @@ locals {
     "appgw_rule02" = {
       name                         = "Allow-AppGW_Web"
       access                       = "Allow"
-      destination_address_prefixes = try(var.vnet_definition.subnets["AppGatewaySubnet"].address_prefix, null) != null ? [var.vnet_definition.subnets["AppGatewaySubnet"].address_prefix] : [cidrsubnet(var.vnet_definition.address_space, 4, 5)]
+      destination_address_prefixes = try(var.vnet_definition.subnets["AppGatewaySubnet"].address_prefix, null) != null ? [var.vnet_definition.subnets["AppGatewaySubnet"].address_prefix] : [cidrsubnet(var.vnet_definition.address_space[0], 4, 5)]
       destination_port_ranges      = ["80", "443"]
       direction                    = "Inbound"
       priority                     = 120
@@ -37,7 +37,7 @@ locals {
     "appgw_rule03" = {
       name                         = "Allow-AppGW_LoadBalancer"
       access                       = "Allow"
-      destination_address_prefixes = try(var.vnet_definition.subnets["AppGatewaySubnet"].address_prefix, null) != null ? [var.vnet_definition.subnets["AppGatewaySubnet"].address_prefix] : [cidrsubnet(var.vnet_definition.address_space, 4, 5)]
+      destination_address_prefixes = try(var.vnet_definition.subnets["AppGatewaySubnet"].address_prefix, null) != null ? [var.vnet_definition.subnets["AppGatewaySubnet"].address_prefix] : [cidrsubnet(var.vnet_definition.address_space[0], 4, 5)]
       destination_port_range       = "*"
       direction                    = "Inbound"
       priority                     = 4000

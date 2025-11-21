@@ -13,21 +13,25 @@ permissions:
   contents: read
 
 env:
+  # Mapping GitHub Secrets to Terraform Environment Variables
+  # Ensure these secrets are set in your GitHub Repository Settings
   ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
   ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
   ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
   ARM_USE_OIDC: true
+  # If you are using a Client Secret instead of OIDC, uncomment the following line:
+  # ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
 
 jobs:
   terraform:
-    name: 'Terraform'
+    name: 'Terraform Plan & Apply'
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./deploy
 
     steps:
-    - name: Checkout
+    - name: Checkout Code
       uses: actions/checkout@v4
 
     - name: Setup Terraform
@@ -36,13 +40,24 @@ jobs:
         terraform_version: 1.9.0
 
     - name: Terraform Init
-      run: terraform init
-      # Note: For a real deployment, you should configure a remote backend.
-      # Example: terraform init -backend-config="resource_group_name=..." ...
+      run: |
+        # If you have a remote backend, uncomment and configure the following lines:
+        # terraform init \
+        #   -backend-config="resource_group_name=${{ secrets.TF_BACKEND_RG }}" \
+        #   -backend-config="storage_account_name=${{ secrets.TF_BACKEND_SA }}" \
+        #   -backend-config="container_name=${{ secrets.TF_BACKEND_CONTAINER }}" \
+        #   -backend-config="key=terraform.tfstate"
+
+        # For local testing or if no backend is configured in main.tf:
+        terraform init
+      env:
+        TF_BACKEND_RG: ${{ secrets.TF_BACKEND_RG }}
+        TF_BACKEND_SA: ${{ secrets.TF_BACKEND_SA }}
+        TF_BACKEND_CONTAINER: ${{ secrets.TF_BACKEND_CONTAINER }}
 
     - name: Terraform Plan
-      run: terraform plan -out=tfplan
+      run: terraform plan -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" -out=tfplan
 
-    #- name: Terraform Apply
-    #  if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    #  run: terraform apply -auto-approve tfplan
+    - name: Terraform Apply
+      if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+      run: terraform apply -auto-approve tfplan
