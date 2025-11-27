@@ -20,7 +20,7 @@ locals {
       direction                    = "Inbound"
       priority                     = 110
       protocol                     = "*"
-      source_address_prefix        = "Internet"
+      source_address_prefix        = "GatewayManager"
       source_port_range            = "*"
     }
     "appgw_rule02" = {
