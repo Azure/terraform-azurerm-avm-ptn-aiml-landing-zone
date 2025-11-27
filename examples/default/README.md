@@ -42,7 +42,7 @@ provider "azurerm" {
 # This allows us to randomize the region for the resource group.
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.3.0"
+  version = "0.9.2"
 }
 
 # This allows us to randomize the region for the resource group.
@@ -55,7 +55,7 @@ resource "random_integer" "region_index" {
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "0.3.0"
+  version = "0.4.2"
 }
 
 data "http" "ip" {
@@ -207,6 +207,9 @@ module "test" {
   }
   enable_telemetry           = var.enable_telemetry
   flag_platform_landing_zone = false
+  # Note: When flag_platform_landing_zone = true, you can enable direct internet routing
+  # for Azure Application Gateway v2 compatibility by setting:
+  # use_internet_routing = true
   genai_container_registry_definition = {
     enable_diagnostic_settings = false
   }
@@ -291,13 +294,13 @@ Version:
 
 Source: Azure/naming/azurerm
 
-Version: 0.3.0
+Version: 0.4.2
 
 ### <a name="module_regions"></a> [regions](#module\_regions)
 
 Source: Azure/avm-utl-regions/azurerm
 
-Version: 0.3.0
+Version: 0.9.2
 
 ### <a name="module_test"></a> [test](#module\_test)
 

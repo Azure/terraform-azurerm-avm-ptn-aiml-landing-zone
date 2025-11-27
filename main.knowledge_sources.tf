@@ -1,6 +1,6 @@
 module "search_service" {
   source  = "Azure/avm-res-search-searchservice/azurerm"
-  version = "0.1.5"
+  version = "0.2.0"
   count   = var.ks_ai_search_definition.deploy ? 1 : 0
 
   location            = azurerm_resource_group.this.location
@@ -18,7 +18,7 @@ module "search_service" {
   private_endpoints = {
     primary = {
       private_dns_zone_resource_ids = var.flag_platform_landing_zone ? [module.private_dns_zones.ai_search_zone.resource_id] : [local.private_dns_zones_existing.ai_search_zone.resource_id]
-      subnet_resource_id            = module.ai_lz_vnet.subnets["PrivateEndpointSubnet"].resource_id
+      subnet_resource_id            = local.subnet_ids["PrivateEndpointSubnet"]
     }
   }
   public_network_access_enabled = var.ks_ai_search_definition.public_network_access_enabled

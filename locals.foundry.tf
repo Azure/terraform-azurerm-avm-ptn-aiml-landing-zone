@@ -5,7 +5,7 @@ locals {
       name = local.ai_foundry_name
       network_injections = [{
         scenario                   = "agent"
-        subnetArmId                = module.ai_lz_vnet.subnets["AIFoundrySubnet"].resource_id
+        subnetArmId                = local.subnet_ids["AIFoundrySubnet"]
         useMicrosoftManagedNetwork = false
       }]
       private_dns_zone_resource_ids = [

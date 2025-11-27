@@ -31,6 +31,10 @@ provider "azurerm" {
   }
 }
 
+locals {
+  location = "australiaeast"
+}
+
 ## Section to provide a random Azure region for the resource group
 # This allows us to randomize the region for the resource group.
 module "regions" {
@@ -62,23 +66,49 @@ data "http" "ip" {
   }
 }
 
-locals {
-  location = "australiaeast" #temporarily pinning on australiaeast for capacity limits in test subscription.
+# Add a vnet in a separate resource group
+resource "azurerm_resource_group" "vnet_rg" {
+  location = local.location
+  name     = module.naming.resource_group.name_unique
 }
 
-module "vm_sku" {
-  source  = "Azure/avm-utl-sku-finder/azapi"
-  version = "0.3.0"
+#create a sample hub to mimic an existing network landing zone configuration
+module "example_hub" {
+  source = "../../modules/example_hub_vnet"
 
-  location      = local.location
-  cache_results = true
-  vm_filters = {
-    cpu_architecture_type          = "x64"
-    min_vcpus                      = 2
-    max_vcpus                      = 2
-    encryption_at_host_supported   = true
-    accelerated_networking_enabled = true
-    premium_io_supported           = true
+  deployer_ip_address = "${data.http.ip.response_body}/32"
+  location            = local.location
+  resource_group_name = "default-example-${module.naming.resource_group.name_unique}"
+  vnet_definition = {
+    address_space = "10.10.0.0/24"
+  }
+  enable_telemetry = var.enable_telemetry
+  name_prefix      = "${module.naming.resource_group.name_unique}-hub"
+}
+
+#create a BYO vnet and peer to the hub
+module "vnet" {
+  source  = "Azure/avm-res-network-virtualnetwork/azurerm"
+  version = "=0.16.0"
+
+  location      = azurerm_resource_group.vnet_rg.location
+  parent_id     = azurerm_resource_group.vnet_rg.id
+  address_space = ["192.168.0.0/20"] # has to be out of 192.168.0.0/16 currently. Other RFC1918 not supported for foundry capabilityHost injection.
+  dns_servers = {
+    dns_servers = [for key, value in module.example_hub.dns_resolver_inbound_ip_addresses : value]
+  }
+  name = module.naming.virtual_network.name_unique
+  peerings = {
+    peertovnet1 = {
+      name                                 = "${module.naming.virtual_network_peering.name_unique}-vnet2-to-vnet1"
+      remote_virtual_network_resource_id   = module.example_hub.virtual_network_resource_id
+      allow_forwarded_traffic              = true
+      allow_gateway_transit                = true
+      allow_virtual_network_access         = true
+      create_reverse_peering               = true
+      reverse_name                         = "${module.naming.virtual_network_peering.name_unique}-vnet1-to-vnet2"
+      reverse_allow_virtual_network_access = true
+    }
   }
 }
 
@@ -86,10 +116,13 @@ module "test" {
   source = "../../"
 
   location            = local.location
-  resource_group_name = "ai-lz-rg-standalone-${substr(module.naming.unique-seed, 0, 5)}"
+  resource_group_name = "ai-lz-rg-standalone-byo-vnet-${substr(module.naming.unique-seed, 0, 5)}"
   vnet_definition = {
-    name          = "ai-lz-vnet-standalone"
-    address_space = "192.168.0.0/20" # has to be out of 192.168.0.0/16 currently. Other RFC1918 not supported for foundry capabilityHost injection.
+    existing_byo_vnet = {
+      this_vnet = {
+        vnet_resource_id = module.vnet.resource_id
+      }
+    }
   }
   ai_foundry_definition = {
     purge_on_destroy = true
@@ -110,7 +143,6 @@ module "test" {
         }
       }
     }
-
     ai_projects = {
       project_1 = {
         name                       = "project-1"
@@ -128,24 +160,17 @@ module "test" {
         }
       }
     }
-
     ai_search_definition = {
       this = {
         enable_diagnostic_settings = false
       }
     }
-
-    buildvm_definition = {
-      sku = module.vm_sku.sku
-    }
-
     cosmosdb_definition = {
       this = {
         enable_diagnostic_settings = false
         consistency_level          = "Session"
       }
     }
-
     key_vault_definition = {
       this = {
         enable_diagnostic_settings = false
@@ -210,10 +235,7 @@ module "test" {
     enable_diagnostic_settings = false
   }
   enable_telemetry           = var.enable_telemetry
-  flag_platform_landing_zone = true
-  # Uncomment the following line to enable direct internet routing instead of firewall routing
-  # This is useful for Azure Application Gateway v2 deployments that require direct internet connectivity
-  # use_internet_routing = true
+  flag_platform_landing_zone = false
   genai_container_registry_definition = {
     enable_diagnostic_settings = false
   }
@@ -233,5 +255,11 @@ module "test" {
   }
   ks_ai_search_definition = {
     enable_diagnostic_settings = false
+  }
+  private_dns_zones = {
+    existing_zones_resource_group_resource_id = module.example_hub.resource_group_resource_id
+  }
+  tags = {
+    SecurityControl = "Ignore"
   }
 }
