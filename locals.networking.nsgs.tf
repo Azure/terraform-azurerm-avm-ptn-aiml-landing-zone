@@ -15,12 +15,12 @@ locals {
     "appgw_rule01" = {
       name                         = "Allow-AppGW_Management"
       access                       = "Allow"
-      destination_address_prefixes = try(var.vnet_definition.subnets["AppGatewaySubnet"].address_prefix, null) != null ? [var.vnet_definition.subnets["AppGatewaySubnet"].address_prefix] : [cidrsubnet(var.vnet_definition.address_space, 4, 5)]
+      destination_address_prefix   = "*" # Allow to all addresses as per MS documentation, https://learn.microsoft.com/en-us/azure/application-gateway/configuration-infrastructure#network-security-groups
       destination_port_range       = "65200-65535"
       direction                    = "Inbound"
       priority                     = 110
       protocol                     = "*"
-      source_address_prefix        = "Internet"
+      source_address_prefix        = "GatewayManager"
       source_port_range            = "*"
     }
     "appgw_rule02" = {
