@@ -14,6 +14,7 @@ variable "vnet_definition" {
       address_prefix = optional(string)
       }
     )), {})
+    tags = optional(map(string))
     vnet_peering_configuration = optional(object({
       peer_vnet_resource_id                = optional(string)
       firewall_ip_address                  = optional(string)
@@ -47,6 +48,7 @@ Configuration object for the Virtual Network (VNet) to be deployed.
   - `enabled` - (Optional) Whether the subnet is enabled. Default is true.
   - `name` - (Optional) The name of the subnet. If not provided, a name will be generated.
   - `address_prefix` - (Optional) The address prefix for the subnet in CIDR notation.
+- `tags` - (Optional) Map of tags to assign to the Virtual Network.
 - `vnet_peering_configuration` - (Optional) Configuration for VNet peering. This is not used for BYO VNet configurations as that is assumed to be handled outside the module.
   - `peer_vnet_resource_id` - (Optional) Resource ID of the peer VNet.
   - `firewall_ip_address` - (Optional) IP address of the firewall for routing.
@@ -256,7 +258,7 @@ variable "app_gateway_definition" {
       }))
     })), null)
 
-    tags = optional(map(string), {})
+    tags = optional(map(string))
     role_assignments = optional(map(object({
       role_definition_id_or_name             = string
       principal_id                           = string
@@ -398,7 +400,7 @@ variable "bastion_definition" {
     deploy              = optional(bool, true)
     name                = optional(string)
     sku                 = optional(string, "Standard")
-    tags                = optional(map(string), {})
+    tags                = optional(map(string))
     zones               = optional(list(string), ["1", "2", "3"])
     resource_group_name = optional(string)
   })
@@ -422,7 +424,7 @@ variable "firewall_definition" {
     sku                 = optional(string, "AZFW_VNet")
     tier                = optional(string, "Standard")
     zones               = optional(list(string), ["1", "2", "3"])
-    tags                = optional(map(string), {})
+    tags                = optional(map(string))
     resource_group_name = optional(string)
   })
   default     = {}
@@ -453,6 +455,7 @@ variable "firewall_policy_definition" {
       protocols             = list(string)
     })), null)
     resource_group_name = optional(string)
+    tags                = optional(map(string))
   })
   default     = {}
   description = <<DESCRIPTION
@@ -468,6 +471,7 @@ Configuration object for the Azure Firewall Policy to be deployed.
   - `source_addresses` - List of source addresses for the rule.
   - `protocols` - List of protocols for the rule (TCP/UDP/ICMP/Any).
 - `resource_group_name` - (Optional) The name of the resource group to deploy the Firewall Policy into. If not provided, the module's resource group will be used.
+- `tags` - (Optional) Map of tags to assign to the Firewall Policy.
 DESCRIPTION
 }
 
@@ -499,6 +503,7 @@ variable "nsgs_definition" {
       }))
     })))
     resource_group_name = optional(string)
+    tags                = optional(map(string))
   })
   default     = {}
   description = <<DESCRIPTION
@@ -527,7 +532,8 @@ Configuration object for Network Security Groups (NSGs) to be deployed.
     - `delete` - (Optional) Delete timeout.
     - `read` - (Optional) Read timeout.
     - `update` - (Optional) Update timeout.
-  - `resource_group_name` - (Optional) The name of the resource group to deploy the NSG into. If not provided, the module's resource group will be used.
+- `resource_group_name` - (Optional) The name of the resource group to deploy the NSG into. If not provided, the module's resource group will be used.
+- `tags` - (Optional) Map of tags to assign to the Network Security Group.
 DESCRIPTION
 }
 
@@ -620,7 +626,7 @@ variable "waf_policy_definition" {
       }
     })
 
-    tags = optional(map(string), {})
+    tags = optional(map(string))
   })
   default     = {}
   description = <<DESCRIPTION

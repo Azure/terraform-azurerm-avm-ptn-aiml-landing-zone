@@ -46,6 +46,6 @@ module "buildvm" {
     sku       = "20_04-lts-gen2"
     version   = "latest"
   }
-  tags = var.buildvm_definition.tags
+  tags = var.buildvm_definition.tags != null ? var.buildvm_definition.tags : var.tags
 }
 
