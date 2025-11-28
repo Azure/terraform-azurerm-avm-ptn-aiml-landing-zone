@@ -80,7 +80,7 @@ variable "ai_foundry_definition" {
       semantic_search_sku          = optional(string, "standard")
       semantic_search_enabled      = optional(bool, false)
       hosting_mode                 = optional(string, "default")
-      tags                         = optional(map(string), {})
+      tags                         = optional(map(string))
       role_assignments = optional(map(object({
         role_definition_id_or_name             = string
         principal_id                           = string
@@ -148,7 +148,7 @@ variable "ai_foundry_definition" {
         delegated_managed_identity_resource_id = optional(string, null)
         principal_type                         = optional(string, null)
       })), {})
-      tags = optional(map(string), {})
+      tags = optional(map(string))
     })), {})
 
     key_vault_definition = optional(map(object({
@@ -168,7 +168,7 @@ variable "ai_foundry_definition" {
         delegated_managed_identity_resource_id = optional(string, null)
         principal_type                         = optional(string, null)
       })), {})
-      tags = optional(map(string), {})
+      tags = optional(map(string))
     })), {})
 
     law_definition = optional(map(object({
@@ -176,7 +176,7 @@ variable "ai_foundry_definition" {
       name                 = optional(string)
       retention            = optional(number, 30)
       sku                  = optional(string, "PerGB2018")
-      tags                 = optional(map(string), {})
+      tags                 = optional(map(string))
     })), {})
 
     storage_account_definition = optional(map(object({
@@ -206,7 +206,7 @@ variable "ai_foundry_definition" {
         delegated_managed_identity_resource_id = optional(string, null)
         principal_type                         = optional(string, null)
       })), {})
-      tags = optional(map(string), {})
+      tags = optional(map(string))
     })), {})
   })
   default     = {}

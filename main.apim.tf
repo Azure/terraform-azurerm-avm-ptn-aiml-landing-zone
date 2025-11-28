@@ -35,7 +35,7 @@ module "apim" {
   sign_in                       = var.apim_definition.sign_in
   sign_up                       = var.apim_definition.sign_up
   sku_name                      = "${var.apim_definition.sku_root}_${var.apim_definition.sku_capacity}"
-  tags                          = var.apim_definition.tags
+  tags                          = var.apim_definition.tags != null ? var.apim_definition.tags : var.tags
   tenant_access                 = var.apim_definition.tenant_access
   virtual_network_subnet_id     = null
   virtual_network_type          = "None"

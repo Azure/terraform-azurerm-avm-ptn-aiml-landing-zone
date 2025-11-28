@@ -58,6 +58,7 @@ Description: Configuration object for the Virtual Network (VNet) to be deployed.
 
 - `name` - (Optional) The name of the Virtual Network. If not provided, a name will be generated.
 - `address_space` - (Required) The address space for the Virtual Network in CIDR notation.
+- `tags` - (Optional) Map of tags to assign to the Virtual Network.
 
 Type:
 
@@ -65,6 +66,7 @@ Type:
 object({
     name          = optional(string)
     address_space = string
+    tags          = optional(map(string))
   })
 ```
 
@@ -97,7 +99,7 @@ Type:
 object({
     name             = optional(string)
     sku              = optional(string, "Standard_B2s")
-    tags             = optional(map(string), {})
+    tags             = optional(map(string))
     enable_telemetry = optional(bool, true)
   })
 ```

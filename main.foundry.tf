@@ -19,6 +19,7 @@ module "foundry_ptn" {
   law_definition                      = var.ai_foundry_definition.law_definition
   private_endpoint_subnet_resource_id = local.subnet_ids["PrivateEndpointSubnet"]
   storage_account_definition          = local.foundry_storage_account_definition
+  tags                                = var.ai_foundry_definition.tags != null ? var.ai_foundry_definition.tags : var.tags
 
   depends_on = [azapi_resource_action.purge_ai_foundry]
 }

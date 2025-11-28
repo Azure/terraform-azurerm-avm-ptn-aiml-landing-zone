@@ -4,7 +4,7 @@ variable "buildvm_definition" {
     deploy           = optional(bool, true)
     name             = optional(string)
     sku              = optional(string, "Standard_B2s")
-    tags             = optional(map(string), {})
+    tags             = optional(map(string))
     enable_telemetry = optional(bool, true)
   })
   default     = {}
