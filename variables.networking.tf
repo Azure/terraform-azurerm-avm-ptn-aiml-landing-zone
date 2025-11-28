@@ -5,13 +5,21 @@ variable "vnet_definition" {
       vnet_resource_id = string
       }
     )), {})
-    address_space                    = optional(string, "192.168.0.0/20")
+    address_space = optional(string, "192.168.0.0/20")
+    ipam_pools = optional(list(object({
+      id            = string
+      prefix_length = string
+    })))
     ddos_protection_plan_resource_id = optional(string)
     dns_servers                      = optional(set(string), [])
     subnets = optional(map(object({
       enabled        = optional(bool, true)
       name           = optional(string)
       address_prefix = optional(string)
+      ipam_pools = optional(list(object({
+        pool_id       = string
+        prefix_length = string
+      })))
       }
     )), {})
     vnet_peering_configuration = optional(object({
@@ -41,12 +49,18 @@ Configuration object for the Virtual Network (VNet) to be deployed.
 - `existing_byo_vnet` - (Optional) Map to configure use of an existing Virtual Network (BYO VNet). If provided, no new VNet will be created. The module will add subnets to the existing VNet during deployment, so ensure that the deployer account has sufficient permissions to create subnets. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
   - `vnet_resource_id` - Resource ID of the existing Virtual Network to use.
 - `address_space` - (Optional) The address space for the Virtual Network in CIDR notation. Defaults to 192.168.0.0/20 if none provided. Not used when `existing_byo_vnet` is configured.
+- `ipam_pools` - (Optional) List of IPAM pools to associate with the VNet. If present, the address_space will be ignored and IPAM pools will be used for address allocation.
+  - `id` - The ID of the IPAM pool.
+  - `prefix_length` - The prefix length to request from the IPAM pool.
 - `ddos_protection_plan_resource_id` - (Optional) Resource ID of the DDoS Protection Plan to associate with the VNet. This is not used for BYO VNet configurations as that is assumed to be handled outside the module.
 - `dns_servers` - (Optional) Set of custom DNS server IP addresses for the VNet.
 - `subnets` - (Optional) Map of subnet configurations that can be used to override the default subnet configurations. The map key must match the desired subnet usage to override the default configuration.
   - `enabled` - (Optional) Whether the subnet is enabled. Default is true.
   - `name` - (Optional) The name of the subnet. If not provided, a name will be generated.
   - `address_prefix` - (Optional) The address prefix for the subnet in CIDR notation.
+  - `ipam_pools` - (Optional) List of IPAM pools to associate with the subnet. If present, the address_prefix will be ignored and IPAM pools will be used for address allocation.
+    - `pool_id` - The ID of the IPAM pool.
+    - `prefix_length` - The prefix length to request from the IPAM pool.
 - `vnet_peering_configuration` - (Optional) Configuration for VNet peering. This is not used for BYO VNet configurations as that is assumed to be handled outside the module.
   - `peer_vnet_resource_id` - (Optional) Resource ID of the peer VNet.
   - `firewall_ip_address` - (Optional) IP address of the firewall for routing.
