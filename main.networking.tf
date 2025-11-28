@@ -12,13 +12,13 @@ module "ai_lz_vnet" {
     id     = var.vnet_definition.ddos_protection_plan_resource_id
     enable = true
   } : null
-  diagnostic_settings = {
+  diagnostic_settings = length(module.log_analytics_workspace) > 0 ? {
     sendToLogAnalytics = {
       name                           = "sendToLogAnalytics-vnet-${random_string.name_suffix.result}"
       workspace_resource_id          = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
       log_analytics_destination_type = "Dedicated"
     }
-  }
+  } : null
   dns_servers = {
     dns_servers = var.vnet_definition.dns_servers
   }
@@ -137,14 +137,14 @@ module "firewall" {
   location            = azurerm_resource_group.this.location
   name                = local.firewall_name
   resource_group_name = var.firewall_definition.resource_group_name != null ? var.firewall_definition.resource_group_name : azurerm_resource_group.this.name
-  diagnostic_settings = {
+  diagnostic_settings = length(module.log_analytics_workspace) > 0 ? {
     to_law = {
       name                  = "sendToLogAnalytics-fwpip-${random_string.name_suffix.result}"
       workspace_resource_id = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
       log_groups            = ["allLogs"]
       metric_categories     = ["AllMetrics"]
     }
-  }
+  } : null
   enable_telemetry = var.enable_telemetry
   firewall_ip_configuration = [
     {
@@ -242,14 +242,14 @@ module "application_gateway" {
   app_gateway_waf_policy_resource_id = module.app_gateway_waf_policy.resource_id
   authentication_certificate         = var.app_gateway_definition.authentication_certificate
   autoscale_configuration            = var.app_gateway_definition.autoscale_configuration
-  diagnostic_settings = {
+  diagnostic_settings = length(module.log_analytics_workspace) > 0 ? {
     to_law = {
       name                  = "sendToLogAnalytics-appgw-${random_string.name_suffix.result}"
       workspace_resource_id = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
       log_groups            = ["allLogs"]
       metric_categories     = ["AllMetrics"]
     }
-  }
+  } : null
   enable_telemetry            = var.enable_telemetry
   http2_enable                = var.app_gateway_definition.http2_enable
   probe_configurations        = var.app_gateway_definition.probe_configurations
