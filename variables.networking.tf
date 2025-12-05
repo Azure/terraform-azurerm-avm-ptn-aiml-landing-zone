@@ -5,15 +5,24 @@ variable "vnet_definition" {
       vnet_resource_id = string
       }
     )), {})
-    address_space                    = optional(string, "192.168.0.0/20")
+    address_space = optional(string, "192.168.0.0/20")
+    ipam_pools = optional(list(object({
+      id            = string
+      prefix_length = string
+    })))
     ddos_protection_plan_resource_id = optional(string)
     dns_servers                      = optional(set(string), [])
     subnets = optional(map(object({
       enabled        = optional(bool, true)
       name           = optional(string)
       address_prefix = optional(string)
+      ipam_pools = optional(list(object({
+        pool_id       = string
+        prefix_length = string
+      })))
       }
     )), {})
+    tags = optional(map(string))
     vnet_peering_configuration = optional(object({
       peer_vnet_resource_id                = optional(string)
       firewall_ip_address                  = optional(string)
@@ -41,12 +50,19 @@ Configuration object for the Virtual Network (VNet) to be deployed.
 - `existing_byo_vnet` - (Optional) Map to configure use of an existing Virtual Network (BYO VNet). If provided, no new VNet will be created. The module will add subnets to the existing VNet during deployment, so ensure that the deployer account has sufficient permissions to create subnets. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
   - `vnet_resource_id` - Resource ID of the existing Virtual Network to use.
 - `address_space` - (Optional) The address space for the Virtual Network in CIDR notation. Defaults to 192.168.0.0/20 if none provided. Not used when `existing_byo_vnet` is configured.
+- `ipam_pools` - (Optional) List of IPAM pools to associate with the VNet. If present, the address_space will be ignored and IPAM pools will be used for address allocation.
+  - `id` - The ID of the IPAM pool.
+  - `prefix_length` - The prefix length to request from the IPAM pool.
 - `ddos_protection_plan_resource_id` - (Optional) Resource ID of the DDoS Protection Plan to associate with the VNet. This is not used for BYO VNet configurations as that is assumed to be handled outside the module.
 - `dns_servers` - (Optional) Set of custom DNS server IP addresses for the VNet.
 - `subnets` - (Optional) Map of subnet configurations that can be used to override the default subnet configurations. The map key must match the desired subnet usage to override the default configuration.
   - `enabled` - (Optional) Whether the subnet is enabled. Default is true.
   - `name` - (Optional) The name of the subnet. If not provided, a name will be generated.
   - `address_prefix` - (Optional) The address prefix for the subnet in CIDR notation.
+  - `ipam_pools` - (Optional) List of IPAM pools to associate with the subnet. If present, the address_prefix will be ignored and IPAM pools will be used for address allocation.
+    - `pool_id` - The ID of the IPAM pool.
+    - `prefix_length` - The prefix length to request from the IPAM pool.
+- `tags` - (Optional) Map of tags to assign to the Virtual Network.
 - `vnet_peering_configuration` - (Optional) Configuration for VNet peering. This is not used for BYO VNet configurations as that is assumed to be handled outside the module.
   - `peer_vnet_resource_id` - (Optional) Resource ID of the peer VNet.
   - `firewall_ip_address` - (Optional) IP address of the firewall for routing.
@@ -256,7 +272,7 @@ variable "app_gateway_definition" {
       }))
     })), null)
 
-    tags = optional(map(string), {})
+    tags = optional(map(string))
     role_assignments = optional(map(object({
       role_definition_id_or_name             = string
       principal_id                           = string
@@ -398,7 +414,7 @@ variable "bastion_definition" {
     deploy              = optional(bool, true)
     name                = optional(string)
     sku                 = optional(string, "Standard")
-    tags                = optional(map(string), {})
+    tags                = optional(map(string))
     zones               = optional(list(string), ["1", "2", "3"])
     resource_group_name = optional(string)
   })
@@ -422,7 +438,7 @@ variable "firewall_definition" {
     sku                 = optional(string, "AZFW_VNet")
     tier                = optional(string, "Standard")
     zones               = optional(list(string), ["1", "2", "3"])
-    tags                = optional(map(string), {})
+    tags                = optional(map(string))
     resource_group_name = optional(string)
   })
   default     = {}
@@ -453,6 +469,7 @@ variable "firewall_policy_definition" {
       protocols             = list(string)
     })), null)
     resource_group_name = optional(string)
+    tags                = optional(map(string))
   })
   default     = {}
   description = <<DESCRIPTION
@@ -468,6 +485,7 @@ Configuration object for the Azure Firewall Policy to be deployed.
   - `source_addresses` - List of source addresses for the rule.
   - `protocols` - List of protocols for the rule (TCP/UDP/ICMP/Any).
 - `resource_group_name` - (Optional) The name of the resource group to deploy the Firewall Policy into. If not provided, the module's resource group will be used.
+- `tags` - (Optional) Map of tags to assign to the Firewall Policy.
 DESCRIPTION
 }
 
@@ -499,6 +517,7 @@ variable "nsgs_definition" {
       }))
     })))
     resource_group_name = optional(string)
+    tags                = optional(map(string))
   })
   default     = {}
   description = <<DESCRIPTION
@@ -527,7 +546,8 @@ Configuration object for Network Security Groups (NSGs) to be deployed.
     - `delete` - (Optional) Delete timeout.
     - `read` - (Optional) Read timeout.
     - `update` - (Optional) Update timeout.
-  - `resource_group_name` - (Optional) The name of the resource group to deploy the NSG into. If not provided, the module's resource group will be used.
+- `resource_group_name` - (Optional) The name of the resource group to deploy the NSG into. If not provided, the module's resource group will be used.
+- `tags` - (Optional) Map of tags to assign to the Network Security Group.
 DESCRIPTION
 }
 
@@ -620,7 +640,7 @@ variable "waf_policy_definition" {
       }
     })
 
-    tags = optional(map(string), {})
+    tags = optional(map(string))
   })
   default     = {}
   description = <<DESCRIPTION

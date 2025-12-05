@@ -2,29 +2,31 @@
 
 module "ai_lz_vnet" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "=0.16.0"
+  version = "0.16.0"
   count   = length(var.vnet_definition.existing_byo_vnet) > 0 ? 0 : 1
 
   location      = azurerm_resource_group.this.location
   parent_id     = azurerm_resource_group.this.id
-  address_space = [var.vnet_definition.address_space]
+  address_space = var.vnet_definition.ipam_pools == null ? [var.vnet_definition.address_space] : null
   ddos_protection_plan = var.vnet_definition.ddos_protection_plan_resource_id != null ? {
     id     = var.vnet_definition.ddos_protection_plan_resource_id
     enable = true
   } : null
-  diagnostic_settings = {
+  diagnostic_settings = length(module.log_analytics_workspace) > 0 ? {
     sendToLogAnalytics = {
       name                           = "sendToLogAnalytics-vnet-${random_string.name_suffix.result}"
       workspace_resource_id          = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
       log_analytics_destination_type = "Dedicated"
     }
-  }
+  } : null
   dns_servers = {
     dns_servers = var.vnet_definition.dns_servers
   }
   enable_telemetry = var.enable_telemetry
+  ipam_pools       = var.vnet_definition.ipam_pools
   name             = local.vnet_name
   subnets          = local.deployed_subnets
+  tags             = var.vnet_definition.tags != null ? var.vnet_definition.tags : var.tags
 }
 
 data "azurerm_virtual_network" "ai_lz_vnet" {
@@ -41,8 +43,9 @@ module "byo_subnets" {
 
   # Direct VNet resource id (module not instantiated when BYO is null due to empty for_each)
   parent_id              = values(var.vnet_definition.existing_byo_vnet)[0].vnet_resource_id
-  address_prefixes       = each.value.address_prefixes
+  address_prefixes       = each.value.ipam_pools == null ? each.value.address_prefixes : null
   delegations            = try(each.value.delegations, try(each.value.delegation, null), null)
+  ipam_pools             = each.value.ipam_pools
   name                   = each.value.name
   network_security_group = try(each.value.network_security_group, null)
   route_table            = try(each.value.route_table, null)
@@ -56,8 +59,44 @@ module "nsgs" {
   name                = local.nsg_name
   resource_group_name = var.nsgs_definition.resource_group_name != null ? var.nsgs_definition.resource_group_name : azurerm_resource_group.this.name
   security_rules      = local.nsg_rules
+  tags                = var.nsgs_definition.tags != null ? var.nsgs_definition.tags : var.tags
 }
 
+# NSGs are required during subnet creation but rules use cidrs which are not known until after vnet creation.
+# Therefore, NSG rules are created in a separate resource after the VNet and subnets are created.
+resource "azurerm_network_security_rule" "this" {
+  for_each = local.nsg_rules
+
+  access                                     = each.value.access
+  direction                                  = each.value.direction
+  name                                       = each.value.name
+  network_security_group_name                = module.nsgs.resource.name
+  priority                                   = each.value.priority
+  protocol                                   = each.value.protocol
+  resource_group_name                        = module.nsgs.resource.resource_group_name
+  description                                = try(each.value.description, null)
+  destination_address_prefix                 = try(each.value.destination_address_prefix, null)
+  destination_address_prefixes               = try(each.value.destination_address_prefixes, null)
+  destination_application_security_group_ids = try(each.value.destination_application_security_group_ids, null)
+  destination_port_range                     = try(each.value.destination_port_range, null)
+  destination_port_ranges                    = try(each.value.destination_port_ranges, null)
+  source_address_prefix                      = try(each.value.source_address_prefix, null)
+  source_address_prefixes                    = try(each.value.source_address_prefixes, null)
+  source_application_security_group_ids      = try(each.value.source_application_security_group_ids, null)
+  source_port_range                          = try(each.value.source_port_range, null)
+  source_port_ranges                         = try(each.value.source_port_ranges, null)
+
+  dynamic "timeouts" {
+    for_each = try(each.value.timeouts, null) == null ? [] : [each.value.timeouts]
+
+    content {
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
+    }
+  }
+}
 
 #TODO: Add the platform landing zone flag as a secondary decision point for the hub vnet peering?
 module "hub_vnet_peering" {
@@ -113,6 +152,7 @@ module "firewall_route_table" {
       next_hop_in_ip_address = module.firewall[0].resource.ip_configuration[0].private_ip_address
     }
   }
+  tags = var.firewall_definition.tags != null ? var.firewall_definition.tags : var.tags
 }
 
 module "fw_pip" {
@@ -124,6 +164,7 @@ module "fw_pip" {
   name                = "${local.firewall_name}-pip"
   resource_group_name = var.firewall_definition.resource_group_name != null ? var.firewall_definition.resource_group_name : azurerm_resource_group.this.name
   enable_telemetry    = var.enable_telemetry
+  tags                = var.firewall_definition.tags != null ? var.firewall_definition.tags : var.tags
   zones               = var.firewall_definition.zones
 }
 
@@ -137,14 +178,14 @@ module "firewall" {
   location            = azurerm_resource_group.this.location
   name                = local.firewall_name
   resource_group_name = var.firewall_definition.resource_group_name != null ? var.firewall_definition.resource_group_name : azurerm_resource_group.this.name
-  diagnostic_settings = {
+  diagnostic_settings = length(module.log_analytics_workspace) > 0 ? {
     to_law = {
       name                  = "sendToLogAnalytics-fwpip-${random_string.name_suffix.result}"
       workspace_resource_id = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
       log_groups            = ["allLogs"]
       metric_categories     = ["AllMetrics"]
     }
-  }
+  } : null
   enable_telemetry = var.enable_telemetry
   firewall_ip_configuration = [
     {
@@ -154,6 +195,7 @@ module "firewall" {
     }
   ]
   firewall_zones = var.firewall_definition.zones
+  tags           = var.firewall_definition.tags != null ? var.firewall_definition.tags : var.tags
 }
 
 module "firewall_policy" {
@@ -193,7 +235,7 @@ module "azure_bastion" {
     subnet_id = local.subnet_ids["AzureBastionSubnet"]
   }
   sku   = var.bastion_definition.sku
-  tags  = var.bastion_definition.tags
+  tags  = var.bastion_definition.tags != null ? var.bastion_definition.tags : var.tags
   zones = var.bastion_definition.zones
 }
 
@@ -242,14 +284,14 @@ module "application_gateway" {
   app_gateway_waf_policy_resource_id = module.app_gateway_waf_policy.resource_id
   authentication_certificate         = var.app_gateway_definition.authentication_certificate
   autoscale_configuration            = var.app_gateway_definition.autoscale_configuration
-  diagnostic_settings = {
+  diagnostic_settings = length(module.log_analytics_workspace) > 0 ? {
     to_law = {
       name                  = "sendToLogAnalytics-appgw-${random_string.name_suffix.result}"
       workspace_resource_id = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
       log_groups            = ["allLogs"]
       metric_categories     = ["AllMetrics"]
     }
-  }
+  } : null
   enable_telemetry            = var.enable_telemetry
   http2_enable                = var.app_gateway_definition.http2_enable
   probe_configurations        = var.app_gateway_definition.probe_configurations
@@ -266,5 +308,9 @@ module "application_gateway" {
   trusted_root_certificate    = var.app_gateway_definition.trusted_root_certificate
   url_path_map_configurations = var.app_gateway_definition.url_path_map_configurations
   zones                       = local.region_zones
+
+  depends_on = [
+    azurerm_network_security_rule.this
+  ]
 }
 

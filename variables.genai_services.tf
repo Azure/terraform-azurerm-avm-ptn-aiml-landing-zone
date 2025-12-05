@@ -11,7 +11,7 @@ variable "genai_app_configuration_definition" {
     purge_protection_enabled      = optional(bool, true)
     sku                           = optional(string, "standard")
     soft_delete_retention_in_days = optional(number, 7)
-    tags                          = optional(map(string), {})
+    tags                          = optional(map(string))
     role_assignments = optional(map(object({
       role_definition_id_or_name             = string
       principal_id                           = string
@@ -59,7 +59,7 @@ variable "genai_container_registry_definition" {
     zone_redundancy_enabled       = optional(bool, true)
     public_network_access_enabled = optional(bool, false)
     enable_diagnostic_settings    = optional(bool, true)
-    tags                          = optional(map(string), {})
+    tags                          = optional(map(string))
     role_assignments = optional(map(object({
       role_definition_id_or_name             = string
       principal_id                           = string
@@ -137,6 +137,7 @@ variable "genai_cosmosdb_definition" {
       exposed_headers    = set(string)
       max_age_in_seconds = optional(number, null)
     }), null)
+    tags = optional(map(string))
   })
   default     = {}
   description = <<DESCRIPTION
@@ -176,6 +177,7 @@ Configuration object for the Azure Cosmos DB account to be created for GenAI ser
   - `allowed_origins` - Set of allowed origins.
   - `exposed_headers` - Set of exposed headers.
   - `max_age_in_seconds` - (Optional) Maximum age in seconds for CORS.
+- `tags` - (Optional) Map of tags to assign to the Cosmos DB account.
 DESCRIPTION
 }
 
@@ -201,7 +203,7 @@ variable "genai_key_vault_definition" {
       delegated_managed_identity_resource_id = optional(string, null)
       principal_type                         = optional(string, null)
     })), {})
-    tags = optional(map(string), {})
+    tags = optional(map(string))
   })
   default     = {}
   description = <<DESCRIPTION
@@ -251,7 +253,7 @@ variable "genai_storage_account_definition" {
       delegated_managed_identity_resource_id = optional(string, null)
       principal_type                         = optional(string, null)
     })), {})
-    tags = optional(map(string), {})
+    tags = optional(map(string))
 
     #TODO:
     # Implement subservice passthrough here

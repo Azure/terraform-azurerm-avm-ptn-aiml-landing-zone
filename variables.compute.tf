@@ -3,7 +3,7 @@ variable "container_app_environment_definition" {
     deploy                              = optional(bool, true)
     name                                = optional(string)
     enable_diagnostic_settings          = optional(bool, true)
-    tags                                = optional(map(string), {})
+    tags                                = optional(map(string))
     internal_load_balancer_enabled      = optional(bool, true)
     log_analytics_workspace_resource_id = optional(string)
     zone_redundancy_enabled             = optional(bool, true)

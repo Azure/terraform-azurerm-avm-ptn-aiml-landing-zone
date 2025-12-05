@@ -9,7 +9,7 @@ variable "ks_ai_search_definition" {
     public_network_access_enabled = optional(bool, false)
     replica_count                 = optional(number, 2)
     semantic_search_sku           = optional(string, "standard")
-    tags                          = optional(map(string), {})
+    tags                          = optional(map(string))
     role_assignments = optional(map(object({
       role_definition_id_or_name             = string
       principal_id                           = string
@@ -53,7 +53,7 @@ variable "ks_bing_grounding_definition" {
     deploy = optional(bool, true)
     name   = optional(string)
     sku    = optional(string, "G1")
-    tags   = optional(map(string), {})
+    tags   = optional(map(string))
   })
   default     = {}
   description = <<DESCRIPTION
