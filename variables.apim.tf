@@ -63,8 +63,9 @@ variable "apim_definition" {
         ssl_keyvault_identity_client_id = optional(string, null)
       })), [])
     }), null)
-    min_api_version           = optional(string)
-    notification_sender_email = optional(string, null)
+    min_api_version                         = optional(string)
+    notification_sender_email               = optional(string, null)
+    private_endpoints_manage_dns_zone_group = optional(bool, true)
     protocols = optional(object({
       enable_http2 = optional(bool, false)
     }))
@@ -136,6 +137,7 @@ Configuration object for the Azure API Management service to be deployed.
     - `default_ssl_binding` - (Optional, proxy only) Whether this is the default SSL binding.
 - `min_api_version` - (Optional) The minimum API version that the API Management service will accept.
 - `notification_sender_email` - (Optional) Email address from which notifications will be sent.
+- `private_endpoints_manage_dns_zone_group` - (Optional) Whether the module should manage DNS zone groups for private endpoint. Default is true.
 - `protocols` - (Optional) Protocol configuration.
   - `enable_http2` - (Optional) Whether HTTP/2 protocol is enabled. Default is false.
 - `role_assignments` - (Optional) Map of role assignments to create on the API Management service. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.

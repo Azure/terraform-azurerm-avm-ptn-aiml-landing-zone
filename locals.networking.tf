@@ -84,7 +84,7 @@ locals {
   private_dns_zones = var.flag_platform_landing_zone == true ? local.private_dns_zone_map : {}
   private_dns_zones_existing = var.flag_platform_landing_zone == false ? { for key, value in local.private_dns_zone_map : key => {
     name        = value.name
-    resource_id = "${coalesce(var.private_dns_zones.existing_zones_resource_group_resource_id, "notused")}/providers/Microsoft.Network/privateDnsZones/${value.name}" #TODO: determine if there is a more elegant way to do this while avoiding errors
+    resource_id = "${coalesce(var.private_dns_zones.existing_zones_resource_group_resource_id, "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/resource-group")}/providers/Microsoft.Network/privateDnsZones/${value.name}" #TODO: determine if there is a more elegant way to do this while avoiding errors
     }
   } : {}
   route_table_name = "${local.vnet_name}-firewall-route-table"

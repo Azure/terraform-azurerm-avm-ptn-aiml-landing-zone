@@ -3,8 +3,9 @@
 variable "ai_foundry_definition" {
   type = object({
     # AI Foundry Hub Configuration
-    create_byor      = optional(bool, true)
-    purge_on_destroy = optional(bool, false)
+    create_byor                              = optional(bool, true)
+    purge_on_destroy                         = optional(bool, false)
+    private_endpoints_manage_dns_zone_groups = optional(bool, true)
     ai_foundry = optional(object({
       name                     = optional(string, null)
       disable_local_auth       = optional(bool, false)
@@ -215,6 +216,7 @@ Configuration object for the Azure AI Foundry deployment (hub, projects, and Bri
 
 - `create_byor` - (Optional) Whether to create BYOR resources managed by this module. Default is true.
 - `purge_on_destroy` - (Optional) Whether to purge soft-delete–capable resources on destroy. Default is false.
+- `private_endpoints_manage_dns_zone_groups` - (Optional) Whether the module should manage DNS zone groups for private endpoints. Default is true.
 
 - `ai_foundry` - (Optional) Azure AI Foundry hub settings.
   - `name` - (Optional) Name of the hub. If not provided, a name will be generated.

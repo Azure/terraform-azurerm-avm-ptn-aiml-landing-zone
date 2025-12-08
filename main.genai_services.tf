@@ -22,9 +22,10 @@ module "avm_res_keyvault_vault" {
       subnet_resource_id            = local.subnet_ids["PrivateEndpointSubnet"]
     }
   }
-  public_network_access_enabled = var.genai_key_vault_definition.public_network_access_enabled
-  role_assignments              = local.genai_key_vault_role_assignments
-  tags                          = var.genai_key_vault_definition.tags
+  private_endpoints_manage_dns_zone_group = var.genai_key_vault_definition.private_endpoints_manage_dns_zone_group
+  public_network_access_enabled           = var.genai_key_vault_definition.public_network_access_enabled
+  role_assignments                        = local.genai_key_vault_role_assignments
+  tags                                    = var.genai_key_vault_definition.tags
   wait_for_rbac_before_key_operations = {
     create = "60s"
   }
@@ -91,7 +92,8 @@ module "cosmosdb" {
       private_dns_zone_resource_ids = var.flag_platform_landing_zone ? [module.private_dns_zones.cosmos_sql_zone.resource_id] : [local.private_dns_zones_existing.cosmos_sql_zone.resource_id]
     }
   }
-  public_network_access_enabled = var.genai_cosmosdb_definition.public_network_access_enabled
+  private_endpoints_manage_dns_zone_group = var.genai_cosmosdb_definition.private_endpoints_manage_dns_zone_group
+  public_network_access_enabled           = var.genai_cosmosdb_definition.public_network_access_enabled
 
   depends_on = [module.private_dns_zones, module.hub_vnet_peering]
 }
@@ -130,10 +132,11 @@ module "storage_account" {
       subresource_name              = endpoint
     }
   }
-  public_network_access_enabled = var.genai_storage_account_definition.public_network_access_enabled
-  role_assignments              = local.genai_storage_account_role_assignments
-  shared_access_key_enabled     = var.genai_storage_account_definition.shared_access_key_enabled
-  tags                          = var.genai_storage_account_definition.tags
+  private_endpoints_manage_dns_zone_group = var.genai_storage_account_definition.private_endpoints_manage_dns_zone_group
+  public_network_access_enabled           = var.genai_storage_account_definition.public_network_access_enabled
+  role_assignments                        = local.genai_storage_account_role_assignments
+  shared_access_key_enabled               = var.genai_storage_account_definition.shared_access_key_enabled
+  tags                                    = var.genai_storage_account_definition.tags
 
   depends_on = [module.private_dns_zones, module.hub_vnet_peering]
 }
@@ -160,9 +163,10 @@ module "containerregistry" {
       subnet_resource_id            = local.subnet_ids["PrivateEndpointSubnet"]
     }
   }
-  public_network_access_enabled = var.genai_container_registry_definition.public_network_access_enabled
-  role_assignments              = local.genai_container_registry_role_assignments
-  zone_redundancy_enabled       = length(local.region_zones) > 1 ? var.genai_container_registry_definition.zone_redundancy_enabled : false
+  private_endpoints_manage_dns_zone_group = var.genai_container_registry_definition.private_endpoints_manage_dns_zone_group
+  public_network_access_enabled           = var.genai_container_registry_definition.public_network_access_enabled
+  role_assignments                        = local.genai_container_registry_role_assignments
+  zone_redundancy_enabled                 = length(local.region_zones) > 1 ? var.genai_container_registry_definition.zone_redundancy_enabled : false
 
   depends_on = [module.private_dns_zones, module.hub_vnet_peering]
 }
@@ -185,9 +189,10 @@ module "app_configuration" {
       subnet_resource_id            = local.subnet_ids["PrivateEndpointSubnet"]
     }
   }
-  role_assignments           = local.genai_app_configuration_role_assignments
-  sku                        = var.genai_app_configuration_definition.sku
-  soft_delete_retention_days = var.genai_app_configuration_definition.soft_delete_retention_in_days
-  tags                       = var.genai_app_configuration_definition.tags
+  private_endpoints_manage_dns_zone_group = var.genai_app_configuration_definition.private_endpoints_manage_dns_zone_group
+  role_assignments                        = local.genai_app_configuration_role_assignments
+  sku                                     = var.genai_app_configuration_definition.sku
+  soft_delete_retention_days              = var.genai_app_configuration_definition.soft_delete_retention_in_days
+  tags                                    = var.genai_app_configuration_definition.tags
 }
 

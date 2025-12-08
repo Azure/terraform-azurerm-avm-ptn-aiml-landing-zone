@@ -28,17 +28,18 @@ module "apim" {
       subnet_resource_id            = local.subnet_ids["PrivateEndpointSubnet"]
     }
   }
-  protocols                     = var.apim_definition.protocols
-  public_network_access_enabled = true
-  publisher_name                = var.apim_definition.publisher_name
-  role_assignments              = local.apim_role_assignments
-  sign_in                       = var.apim_definition.sign_in
-  sign_up                       = var.apim_definition.sign_up
-  sku_name                      = "${var.apim_definition.sku_root}_${var.apim_definition.sku_capacity}"
-  tags                          = var.apim_definition.tags
-  tenant_access                 = var.apim_definition.tenant_access
-  virtual_network_subnet_id     = null
-  virtual_network_type          = "None"
-  zones                         = local.region_zones
+  private_endpoints_manage_dns_zone_group = var.apim_definition.private_endpoints_manage_dns_zone_group
+  protocols                               = var.apim_definition.protocols
+  public_network_access_enabled           = true
+  publisher_name                          = var.apim_definition.publisher_name
+  role_assignments                        = local.apim_role_assignments
+  sign_in                                 = var.apim_definition.sign_in
+  sign_up                                 = var.apim_definition.sign_up
+  sku_name                                = "${var.apim_definition.sku_root}_${var.apim_definition.sku_capacity}"
+  tags                                    = var.apim_definition.tags
+  tenant_access                           = var.apim_definition.tenant_access
+  virtual_network_subnet_id               = null
+  virtual_network_type                    = "None"
+  zones                                   = local.region_zones
 }
 

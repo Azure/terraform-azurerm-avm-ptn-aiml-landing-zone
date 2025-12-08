@@ -1,15 +1,16 @@
 variable "ks_ai_search_definition" {
   type = object({
-    deploy                        = optional(bool, true)
-    name                          = optional(string)
-    enable_diagnostic_settings    = optional(bool, true)
-    sku                           = optional(string, "standard")
-    local_authentication_enabled  = optional(bool, true)
-    partition_count               = optional(number, 1)
-    public_network_access_enabled = optional(bool, false)
-    replica_count                 = optional(number, 2)
-    semantic_search_sku           = optional(string, "standard")
-    tags                          = optional(map(string), {})
+    deploy                                  = optional(bool, true)
+    name                                    = optional(string)
+    enable_diagnostic_settings              = optional(bool, true)
+    sku                                     = optional(string, "standard")
+    local_authentication_enabled            = optional(bool, true)
+    private_endpoints_manage_dns_zone_group = optional(bool, true)
+    partition_count                         = optional(number, 1)
+    public_network_access_enabled           = optional(bool, false)
+    replica_count                           = optional(number, 2)
+    semantic_search_sku                     = optional(string, "standard")
+    tags                                    = optional(map(string), {})
     role_assignments = optional(map(object({
       role_definition_id_or_name             = string
       principal_id                           = string
@@ -31,6 +32,7 @@ Configuration object for the Azure AI Search service to be created as part of th
 - `sku` - (Optional) The SKU of the AI Search service. Default is "standard".
 - `local_authentication_enabled` - (Optional) Whether local authentication is enabled. Default is true.
 - `partition_count` - (Optional) The number of partitions for the search service. Default is 1.
+- `private_endpoints_manage_dns_zone_group` - (Optional) Whether the module should manage DNS zone groups for private endpoint. Default is true.
 - `public_network_access_enabled` - (Optional) Whether public network access is enabled. Default is false.
 - `replica_count` - (Optional) The number of replicas for the search service. Default is 2.
 - `semantic_search_sku` - (Optional) The SKU for semantic search capabilities. Default is "standard".

@@ -5,13 +5,14 @@ variable "genai_app_configuration_definition" {
       authentication_mode     = string
       private_link_delegation = string
     }), null)
-    deploy                        = optional(bool, true)
-    name                          = optional(string)
-    local_auth_enabled            = optional(bool, false)
-    purge_protection_enabled      = optional(bool, true)
-    sku                           = optional(string, "standard")
-    soft_delete_retention_in_days = optional(number, 7)
-    tags                          = optional(map(string), {})
+    deploy                                  = optional(bool, true)
+    name                                    = optional(string)
+    local_auth_enabled                      = optional(bool, false)
+    private_endpoints_manage_dns_zone_group = optional(bool, true)
+    purge_protection_enabled                = optional(bool, true)
+    sku                                     = optional(string, "standard")
+    soft_delete_retention_in_days           = optional(number, 7)
+    tags                                    = optional(map(string), {})
     role_assignments = optional(map(object({
       role_definition_id_or_name             = string
       principal_id                           = string
@@ -33,6 +34,7 @@ Configuration object for the Azure App Configuration service to be created for G
 - `deploy` - (Optional) Whether to deploy the App Configuration store. Default is true.
 - `name` - (Optional) The name of the App Configuration store. If not provided, a name will be generated.
 - `local_auth_enabled` - (Optional) Whether local authentication is enabled. Default is false.
+- `private_endpoints_manage_dns_zone_group` - (Optional) Whether the module should manage DNS zone groups for private endpoints. Default is true.
 - `purge_protection_enabled` - (Optional) Whether purge protection is enabled. Default is true.
 - `sku` - (Optional) The SKU of the App Configuration store. Default is "standard".
 - `soft_delete_retention_in_days` - (Optional) The retention period in days for soft delete. Default is 7.
@@ -53,13 +55,14 @@ DESCRIPTION
 # Add georeplication support for Container Registry?
 variable "genai_container_registry_definition" {
   type = object({
-    deploy                        = optional(bool, true)
-    name                          = optional(string)
-    sku                           = optional(string, "Premium")
-    zone_redundancy_enabled       = optional(bool, true)
-    public_network_access_enabled = optional(bool, false)
-    enable_diagnostic_settings    = optional(bool, true)
-    tags                          = optional(map(string), {})
+    deploy                                  = optional(bool, true)
+    name                                    = optional(string)
+    sku                                     = optional(string, "Premium")
+    zone_redundancy_enabled                 = optional(bool, true)
+    private_endpoints_manage_dns_zone_group = optional(bool, true)
+    public_network_access_enabled           = optional(bool, false)
+    enable_diagnostic_settings              = optional(bool, true)
+    tags                                    = optional(map(string), {})
     role_assignments = optional(map(object({
       role_definition_id_or_name             = string
       principal_id                           = string
@@ -79,6 +82,7 @@ Configuration object for the Azure Container Registry to be created for GenAI se
 - `name` - (Optional) The name of the Container Registry. If not provided, a name will be generated.
 - `sku` - (Optional) The SKU of the Container Registry. Default is "Premium".
 - `zone_redundancy_enabled` - (Optional) Whether zone redundancy is enabled. Default is true.
+- `private_endpoints_manage_dns_zone_group` - (Optional) Whether the module should manage DNS zone groups for private endpoint. Default is true.
 - `public_network_access_enabled` - (Optional) Whether public network access is enabled. Default is false.
 - `tags` - (Optional) Map of tags to assign to the Container Registry.
 - `role_assignments` - (Optional) Map of role assignments to create on the Container Registry. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
@@ -103,12 +107,13 @@ variable "genai_cosmosdb_definition" {
       zone_redundant    = optional(bool, true)
       failover_priority = optional(number, 0)
     })), [])
-    public_network_access_enabled    = optional(bool, false)
-    analytical_storage_enabled       = optional(bool, true)
-    automatic_failover_enabled       = optional(bool, true)
-    local_authentication_disabled    = optional(bool, true)
-    partition_merge_enabled          = optional(bool, false)
-    multiple_write_locations_enabled = optional(bool, false)
+    private_endpoints_manage_dns_zone_group = optional(bool, true)
+    public_network_access_enabled           = optional(bool, false)
+    analytical_storage_enabled              = optional(bool, true)
+    automatic_failover_enabled              = optional(bool, true)
+    local_authentication_disabled           = optional(bool, true)
+    partition_merge_enabled                 = optional(bool, false)
+    multiple_write_locations_enabled        = optional(bool, false)
     analytical_storage_config = optional(object({
       schema_type = string
     }), null)
@@ -148,6 +153,7 @@ Configuration object for the Azure Cosmos DB account to be created for GenAI ser
   - `location` - The Azure region for the secondary location.
   - `zone_redundant` - (Optional) Whether zone redundancy is enabled for the secondary region. Default is true.
   - `failover_priority` - (Optional) The failover priority for the secondary region. Default is 0.
+- `private_endpoints_manage_dns_zone_group` - (Optional) Whether the module should manage DNS zone groups for private endpoint. Default is true.
 - `public_network_access_enabled` - (Optional) Whether public network access is enabled. Default is false.
 - `analytical_storage_enabled` - (Optional) Whether analytical storage is enabled. Default is true.
 - `automatic_failover_enabled` - (Optional) Whether automatic failover is enabled. Default is false.
@@ -188,9 +194,10 @@ variable "genai_key_vault_definition" {
       ip_rules                   = optional(list(string), [])
       virtual_network_subnet_ids = optional(list(string), [])
     }), null)
-    public_network_access_enabled = optional(bool, false)
-    sku                           = optional(string, "standard")
-    tenant_id                     = optional(string)
+    private_endpoints_manage_dns_zone_group = optional(bool, true)
+    public_network_access_enabled           = optional(bool, false)
+    sku                                     = optional(string, "standard")
+    tenant_id                               = optional(string)
     role_assignments = optional(map(object({
       role_definition_id_or_name             = string
       principal_id                           = string
@@ -213,6 +220,7 @@ Configuration object for the Azure Key Vault to be created for GenAI services.
   - `default_action` - (Optional) Default action when no rule matches. Default is "Deny".
   - `ip_rules` - (Optional) List of IP addresses or CIDR blocks to allow access.
   - `virtual_network_subnet_ids` - (Optional) List of subnet resource IDs to allow access.
+- `private_endpoints_manage_dns_zone_group` - (Optional) Whether the module should manage DNS zone groups for private endpoint. Default is true.
 - `public_network_access_enabled` - (Optional) Whether public network access is enabled. Default is false.
 - `sku` - (Optional) The SKU of the Key Vault. Default is "standard".
 - `tenant_id` - (Optional) The tenant ID for the Key Vault. If not provided, the current tenant will be used.
@@ -231,16 +239,17 @@ DESCRIPTION
 
 variable "genai_storage_account_definition" {
   type = object({
-    deploy                        = optional(bool, true)
-    name                          = optional(string)
-    enable_diagnostic_settings    = optional(bool, true)
-    account_kind                  = optional(string, "StorageV2")
-    account_tier                  = optional(string, "Standard")
-    account_replication_type      = optional(string, "GRS")
-    endpoint_types                = optional(set(string), ["blob"])
-    access_tier                   = optional(string, "Hot")
-    public_network_access_enabled = optional(bool, false)
-    shared_access_key_enabled     = optional(bool, true)
+    deploy                                  = optional(bool, true)
+    name                                    = optional(string)
+    enable_diagnostic_settings              = optional(bool, true)
+    account_kind                            = optional(string, "StorageV2")
+    account_tier                            = optional(string, "Standard")
+    account_replication_type                = optional(string, "GRS")
+    endpoint_types                          = optional(set(string), ["blob"])
+    access_tier                             = optional(string, "Hot")
+    private_endpoints_manage_dns_zone_group = optional(bool, true)
+    public_network_access_enabled           = optional(bool, false)
+    shared_access_key_enabled               = optional(bool, true)
     role_assignments = optional(map(object({
       role_definition_id_or_name             = string
       principal_id                           = string
@@ -267,6 +276,7 @@ Configuration object for the Azure Storage Account to be created for GenAI servi
 - `account_replication_type` - (Optional) The replication type for the storage account. Default is "GRS".
 - `endpoint_types` - (Optional) Set of endpoint types to enable. Default is ["blob"].
 - `access_tier` - (Optional) The access tier for the storage account. Default is "Hot".
+- `private_endpoints_manage_dns_zone_group` - (Optional) Whether the module should manage DNS zone groups for private endpoint. Default is true.
 - `public_network_access_enabled` - (Optional) Whether public network access is enabled. Default is false.
 - `shared_access_key_enabled` - (Optional) Whether shared access keys are enabled. Default is true.
 - `role_assignments` - (Optional) Map of role assignments to create on the Storage Account. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.

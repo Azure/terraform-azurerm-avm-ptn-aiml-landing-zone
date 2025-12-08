@@ -21,10 +21,11 @@ module "search_service" {
       subnet_resource_id            = local.subnet_ids["PrivateEndpointSubnet"]
     }
   }
-  public_network_access_enabled = var.ks_ai_search_definition.public_network_access_enabled
-  replica_count                 = var.ks_ai_search_definition.replica_count
-  semantic_search_sku           = var.ks_ai_search_definition.semantic_search_sku
-  sku                           = var.ks_ai_search_definition.sku
+  private_endpoints_manage_dns_zone_group = var.ks_ai_search_definition.private_endpoints_manage_dns_zone_group
+  public_network_access_enabled           = var.ks_ai_search_definition.public_network_access_enabled
+  replica_count                           = var.ks_ai_search_definition.replica_count
+  semantic_search_sku                     = var.ks_ai_search_definition.semantic_search_sku
+  sku                                     = var.ks_ai_search_definition.sku
 
   depends_on = [module.private_dns_zones, module.hub_vnet_peering]
 }
