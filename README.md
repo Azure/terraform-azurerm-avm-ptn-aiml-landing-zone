@@ -327,6 +327,7 @@ object({
     # AI Foundry Hub Configuration
     create_byor      = optional(bool, true)
     purge_on_destroy = optional(bool, false)
+    tags             = optional(map(string))
     ai_foundry = optional(object({
       name                     = optional(string, null)
       disable_local_auth       = optional(bool, false)

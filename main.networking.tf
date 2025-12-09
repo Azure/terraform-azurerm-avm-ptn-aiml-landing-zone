@@ -226,6 +226,7 @@ module "app_gateway_waf_policy" {
   resource_group_name = azurerm_resource_group.this.name
   enable_telemetry    = var.enable_telemetry
   policy_settings     = var.waf_policy_definition.policy_settings
+  tags                = var.waf_policy_definition.tags != null ? var.waf_policy_definition.tags : var.tags
 }
 
 
