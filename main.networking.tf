@@ -12,10 +12,10 @@ module "ai_lz_vnet" {
     id     = var.vnet_definition.ddos_protection_plan_resource_id
     enable = true
   } : null
-  diagnostic_settings = length(module.log_analytics_workspace) > 0 ? {
+  diagnostic_settings = local.deploy_diagnostics_settings ? {
     sendToLogAnalytics = {
       name                           = "sendToLogAnalytics-vnet-${random_string.name_suffix.result}"
-      workspace_resource_id          = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
+      workspace_resource_id          = local.log_analytics_workspace_id
       log_analytics_destination_type = "Dedicated"
     }
   } : null
@@ -138,10 +138,10 @@ module "firewall" {
   location            = azurerm_resource_group.this.location
   name                = local.firewall_name
   resource_group_name = var.firewall_definition.resource_group_name != null ? var.firewall_definition.resource_group_name : azurerm_resource_group.this.name
-  diagnostic_settings = length(module.log_analytics_workspace) > 0 ? {
+  diagnostic_settings = local.deploy_diagnostics_settings ? {
     to_law = {
       name                  = "sendToLogAnalytics-fwpip-${random_string.name_suffix.result}"
-      workspace_resource_id = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
+      workspace_resource_id = local.log_analytics_workspace_id
       log_groups            = ["allLogs"]
       metric_categories     = ["AllMetrics"]
     }
@@ -243,10 +243,10 @@ module "application_gateway" {
   app_gateway_waf_policy_resource_id = module.app_gateway_waf_policy.resource_id
   authentication_certificate         = var.app_gateway_definition.authentication_certificate
   autoscale_configuration            = var.app_gateway_definition.autoscale_configuration
-  diagnostic_settings = length(module.log_analytics_workspace) > 0 ? {
+  diagnostic_settings = local.deploy_diagnostics_settings ? {
     to_law = {
       name                  = "sendToLogAnalytics-appgw-${random_string.name_suffix.result}"
-      workspace_resource_id = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
+      workspace_resource_id = local.log_analytics_workspace_id
       log_groups            = ["allLogs"]
       metric_categories     = ["AllMetrics"]
     }

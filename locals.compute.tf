@@ -2,7 +2,7 @@ locals {
   cae_log_analytics_workspace_resource_id = (
     var.container_app_environment_definition.log_analytics_workspace_resource_id != null ?
     var.container_app_environment_definition.log_analytics_workspace_resource_id :
-    length(module.log_analytics_workspace) > 0 ? module.log_analytics_workspace[0].resource_id : null
+    local.log_analytics_workspace_id
   )
   container_app_environment_default_role_assignments = {}
   container_app_environment_name = (

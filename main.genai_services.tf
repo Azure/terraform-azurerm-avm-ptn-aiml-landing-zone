@@ -6,10 +6,10 @@ module "avm_res_keyvault_vault" {
   name                = local.genai_key_vault_name
   resource_group_name = azurerm_resource_group.this.name
   tenant_id           = var.genai_key_vault_definition.tenant_id != null ? var.genai_key_vault_definition.tenant_id : data.azurerm_client_config.current.tenant_id
-  diagnostic_settings = length(module.log_analytics_workspace) > 0 ? {
+  diagnostic_settings = local.deploy_diagnostics_settings ? {
     to_law = {
       name                  = "sendToLogAnalytics-kv-${random_string.name_suffix.result}"
-      workspace_resource_id = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
+      workspace_resource_id = local.log_analytics_workspace_id
     }
   } : null
   enabled_for_deployment          = true
@@ -66,10 +66,10 @@ module "cosmosdb" {
     max_staleness_prefix    = var.genai_cosmosdb_definition.consistency_policy.max_staleness_prefix
   }
   cors_rule = var.genai_cosmosdb_definition.cors_rule
-  diagnostic_settings = var.genai_cosmosdb_definition.enable_diagnostic_settings && length(module.log_analytics_workspace) > 0 ? {
+  diagnostic_settings = var.genai_cosmosdb_definition.enable_diagnostic_settings && local.deploy_diagnostics_settings ? {
     to_law = {
       name                  = "sendToLogAnalytics-cosmosdb-${random_string.name_suffix.result}"
-      workspace_resource_id = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
+      workspace_resource_id = local.log_analytics_workspace_id
     }
   } : null
   enable_telemetry = var.enable_telemetry
@@ -113,10 +113,10 @@ module "storage_account" {
   account_kind             = var.genai_storage_account_definition.account_kind
   account_replication_type = var.genai_storage_account_definition.account_replication_type
   account_tier             = var.genai_storage_account_definition.account_tier
-  diagnostic_settings_storage_account = var.genai_storage_account_definition.enable_diagnostic_settings && length(module.log_analytics_workspace) > 0 ? {
+  diagnostic_settings_storage_account = var.genai_storage_account_definition.enable_diagnostic_settings && local.deploy_diagnostics_settings ? {
     storage = {
       name                  = "sendToLogAnalytics-sa-${random_string.name_suffix.result}"
-      workspace_resource_id = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
+      workspace_resource_id = local.log_analytics_workspace_id
     }
   } : null
   enable_telemetry   = var.enable_telemetry
@@ -147,10 +147,10 @@ module "containerregistry" {
   location            = azurerm_resource_group.this.location
   name                = local.genai_container_registry_name
   resource_group_name = azurerm_resource_group.this.name
-  diagnostic_settings = var.genai_container_registry_definition.enable_diagnostic_settings && length(module.log_analytics_workspace) > 0 ? {
+  diagnostic_settings = var.genai_container_registry_definition.enable_diagnostic_settings && local.deploy_diagnostics_settings ? {
     storage = {
       name                  = "sendToLogAnalytics-acr-${random_string.name_suffix.result}"
-      workspace_resource_id = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
+      workspace_resource_id = local.log_analytics_workspace_id
     }
   } : null
   enable_telemetry = var.enable_telemetry
