@@ -87,8 +87,21 @@ locals {
     resource_id = "${coalesce(var.private_dns_zones.existing_zones_resource_group_resource_id, "notused")}/providers/Microsoft.Network/privateDnsZones/${value.name}" #TODO: determine if there is a more elegant way to do this while avoiding errors
     }
   } : {}
-  route_table_name = "${local.vnet_name}-firewall-route-table"
-  subnet_ids       = length(var.vnet_definition.existing_byo_vnet) > 0 ? { for key, m in module.byo_subnets : key => try(m.resource_id, m.id) } : { for key, s in module.ai_lz_vnet[0].subnets : key => s.resource_id }
+  route_table_apim = {
+    name = coalesce(var.rt_definitions.apim.name, "${local.vnet_name}-apim-route-table")
+    resource_group = {
+      name     = coalesce(var.rt_definitions.apim.resource_group.name, azurerm_resource_group.this.name)
+      location = coalesce(var.rt_definitions.apim.resource_group.location, azurerm_resource_group.this.location)
+    }
+  }
+  route_table_firewall = {
+    name = coalesce(var.rt_definitions.firewall.name, "${local.vnet_name}-firewall-route-table")
+    resource_group = {
+      name     = coalesce(var.rt_definitions.firewall.resource_group.name, var.firewall_definition.resource_group_name, azurerm_resource_group.this.name)
+      location = coalesce(var.rt_definitions.firewall.resource_group.location, azurerm_resource_group.this.location)
+    }
+  }
+  subnet_ids = length(var.vnet_definition.existing_byo_vnet) > 0 ? { for key, m in module.byo_subnets : key => try(m.resource_id, m.id) } : { for key, s in module.ai_lz_vnet[0].subnets : key => s.resource_id }
   subnets = {
     AzureBastionSubnet = {
       enabled          = var.flag_platform_landing_zone == true ? try(local.subnets_definition["AzureBastionSubnet"].enabled, true) : try(local.subnets_definition["AzureBastionSubnet"].enabled, false)
@@ -141,7 +154,7 @@ locals {
       address_prefixes = try(local.subnets_definition["APIMSubnet"].address_prefix, null) != null ? [local.subnets_definition["APIMSubnet"].address_prefix] : [cidrsubnet(local.vnet_address_space, 4, 4)]
       route_table = ((var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
         (var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? {
-        id = module.firewall_route_table[0].resource_id
+        id = module.apim_route_table[0].resource_id
       } : null
       network_security_group = {
         id = module.nsgs.resource_id

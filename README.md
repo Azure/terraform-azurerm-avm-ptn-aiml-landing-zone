@@ -1766,6 +1766,43 @@ object({
 
 Default: `{}`
 
+### <a name="input_rt_definitions"></a> [rt\_definitions](#input\_rt\_definitions)
+
+Description: Configuration object for Route Tables to be deployed.
+- `firewall` - (Optional) Configuration for the firewall route table.
+  - `name` - (Optional) The name of the firewall route table. If not provided, a name will be generated.
+  - `resource_group` - (Optional) Resource group configuration for the firewall route table. If not provided, the module's resource group will be used.
+    - `name` - The name of the resource group.
+    - `location` - (Optional) The location of the resource group. If not provided, the module's resource group location will be used.
+- `apim` - (Optional) Configuration for the API Management route table.
+  - `name` - (Optional) The name of the API Management route table. If not provided, a name will be generated.
+  - `resource_group` - (Optional) Resource group configuration for the API Management route table. If not provided, the module's resource group will be used.
+    - `name` - The name of the resource group.
+    - `location` - (Optional) The location of the resource group. If not provided, the module's resource group location will be used.
+
+Type:
+
+```hcl
+optional(object({
+    firewall = optional(object({
+      name = optional(string)
+      resource_group = optional(object({
+        name     = string
+        location = optional(string)
+      }), {})
+    }), {})
+    apim = optional(object({
+      name = optional(string)
+      resource_group = optional(object({
+        name     = string
+        location = optional(string)
+      }), {})
+    }), {})
+  }), {})
+```
+
+Default: `{}`
+
 ### <a name="input_tags"></a> [tags](#input\_tags)
 
 Description: Map of tags to be assigned to all resources created by this module.
@@ -1908,6 +1945,12 @@ Version: =0.16.0
 Source: Azure/avm-res-apimanagement-service/azurerm
 
 Version: 0.0.5
+
+### <a name="module_apim_route_table"></a> [apim\_route\_table](#module\_apim\_route\_table)
+
+Source: Azure/avm-res-network-routetable/azurerm
+
+Version: 0.4.1
 
 ### <a name="module_app_configuration"></a> [app\_configuration](#module\_app\_configuration)
 
