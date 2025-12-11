@@ -93,8 +93,11 @@ resource "azurerm_virtual_hub_connection" "this" {
 module "apim_route_table" {
   source  = "Azure/avm-res-network-routetable/azurerm"
   version = "0.4.1"
-  count = ((var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
-  (var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? 1 : 0
+  count = anytrue([
+    var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0,
+    var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null,
+    local.apim_networking.management_return_via_internet
+  ]) ? 1 : 0
 
   location                      = local.route_table_apim.resource_group.location
   name                          = local.route_table_apim.name
@@ -111,6 +114,11 @@ module "apim_route_table" {
       address_prefix         = "0.0.0.0/0"
       next_hop_type          = "VirtualAppliance"
       next_hop_in_ip_address = module.firewall[0].resource.ip_configuration[0].private_ip_address
+    } : null
+    apim_direct_return = local.apim_networking.management_return_via_internet ? {
+      name           = "apim-management-to-internet"
+      address_prefix = "ApiManagement"
+      next_hop_type  = "Internet"
     } : null
   } : k => v if v != null }
   tags = local.route_table_apim.tags

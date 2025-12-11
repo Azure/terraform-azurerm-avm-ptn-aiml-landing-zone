@@ -157,7 +157,7 @@ locals {
       route_table = anytrue([
         var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0,
         (var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null),
-        var.apim_definition.virtual_network_integration.enabled && var.apim_definition.virtual_network_integration.management_return_via_internet
+        local.apim_networking.management_return_via_internet
         ]) ? {
         id = module.apim_route_table[0].resource_id
       } : null

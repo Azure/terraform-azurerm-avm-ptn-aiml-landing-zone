@@ -80,5 +80,12 @@ locals {
     local.apim_default_role_assignments,
     try(var.apim_definition.role_assignments, {})
   )
-  apim_zones = contains(["Premium"], var.apim_definition.sku_root) ? slice(local.region_zones, 0, var.apim_definition.sku_capacity) : null
+  apim_zones = (var.apim_definition.zones == null || length(var.apim_definition.zones) > 0 ? var.apim_definition.zones :
+    contains(["Premium"], var.apim_definition.sku_root) ?
+    [
+      for z in local.region_zones : z
+      if(mod(var.apim_definition.sku_capacity, z) == 0) && (var.apim_definition.sku_capacity / z <= 3)
+    ]
+    : null
+  )
 }

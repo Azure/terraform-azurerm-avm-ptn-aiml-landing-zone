@@ -608,6 +608,7 @@ Description: Configuration object for the Azure API Management service to be dep
   - `public` - (Optional) Whether to make the Gateway publicly accessible when virtual network integration is enabled. Default is false.
   - `use_service_endpoints` - (Optional) Whether to enable SQL service endpoint on the APIM subnet.
   - `management_return_via_internet` - (Optional) Whether management traffic should return directly via the internet and ignore any other UDRs.
+- `zones` - (Optional) List of availability zones for the API Management service. If not set, Automatic zone assignment will be used for supported SKUs. If an empty list is provided, zones will be calculated based on capacity and avalability zones in the region.
 
 Type:
 
@@ -714,6 +715,7 @@ object({
       service_endpoints              = optional(bool)
       management_return_via_internet = optional(bool)
     }), {})
+    zones = optional(list(number))
   })
 ```
 
