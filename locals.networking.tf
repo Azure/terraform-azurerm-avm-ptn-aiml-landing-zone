@@ -154,13 +154,36 @@ locals {
       enabled          = true
       name             = try(local.subnets_definition["APIMSubnet"].name, null) != null ? local.subnets_definition["APIMSubnet"].name : "APIMSubnet"
       address_prefixes = try(local.subnets_definition["APIMSubnet"].address_prefix, null) != null ? [local.subnets_definition["APIMSubnet"].address_prefix] : [cidrsubnet(local.vnet_address_space, 4, 4)]
-      route_table = ((var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
-        (var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? {
+      route_table = anytrue([
+        var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0,
+        (var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null),
+        var.apim_definition.virtual_network_integration.enabled && var.apim_definition.virtual_network_integration.management_return_via_internet
+        ]) ? {
         id = module.apim_route_table[0].resource_id
       } : null
       network_security_group = {
         id = module.nsgs.resource_id
       }
+      service_endpoints_with_location = local.apim_networking.use_service_endpoints ? [
+        {
+          service   = "Microsoft.Sql"
+          locations = [var.location]
+        },
+        {
+          service   = "Microsoft.Storage"
+          locations = [var.location]
+        },
+        {
+          service   = "Microsoft.KeyVault"
+          locations = [var.location]
+        }
+      ] : null
+      delegations = local.apim_networking.use_service_delegation ? [{
+        name = "APIMSubnetDelegation"
+        service_delegation = {
+          name = "Microsoft.Web/serverFarms"
+        }
+      }] : null
     }
     AIFoundrySubnet = {
       enabled          = true

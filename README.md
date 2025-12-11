@@ -594,6 +594,20 @@ Description: Configuration object for the Azure API Management service to be dep
 - `tags` - (Optional) Map of tags to assign to the API Management service.
 - `tenant_access` - (Optional) Tenant access configuration.
   - `enabled` - Whether tenant access is enabled.
+- 'virtual\_network\_integration' - (Optional) Virtual network integration configuration.
+
+  For Developer and Premium SKUs: If enabled is true then the integration will be "External" if public is also true, otherwise "Internal".  
+    If "External" no internal IPs or Private Endpoints will be created.  
+    If "Internal" internal IPs will be created (no Private Endpoints) and the Developer Portal will not be externally accessible.  
+    The module will pick sensible defaults for `use_service_endpoints` and `management_return_via_internet` unless explicitly overridden.  
+  For StandardV2 and PremiumV2 SKUs:  
+    Internal Private endpoints will always be created. `public` determines whether the Gateway is publicly accessible or not.  
+  For Basic, Standard, and Consumption SKUs: virtual\_network\_integration is not supported and will be ignored.
+
+  - `enabled` - (Optional) Whether to enable virtual network integration. Default is false.
+  - `public` - (Optional) Whether to make the Gateway publicly accessible when virtual network integration is enabled. Default is false.
+  - `use_service_endpoints` - (Optional) Whether to enable SQL service endpoint on the APIM subnet.
+  - `management_return_via_internet` - (Optional) Whether management traffic should return directly via the internet and ignore any other UDRs.
 
 Type:
 
@@ -694,6 +708,12 @@ object({
     tenant_access = optional(object({
       enabled = bool
     }), null)
+    virtual_network_integration = optional(object({
+      enabled                        = optional(bool, false)
+      public                         = optional(bool, false)
+      service_endpoints              = optional(bool)
+      management_return_via_internet = optional(bool)
+    }), {})
   })
 ```
 
