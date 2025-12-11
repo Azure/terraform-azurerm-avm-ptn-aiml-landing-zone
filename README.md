@@ -1773,32 +1773,32 @@ Description: Configuration object for Route Tables to be deployed.
   - `name` - (Optional) The name of the firewall route table. If not provided, a name will be generated.
   - `resource_group` - (Optional) Resource group configuration for the firewall route table. If not provided, the module's resource group will be used.
     - `name` - The name of the resource group.
-    - `location` - (Optional) The location of the resource group. If not provided, the module's resource group location will be used.
+    - `location` - The location of the resource group. If not provided, the module's resource group location will be used.
 - `apim` - (Optional) Configuration for the API Management route table.
   - `name` - (Optional) The name of the API Management route table. If not provided, a name will be generated.
   - `resource_group` - (Optional) Resource group configuration for the API Management route table. If not provided, the module's resource group will be used.
     - `name` - The name of the resource group.
-    - `location` - (Optional) The location of the resource group. If not provided, the module's resource group location will be used.
+    - `location` - The location of the resource group. If not provided, the module's resource group location will be used.
 
 Type:
 
 ```hcl
-optional(object({
+object({
     firewall = optional(object({
       name = optional(string)
       resource_group = optional(object({
         name     = string
-        location = optional(string)
-      }), {})
+        location = string
+      }))
     }), {})
     apim = optional(object({
       name = optional(string)
       resource_group = optional(object({
         name     = string
-        location = optional(string)
-      }), {})
+        location = string
+      }))
     }), {})
-  }), {})
+  })
 ```
 
 Default: `{}`
