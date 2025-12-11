@@ -171,7 +171,7 @@ locals {
         },
         {
           service   = "Microsoft.Storage"
-          locations = [var.location]
+          locations = [var.location, local.paired_region]
         },
         {
           service   = "Microsoft.KeyVault"
