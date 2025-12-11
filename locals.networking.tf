@@ -93,6 +93,7 @@ locals {
       name     = coalesce(try(var.rt_definitions.apim.resource_group.name, null), azurerm_resource_group.this.name)
       location = coalesce(try(var.rt_definitions.apim.resource_group.location, null), azurerm_resource_group.this.location)
     }
+    tags = coalesce(var.rt_definitions.apim.tags, var.tags)
   }
   route_table_firewall = {
     name = coalesce(var.rt_definitions.firewall.name, "${local.vnet_name}-firewall-route-table")
@@ -100,6 +101,7 @@ locals {
       name     = coalesce(try(var.rt_definitions.firewall.resource_group.name, null), coalesce(var.firewall_definition.resource_group_name, azurerm_resource_group.this.name))
       location = coalesce(try(var.rt_definitions.firewall.resource_group.location, null), azurerm_resource_group.this.location)
     }
+    tags = coalesce(var.rt_definitions.firewall.tags, var.tags)
   }
   subnet_ids = length(var.vnet_definition.existing_byo_vnet) > 0 ? { for key, m in module.byo_subnets : key => try(m.resource_id, m.id) } : { for key, s in module.ai_lz_vnet[0].subnets : key => s.resource_id }
   subnets = {

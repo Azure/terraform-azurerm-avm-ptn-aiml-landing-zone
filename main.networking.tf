@@ -113,6 +113,7 @@ module "apim_route_table" {
       next_hop_in_ip_address = module.firewall[0].resource.ip_configuration[0].private_ip_address
     } : null
   } : k => v if v != null }
+  tags = local.route_table_apim.tags
 }
 
 module "firewall_route_table" {
@@ -138,6 +139,7 @@ module "firewall_route_table" {
       next_hop_in_ip_address = module.firewall[0].resource.ip_configuration[0].private_ip_address
     } : null
   } : k => v if v != null }
+  tags = local.route_table_firewall.tags
 }
 
 module "fw_pip" {

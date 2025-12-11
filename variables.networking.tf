@@ -562,6 +562,7 @@ variable "rt_definitions" {
         name     = string
         location = string
       }))
+      tags = optional(map(string))
     }), {})
     apim = optional(object({
       name = optional(string)
@@ -569,6 +570,7 @@ variable "rt_definitions" {
         name     = string
         location = string
       }))
+      tags = optional(map(string))
     }), {})
   })
   default     = {}
@@ -579,12 +581,15 @@ Configuration object for Route Tables to be deployed.
   - `resource_group` - (Optional) Resource group configuration for the firewall route table. If not provided, the module's resource group will be used.
     - `name` - The name of the resource group.
     - `location` - The location of the resource group. If not provided, the module's resource group location will be used.
+  - `tags` - (Optional) Map of tags to assign to the firewall route table.
 - `apim` - (Optional) Configuration for the API Management route table.
   - `name` - (Optional) The name of the API Management route table. If not provided, a name will be generated.
   - `resource_group` - (Optional) Resource group configuration for the API Management route table. If not provided, the module's resource group will be used.
     - `name` - The name of the resource group.
     - `location` - The location of the resource group. If not provided, the module's resource group location will be used.
+  - `tags` - (Optional) Map of tags to assign to the API Management route table.
 DESCRIPTION
+  nullable    = false
 }
 
 variable "use_internet_routing" {
