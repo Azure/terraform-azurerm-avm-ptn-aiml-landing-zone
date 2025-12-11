@@ -84,8 +84,8 @@ locals {
     contains(["Premium"], var.apim_definition.sku_root) ?
     range(1, max([
       for z in local.region_zones : z
-      if(var.apim_definition.sku_capacity % z) == 0 && (var.apim_definition.sku_capacity / z <= 3)
-    ]...)+1)
+      if(var.apim_definition.sku_capacity % z) == 0
+    ]...) + 1)
     : null
   )
 }
