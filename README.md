@@ -1886,6 +1886,10 @@ Default: `{}`
 
 The following outputs are exported:
 
+### <a name="output_log_analytics_workspace_id"></a> [log\_analytics\_workspace\_id](#output\_log\_analytics\_workspace\_id)
+
+Description: The ID of the Log Analytics Workspace used for monitoring.
+
 ### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
 
 Description: Future resource ID output for the LZA.
