@@ -51,7 +51,7 @@ resource "azurerm_role_assignment" "deployment_user_kv_admin" {
   count = var.genai_key_vault_definition.deploy ? 1 : 0
 
   principal_id         = data.azurerm_client_config.current.object_id
-  scope                = module.avm_res_keyvault_vault.resource_id
+  scope                = module.avm_res_keyvault_vault[0].resource_id
   role_definition_name = "Key Vault Administrator"
 }
 
