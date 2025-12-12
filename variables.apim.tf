@@ -63,7 +63,7 @@ variable "apim_definition" {
         ssl_keyvault_identity_client_id = optional(string, null)
       })), [])
     }), null)
-    managed_identities = optiona(object({
+    managed_identities = optional(object({
       system_assigned            = optional(bool, false)
       user_assigned_resource_ids = optional(set(string), [])
     }))
