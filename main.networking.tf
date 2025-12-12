@@ -93,7 +93,7 @@ resource "azurerm_virtual_hub_connection" "this" {
 module "firewall_route_table" {
   source  = "Azure/avm-res-network-routetable/azurerm"
   version = "0.4.1"
-  count   = var.flag_platform_landing_zone || (length(var.vnet_definition.existing_byo_vnet) > 0 && try(var.vnet_definition.existing_byo_vnet[0].firewall_ip_address, null) != null) ? 1 : 0
+  count   = var.flag_platform_landing_zone || (length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null) ? 1 : 0
 
   location                      = azurerm_resource_group.this.location
   name                          = local.route_table_name
@@ -110,7 +110,7 @@ module "firewall_route_table" {
       name                   = "default-to-firewall"
       address_prefix         = "0.0.0.0/0"
       next_hop_type          = "VirtualAppliance"
-      next_hop_in_ip_address = length(var.vnet_definition.existing_byo_vnet) == 0 ? module.firewall[0].resource.ip_configuration[0].private_ip_address : var.vnet_definition.existing_byo_vnet[0].firewall_ip_address
+      next_hop_in_ip_address = length(var.vnet_definition.existing_byo_vnet) == 0 ? module.firewall[0].resource.ip_configuration[0].private_ip_address : values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address
     }
   }
 }
