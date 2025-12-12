@@ -68,6 +68,7 @@ Description: Configuration object for the Virtual Network (VNet) to be deployed.
 - `name` - (Optional) The name of the Virtual Network. If not provided, a name will be generated.
 - `existing_byo_vnet` - (Optional) Map to configure use of an existing Virtual Network (BYO VNet). If provided, no new VNet will be created. The module will add subnets to the existing VNet during deployment, so ensure that the deployer account has sufficient permissions to create subnets. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
   - `vnet_resource_id` - Resource ID of the existing Virtual Network to use.
+  - `firewall_ip_address` - (Optional) IP address of the firewall if a firewall is deployed for use by the BYO vnet. This IP address wlll be used to configure the route table for the subnets when provided. If using a BYO Vnet, the firewall is assumed to be deployed and configured outside of this module.
 - `address_space` - (Optional) The address space for the Virtual Network in CIDR notation. Defaults to 192.168.0.0/20 if none provided. Not used when `existing_byo_vnet` is configured.
 - `ddos_protection_plan_resource_id` - (Optional) Resource ID of the DDoS Protection Plan to associate with the VNet. This is not used for BYO VNet configurations as that is assumed to be handled outside the module.
 - `dns_servers` - (Optional) Set of custom DNS server IP addresses for the VNet.
@@ -77,7 +78,6 @@ Description: Configuration object for the Virtual Network (VNet) to be deployed.
   - `address_prefix` - (Optional) The address prefix for the subnet in CIDR notation.
 - `vnet_peering_configuration` - (Optional) Configuration for VNet peering. This is not used for BYO VNet configurations as that is assumed to be handled outside the module.
   - `peer_vnet_resource_id` - (Optional) Resource ID of the peer VNet.
-  - `firewall_ip_address` - (Optional) IP address of the firewall for routing.
   - `name` - (Optional) Name of the peering connection.
   - `allow_forwarded_traffic` - (Optional) Whether forwarded traffic is allowed. Default is true.
   - `allow_gateway_transit` - (Optional) Whether gateway transit is allowed. Default is true.
@@ -98,7 +98,8 @@ Type:
 object({
     name = optional(string)
     existing_byo_vnet = optional(map(object({
-      vnet_resource_id = string
+      vnet_resource_id    = string
+      firewall_ip_address = optional(string)
       }
     )), {})
     address_space                    = optional(string, "192.168.0.0/20")
@@ -112,7 +113,6 @@ object({
     )), {})
     vnet_peering_configuration = optional(object({
       peer_vnet_resource_id                = optional(string)
-      firewall_ip_address                  = optional(string)
       name                                 = optional(string)
       allow_forwarded_traffic              = optional(bool, true)
       allow_gateway_transit                = optional(bool, true)

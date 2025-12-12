@@ -93,7 +93,7 @@ resource "azurerm_virtual_hub_connection" "this" {
 module "firewall_route_table" {
   source  = "Azure/avm-res-network-routetable/azurerm"
   version = "0.4.1"
-  count   = var.flag_platform_landing_zone ? 1 : 0
+  count   = var.flag_platform_landing_zone || (length(var.vnet_definition.existing_byo_vnet) > 0 && try(var.vnet_definition.existing_byo_vnet[0].firewall_ip_address, null) != null) ? 1 : 0
 
   location                      = azurerm_resource_group.this.location
   name                          = local.route_table_name
@@ -110,7 +110,7 @@ module "firewall_route_table" {
       name                   = "default-to-firewall"
       address_prefix         = "0.0.0.0/0"
       next_hop_type          = "VirtualAppliance"
-      next_hop_in_ip_address = module.firewall[0].resource.ip_configuration[0].private_ip_address
+      next_hop_in_ip_address = length(var.vnet_definition.existing_byo_vnet) == 0 ? module.firewall[0].resource.ip_configuration[0].private_ip_address : var.vnet_definition.existing_byo_vnet[0].firewall_ip_address
     }
   }
 }
@@ -118,7 +118,7 @@ module "firewall_route_table" {
 module "fw_pip" {
   source  = "Azure/avm-res-network-publicipaddress/azurerm"
   version = "0.2.0"
-  count   = var.flag_platform_landing_zone ? 1 : 0
+  count   = var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0 ? 1 : 0
 
   location            = azurerm_resource_group.this.location
   name                = "${local.firewall_name}-pip"
@@ -130,7 +130,7 @@ module "fw_pip" {
 module "firewall" {
   source  = "Azure/avm-res-network-azurefirewall/azurerm"
   version = "0.4.0"
-  count   = var.flag_platform_landing_zone && var.firewall_definition.deploy ? 1 : 0
+  count   = var.flag_platform_landing_zone && var.firewall_definition.deploy && length(var.vnet_definition.existing_byo_vnet) == 0 ? 1 : 0
 
   firewall_sku_name   = var.firewall_definition.sku
   firewall_sku_tier   = var.firewall_definition.tier
@@ -159,7 +159,7 @@ module "firewall" {
 module "firewall_policy" {
   source  = "Azure/avm-res-network-firewallpolicy/azurerm"
   version = "0.3.3"
-  count   = var.flag_platform_landing_zone ? 1 : 0
+  count   = var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0 ? 1 : 0
 
   location            = azurerm_resource_group.this.location
   name                = "${local.firewall_name}-policy"
@@ -171,7 +171,7 @@ module "firewall_policy" {
 module "firewall_network_rule_collection_group" {
   source  = "Azure/avm-res-network-firewallpolicy/azurerm//modules/rule_collection_groups"
   version = "0.3.3"
-  count   = var.flag_platform_landing_zone ? 1 : 0
+  count   = var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0 ? 1 : 0
 
   firewall_policy_rule_collection_group_firewall_policy_id      = module.firewall_policy[0].resource_id
   firewall_policy_rule_collection_group_name                    = local.firewall_policy_rule_collection_group_name
