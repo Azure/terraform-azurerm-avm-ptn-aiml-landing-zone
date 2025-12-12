@@ -73,7 +73,7 @@ data "http" "ip" {
   }
 }
 
-module "test" {
+module "vmfeatures" {
   source  = "Azure/avm-res-features-feature/azurerm"
   version = "0.1.0"
 
@@ -317,6 +317,12 @@ Version: 0.9.2
 Source: ../../
 
 Version:
+
+### <a name="module_vmfeatures"></a> [vmfeatures](#module\_vmfeatures)
+
+Source: Azure/avm-res-features-feature/azurerm
+
+Version: 0.1.0
 
 ### <a name="module_vnet"></a> [vnet](#module\_vnet)
 

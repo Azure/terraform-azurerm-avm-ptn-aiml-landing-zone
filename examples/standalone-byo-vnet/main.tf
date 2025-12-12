@@ -66,7 +66,7 @@ data "http" "ip" {
   }
 }
 
-module "test" {
+module "vmfeatures" {
   source  = "Azure/avm-res-features-feature/azurerm"
   version = "0.1.0"
 
