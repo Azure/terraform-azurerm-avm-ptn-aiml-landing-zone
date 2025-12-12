@@ -9,6 +9,10 @@ terraform {
   required_version = ">= 1.9, < 2.0"
 
   required_providers {
+    azapi = {
+      source  = "azure/azapi"
+      version = "~> 2.0"
+    }
     azurerm = {
       source  = "hashicorp/azurerm"
       version = "~> 4.21"
@@ -73,17 +77,6 @@ data "http" "ip" {
     max_delay_ms = 1000
     min_delay_ms = 500
   }
-}
-
-module "vmfeatures" {
-  source  = "Azure/avm-res-features-feature/azurerm"
-  version = "0.1.0"
-
-  # Register the EncryptionAtHost feature for Microsoft.Compute
-  # This is a preview feature that is typically not registered by default
-  name             = "EncryptionAtHost"
-  provider_name    = "Microsoft.Compute"
-  enable_telemetry = var.enable_telemetry
 }
 
 # Add a vnet in a separate resource group
@@ -261,6 +254,8 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.0)
+
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.21)
 
 - <a name="requirement_http"></a> [http](#requirement\_http) (~> 3.4)
@@ -271,7 +266,7 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
-- [azapi_update_resource.allow_drop_unencrypted_vnet](https://registry.terraform.io/providers/hashicorp/azapi/latest/docs/resources/update_resource) (resource)
+- [azapi_update_resource.allow_drop_unencrypted_vnet](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/update_resource) (resource)
 - [azurerm_resource_group.vnet_rg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 - [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
@@ -321,12 +316,6 @@ Version: 0.9.2
 Source: ../../
 
 Version:
-
-### <a name="module_vmfeatures"></a> [vmfeatures](#module\_vmfeatures)
-
-Source: Azure/avm-res-features-feature/azurerm
-
-Version: 0.1.0
 
 ### <a name="module_vnet"></a> [vnet](#module\_vnet)
 

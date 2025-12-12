@@ -2,6 +2,10 @@ terraform {
   required_version = ">= 1.9, < 2.0"
 
   required_providers {
+    azapi = {
+      source  = "azure/azapi"
+      version = "~> 2.0"
+    }
     azurerm = {
       source  = "hashicorp/azurerm"
       version = "~> 4.21"
@@ -66,17 +70,6 @@ data "http" "ip" {
     max_delay_ms = 1000
     min_delay_ms = 500
   }
-}
-
-module "vmfeatures" {
-  source  = "Azure/avm-res-features-feature/azurerm"
-  version = "0.1.0"
-
-  # Register the EncryptionAtHost feature for Microsoft.Compute
-  # This is a preview feature that is typically not registered by default
-  name             = "EncryptionAtHost"
-  provider_name    = "Microsoft.Compute"
-  enable_telemetry = var.enable_telemetry
 }
 
 # Add a vnet in a separate resource group
