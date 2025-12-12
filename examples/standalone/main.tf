@@ -66,6 +66,8 @@ locals {
   location = "swedencentral" #temporarily pinning on australiaeast for capacity limits in test subscription.
 }
 
+data "azurerm_client_config" "current" {}
+
 module "vm_sku" {
   source  = "Azure/avm-utl-sku-finder/azapi"
   version = "0.3.0"
