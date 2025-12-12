@@ -72,7 +72,7 @@ module "example_hub" {
   source = "../../modules/example_hub_vnet"
 
   deployer_ip_address = "${data.http.ip.response_body}/32"
-  location            = "australiaeast"
+  location            = "swedencentral"
   resource_group_name = "default-example-${module.naming.resource_group.name_unique}"
   vnet_definition = {
     address_space = "10.10.0.0/24"
@@ -84,7 +84,7 @@ module "example_hub" {
 module "test" {
   source = "../../"
 
-  location            = "australiaeast" #temporarily pinning on australiaeast for capacity limits in test subscription.
+  location            = "swedencentral" #temporarily pinning on swedencentral for capacity limits in test subscription.
   resource_group_name = "ai-lz-rg-default-${substr(module.naming.unique-seed, 0, 5)}"
   vnet_definition = {
     name          = "ai-lz-vnet-default"

@@ -32,7 +32,7 @@ provider "azurerm" {
 }
 
 locals {
-  location = "australiaeast"
+  location = "swedencentral"
 }
 
 ## Section to provide a random Azure region for the resource group
@@ -64,6 +64,17 @@ data "http" "ip" {
     max_delay_ms = 1000
     min_delay_ms = 500
   }
+}
+
+module "test" {
+  source  = "Azure/avm-res-features-feature/azurerm"
+  version = "0.1.0"
+
+  # Register the EncryptionAtHost feature for Microsoft.Compute
+  # This is a preview feature that is typically not registered by default
+  name             = "EncryptionAtHost"
+  provider_name    = "Microsoft.Compute"
+  enable_telemetry = var.enable_telemetry
 }
 
 # Add a vnet in a separate resource group

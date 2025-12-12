@@ -63,7 +63,7 @@ data "http" "ip" {
 }
 
 locals {
-  location = "australiaeast" #temporarily pinning on australiaeast for capacity limits in test subscription.
+  location = "swedencentral" #temporarily pinning on australiaeast for capacity limits in test subscription.
 }
 
 module "vm_sku" {

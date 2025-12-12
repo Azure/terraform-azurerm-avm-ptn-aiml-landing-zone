@@ -32,7 +32,7 @@ provider "azurerm" {
 }
 
 locals {
-  location = "australiaeast"
+  location = "swedencentral"
 }
 
 ## Section to provide a random Azure region for the resource group
