@@ -2003,7 +2003,7 @@ Version: 0.4.1
 
 Source: Azure/avm-ptn-aiml-ai-foundry/azurerm
 
-Version: 0.7.0
+Version: 0.8.0
 
 ### <a name="module_fw_pip"></a> [fw\_pip](#module\_fw\_pip)
 

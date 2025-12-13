@@ -1,6 +1,6 @@
 module "foundry_ptn" {
   source  = "Azure/avm-ptn-aiml-ai-foundry/azurerm"
-  version = "0.7.0"
+  version = "0.8.0"
 
   #configure the base resource
   base_name                  = coalesce(var.name_prefix, "foundry")
