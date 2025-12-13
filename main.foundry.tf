@@ -39,5 +39,5 @@ resource "time_sleep" "purge_ai_foundry_cooldown" {
 
   destroy_duration = "900s" # 10m
 
-  depends_on = [module.ai_lz_vnet]
+  depends_on = [module.ai_lz_vnet, module.byo_subnets]
 }
