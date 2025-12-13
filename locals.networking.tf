@@ -109,7 +109,8 @@ locals {
       enabled          = var.flag_platform_landing_zone == true ? try(local.subnets_definition["JumpboxSubnet"].enabled, true) : try(local.subnets_definition["JumpboxSubnet"].enabled, false)
       name             = try(local.subnets_definition["JumpboxSubnet"].name, null) != null ? local.subnets_definition["JumpboxSubnet"].name : "JumpboxSubnet"
       address_prefixes = try(local.subnets_definition["JumpboxSubnet"].address_prefix, null) != null ? [local.subnets_definition["JumpboxSubnet"].address_prefix] : [cidrsubnet(local.vnet_address_space, 4, 6)]
-      route_table = var.flag_platform_landing_zone == true ? {
+      route_table = ((var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
+        (var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? {
         id = module.firewall_route_table[0].resource_id
       } : null
       network_security_group = {
@@ -120,7 +121,8 @@ locals {
       enabled          = true
       name             = try(local.subnets_definition["AppGatewaySubnet"].name, null) != null ? local.subnets_definition["AppGatewaySubnet"].name : "AppGatewaySubnet"
       address_prefixes = try(local.subnets_definition["AppGatewaySubnet"].address_prefix, null) != null ? [local.subnets_definition["AppGatewaySubnet"].address_prefix] : [cidrsubnet(local.vnet_address_space, 4, 5)]
-      route_table = var.flag_platform_landing_zone == true ? {
+      route_table = ((var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
+        (var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? {
         id = module.firewall_route_table[0].resource_id
       } : null
       network_security_group = {
@@ -137,7 +139,8 @@ locals {
       enabled          = true
       name             = try(local.subnets_definition["APIMSubnet"].name, null) != null ? local.subnets_definition["APIMSubnet"].name : "APIMSubnet"
       address_prefixes = try(local.subnets_definition["APIMSubnet"].address_prefix, null) != null ? [local.subnets_definition["APIMSubnet"].address_prefix] : [cidrsubnet(local.vnet_address_space, 4, 4)]
-      route_table = var.flag_platform_landing_zone == true ? {
+      route_table = ((var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
+        (var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? {
         id = module.firewall_route_table[0].resource_id
       } : null
       network_security_group = {
@@ -148,7 +151,8 @@ locals {
       enabled          = true
       name             = try(local.subnets_definition["AIFoundrySubnet"].name, null) != null ? local.subnets_definition["AIFoundrySubnet"].name : "AIFoundrySubnet"
       address_prefixes = try(local.subnets_definition["AIFoundrySubnet"].address_prefix, null) != null ? [local.subnets_definition["AIFoundrySubnet"].address_prefix] : [cidrsubnet(local.vnet_address_space, 4, 3)]
-      route_table = var.flag_platform_landing_zone == true ? {
+      route_table = ((var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
+        (var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? {
         id = module.firewall_route_table[0].resource_id
       } : null
       network_security_group = {
@@ -166,7 +170,8 @@ locals {
       enabled          = true
       name             = try(local.subnets_definition["DevOpsBuildSubnet"].name, null) != null ? local.subnets_definition["DevOpsBuildSubnet"].name : "DevOpsBuildSubnet"
       address_prefixes = try(local.subnets_definition["DevOpsBuildSubnet"].address_prefix, null) != null ? [local.subnets_definition["DevOpsBuildSubnet"].address_prefix] : [cidrsubnet(local.vnet_address_space, 4, 2)]
-      route_table = var.flag_platform_landing_zone == true ? {
+      route_table = ((var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
+        (var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? {
         id = module.firewall_route_table[0].resource_id
       } : null
       network_security_group = {
@@ -183,7 +188,8 @@ locals {
       enabled          = true
       name             = try(local.subnets_definition["ContainerAppEnvironmentSubnet"].name, null) != null ? local.subnets_definition["ContainerAppEnvironmentSubnet"].name : "ContainerAppEnvironmentSubnet"
       address_prefixes = try(local.subnets_definition["ContainerAppEnvironmentSubnet"].address_prefix, null) != null ? [local.subnets_definition["ContainerAppEnvironmentSubnet"].address_prefix] : [cidrsubnet(local.vnet_address_space, 4, 1)]
-      route_table = var.flag_platform_landing_zone == true ? {
+      route_table = ((var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
+        (var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? {
         id = module.firewall_route_table[0].resource_id
       } : null
     }
@@ -191,7 +197,8 @@ locals {
       enabled          = true
       name             = try(local.subnets_definition["PrivateEndpointSubnet"].name, null) != null ? local.subnets_definition["PrivateEndpointSubnet"].name : "PrivateEndpointSubnet"
       address_prefixes = try(local.subnets_definition["PrivateEndpointSubnet"].address_prefix, null) != null ? [local.subnets_definition["PrivateEndpointSubnet"].address_prefix] : [cidrsubnet(local.vnet_address_space, 4, 0)]
-      route_table = var.flag_platform_landing_zone == true ? {
+      route_table = ((var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
+        (var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? {
         id = module.firewall_route_table[0].resource_id
       } : null
       network_security_group = {
