@@ -2,6 +2,10 @@ terraform {
   required_version = ">= 1.9, < 2.0"
 
   required_providers {
+    azapi = {
+      source  = "azure/azapi"
+      version = "~> 2.0"
+    }
     azurerm = {
       source  = "hashicorp/azurerm"
       version = "~> 4.21"
@@ -31,11 +35,13 @@ provider "azurerm" {
   }
 }
 
+data "azurerm_client_config" "current" {}
+
 ## Section to provide a random Azure region for the resource group
 # This allows us to randomize the region for the resource group.
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.3.0"
+  version = "0.9.2"
 }
 
 # This allows us to randomize the region for the resource group.
@@ -48,7 +54,7 @@ resource "random_integer" "region_index" {
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "0.3.0"
+  version = "0.4.2"
 }
 
 data "http" "ip" {
@@ -65,7 +71,7 @@ module "example_hub" {
   source = "../../modules/example_hub_vnet"
 
   deployer_ip_address = "${data.http.ip.response_body}/32"
-  location            = "australiaeast"
+  location            = "swedencentral"
   resource_group_name = "default-example-${module.naming.resource_group.name_unique}"
   vnet_definition = {
     address_space = "10.10.0.0/24"
@@ -77,7 +83,7 @@ module "example_hub" {
 module "test" {
   source = "../../"
 
-  location            = "australiaeast" #temporarily pinning on australiaeast for capacity limits in test subscription.
+  location            = "swedencentral" #temporarily pinning on swedencentral for capacity limits in test subscription.
   resource_group_name = "ai-lz-rg-default-${substr(module.naming.unique-seed, 0, 5)}"
   vnet_definition = {
     name          = "ai-lz-vnet-default"
@@ -200,6 +206,9 @@ module "test" {
   }
   enable_telemetry           = var.enable_telemetry
   flag_platform_landing_zone = false
+  # Note: When flag_platform_landing_zone = true, you can enable direct internet routing
+  # for Azure Application Gateway v2 compatibility by setting:
+  # use_internet_routing = true
   genai_container_registry_definition = {
     enable_diagnostic_settings = false
   }

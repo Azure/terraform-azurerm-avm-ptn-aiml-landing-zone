@@ -2,9 +2,13 @@ terraform {
   required_version = ">= 1.9, < 2.0"
 
   required_providers {
+    azapi = {
+      source  = "azure/azapi"
+      version = "~> 2.0"
+    }
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.21"
+      version = ">= 3.116, < 5.0"
     }
     http = {
       source  = "hashicorp/http"
@@ -35,7 +39,7 @@ provider "azurerm" {
 # This allows us to randomize the region for the resource group.
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.3.0"
+  version = "0.9.2"
 }
 
 # This allows us to randomize the region for the resource group.
@@ -48,7 +52,7 @@ resource "random_integer" "region_index" {
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "0.3.0"
+  version = "0.4.2"
 }
 
 # Get the deployer IP address to allow for public write to the key vault. This is to make sure the tests run.
@@ -62,14 +66,36 @@ data "http" "ip" {
   }
 }
 
+locals {
+  location = "swedencentral" #temporarily pinning on australiaeast for capacity limits in test subscription.
+}
+
+data "azurerm_client_config" "current" {}
+
+module "vm_sku" {
+  source  = "Azure/avm-utl-sku-finder/azapi"
+  version = "0.3.0"
+
+  location      = local.location
+  cache_results = true
+  vm_filters = {
+    cpu_architecture_type          = "x64"
+    min_vcpus                      = 2
+    max_vcpus                      = 2
+    encryption_at_host_supported   = true
+    accelerated_networking_enabled = true
+    premium_io_supported           = true
+  }
+}
+
 module "test" {
   source = "../../"
 
-  location            = "australiaeast" #temporarily pinning on australiaeast for capacity limits in test subscription.
+  location            = local.location
   resource_group_name = "ai-lz-rg-standalone-${substr(module.naming.unique-seed, 0, 5)}"
   vnet_definition = {
     name          = "ai-lz-vnet-standalone"
-    address_space = "192.168.0.0/23" # has to be out of 192.168.0.0/16 currently. Other RFC1918 not supported for foundry capabilityHost injection.
+    address_space = "192.168.0.0/20" # has to be out of 192.168.0.0/16 currently. Other RFC1918 not supported for foundry capabilityHost injection.
   }
   ai_foundry_definition = {
     purge_on_destroy = true
@@ -90,6 +116,7 @@ module "test" {
         }
       }
     }
+
     ai_projects = {
       project_1 = {
         name                       = "project-1"
@@ -107,17 +134,24 @@ module "test" {
         }
       }
     }
+
     ai_search_definition = {
       this = {
         enable_diagnostic_settings = false
       }
     }
+
+    buildvm_definition = {
+      sku = module.vm_sku.sku
+    }
+
     cosmosdb_definition = {
       this = {
         enable_diagnostic_settings = false
         consistency_level          = "Session"
       }
     }
+
     key_vault_definition = {
       this = {
         enable_diagnostic_settings = false
@@ -183,6 +217,9 @@ module "test" {
   }
   enable_telemetry           = var.enable_telemetry
   flag_platform_landing_zone = true
+  # Uncomment the following line to enable direct internet routing instead of firewall routing
+  # This is useful for Azure Application Gateway v2 deployments that require direct internet connectivity
+  # use_internet_routing = true
   genai_container_registry_definition = {
     enable_diagnostic_settings = false
   }

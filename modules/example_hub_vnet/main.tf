@@ -3,9 +3,7 @@ data "azurerm_client_config" "current" {}
 
 module "avm_utl_regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.5.2"
-
-  recommended_filter = false
+  version = "0.9.2"
 }
 
 resource "random_string" "name_suffix" {
@@ -23,14 +21,14 @@ resource "azurerm_resource_group" "this" {
 #Create Hub Vnet (Subnets: AzureBastionSubnet, BuildVM subnet, Private Resolver Subnet?)
 module "ai_lz_vnet" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "=0.7.1"
+  version = "=0.16.0"
 
-  address_space       = [var.vnet_definition.address_space]
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
-  enable_telemetry    = var.enable_telemetry
-  name                = local.vnet_name
-  subnets             = local.deployed_subnets
+  location         = azurerm_resource_group.this.location
+  parent_id        = azurerm_resource_group.this.id
+  address_space    = [var.vnet_definition.address_space]
+  enable_telemetry = var.enable_telemetry
+  name             = local.vnet_name
+  subnets          = local.deployed_subnets
 }
 
 module "natgateway" {
@@ -86,7 +84,7 @@ module "fw_pip" {
 
 module "firewall" {
   source  = "Azure/avm-res-network-azurefirewall/azurerm"
-  version = "0.3.0"
+  version = "0.4.0"
 
   firewall_sku_name   = "AZFW_VNet"
   firewall_sku_tier   = "Standard"
@@ -163,12 +161,12 @@ module "private_resolver" {
 # Create the Private DNS zones and link to the hub VNet
 module "private_dns_zones" {
   source   = "Azure/avm-res-network-privatednszone/azurerm"
-  version  = "0.3.4"
+  version  = "0.4.2"
   for_each = local.private_dns_zones
 
-  domain_name         = each.value.name
-  resource_group_name = azurerm_resource_group.this.name
-  enable_telemetry    = var.enable_telemetry
+  domain_name      = each.value.name
+  parent_id        = azurerm_resource_group.this.id
+  enable_telemetry = var.enable_telemetry
   virtual_network_links = {
     alz_vnet_link = {
       vnetlinkname      = "${module.ai_lz_vnet.name}-link"
@@ -186,7 +184,7 @@ resource "random_integer" "zone_index" {
 
 module "jumpvm" {
   source  = "Azure/avm-res-compute-virtualmachine/azurerm"
-  version = "0.19.3"
+  version = "0.20.0"
 
   location = azurerm_resource_group.this.location
   name     = local.jump_vm_name
@@ -217,7 +215,7 @@ module "jumpvm" {
 
 module "avm_res_keyvault_vault" {
   source  = "Azure/avm-res-keyvault-vault/azurerm"
-  version = "=0.10.0"
+  version = "=0.10.2"
 
   location                    = azurerm_resource_group.this.location
   name                        = local.kv_name

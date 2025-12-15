@@ -1,7 +1,12 @@
 variable "vnet_definition" {
   type = object({
-    name                             = optional(string)
-    address_space                    = string
+    name = optional(string)
+    existing_byo_vnet = optional(map(object({
+      vnet_resource_id    = string
+      firewall_ip_address = optional(string)
+      }
+    )), {})
+    address_space                    = optional(string, "192.168.0.0/20")
     ddos_protection_plan_resource_id = optional(string)
     dns_servers                      = optional(set(string), [])
     subnets = optional(map(object({
@@ -12,7 +17,6 @@ variable "vnet_definition" {
     )), {})
     vnet_peering_configuration = optional(object({
       peer_vnet_resource_id                = optional(string)
-      firewall_ip_address                  = optional(string)
       name                                 = optional(string)
       allow_forwarded_traffic              = optional(bool, true)
       allow_gateway_transit                = optional(bool, true)
@@ -29,22 +33,23 @@ variable "vnet_definition" {
       peer_vwan_hub_resource_id = optional(string)
       #TODO: Add other connection properties here?
     }), {})
-
   })
   description = <<DESCRIPTION
 Configuration object for the Virtual Network (VNet) to be deployed.
 
 - `name` - (Optional) The name of the Virtual Network. If not provided, a name will be generated.
-- `address_space` - (Required) The address space for the Virtual Network in CIDR notation.
-- `ddos_protection_plan_resource_id` - (Optional) Resource ID of the DDoS Protection Plan to associate with the VNet.
+- `existing_byo_vnet` - (Optional) Map to configure use of an existing Virtual Network (BYO VNet). If provided, no new VNet will be created. The module will add subnets to the existing VNet during deployment, so ensure that the deployer account has sufficient permissions to create subnets. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `vnet_resource_id` - Resource ID of the existing Virtual Network to use.
+  - `firewall_ip_address` - (Optional) IP address of the firewall if a firewall is deployed for use by the BYO vnet. This IP address wlll be used to configure the route table for the subnets when provided. If using a BYO Vnet, the firewall is assumed to be deployed and configured outside of this module.
+- `address_space` - (Optional) The address space for the Virtual Network in CIDR notation. Defaults to 192.168.0.0/20 if none provided. Not used when `existing_byo_vnet` is configured.
+- `ddos_protection_plan_resource_id` - (Optional) Resource ID of the DDoS Protection Plan to associate with the VNet. This is not used for BYO VNet configurations as that is assumed to be handled outside the module.
 - `dns_servers` - (Optional) Set of custom DNS server IP addresses for the VNet.
-- `subnets` - (Optional) Map of subnet configurations. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+- `subnets` - (Optional) Map of subnet configurations that can be used to override the default subnet configurations. The map key must match the desired subnet usage to override the default configuration.
   - `enabled` - (Optional) Whether the subnet is enabled. Default is true.
   - `name` - (Optional) The name of the subnet. If not provided, a name will be generated.
   - `address_prefix` - (Optional) The address prefix for the subnet in CIDR notation.
-- `vnet_peering_configuration` - (Optional) Configuration for VNet peering.
+- `vnet_peering_configuration` - (Optional) Configuration for VNet peering. This is not used for BYO VNet configurations as that is assumed to be handled outside the module.
   - `peer_vnet_resource_id` - (Optional) Resource ID of the peer VNet.
-  - `firewall_ip_address` - (Optional) IP address of the firewall for routing.
   - `name` - (Optional) Name of the peering connection.
   - `allow_forwarded_traffic` - (Optional) Whether forwarded traffic is allowed. Default is true.
   - `allow_gateway_transit` - (Optional) Whether gateway transit is allowed. Default is true.
@@ -56,7 +61,7 @@ Configuration object for the Virtual Network (VNet) to be deployed.
   - `reverse_name` - (Optional) Name of the reverse peering connection.
   - `reverse_use_remote_gateways` - (Optional) Whether to use remote gateways in reverse direction. Default is false.
   - `use_remote_gateways` - (Optional) Whether to use remote gateways. Default is false.
-- `vwan_hub_peering_configuration` - (Optional) Configuration for Virtual WAN hub peering.
+- `vwan_hub_peering_configuration` - (Optional) Configuration for Virtual WAN hub peering. This is not used for BYO VNet configurations as that is assumed to be handled outside the module.
   - `peer_vwan_hub_resource_id` - (Optional) Resource ID of the Virtual WAN hub to peer with.
 
 DESCRIPTION
@@ -64,7 +69,7 @@ DESCRIPTION
 
 variable "app_gateway_definition" {
   type = object({
-    deploy       = optional(bool, true)
+    deploy       = optional(bool, false)
     name         = optional(string)
     http2_enable = optional(bool, true)
     authentication_certificate = optional(map(object({
@@ -390,11 +395,12 @@ DESCRIPTION
 
 variable "bastion_definition" {
   type = object({
-    deploy = optional(bool, true)
-    name   = optional(string)
-    sku    = optional(string, "Standard")
-    tags   = optional(map(string), {})
-    zones  = optional(list(string), ["1", "2", "3"])
+    deploy              = optional(bool, true)
+    name                = optional(string)
+    sku                 = optional(string, "Standard")
+    tags                = optional(map(string), {})
+    zones               = optional(list(string), ["1", "2", "3"])
+    resource_group_name = optional(string)
   })
   default     = {}
   description = <<DESCRIPTION
@@ -405,17 +411,19 @@ Configuration object for the Azure Bastion service to be deployed.
 - `sku` - (Optional) The SKU of the Bastion service. Default is "Standard".
 - `tags` - (Optional) Map of tags to assign to the Bastion service.
 - `zones` - (Optional) List of availability zones for the Bastion service. Default is ["1", "2", "3"].
+- `resource_group_name` - (Optional) The name of the resource group to deploy the Bastion service into. If not provided, the module's resource group will be used.
 DESCRIPTION
 }
 
 variable "firewall_definition" {
   type = object({
-    deploy = optional(bool, true)
-    name   = optional(string)
-    sku    = optional(string, "AZFW_VNet")
-    tier   = optional(string, "Standard")
-    zones  = optional(list(string), ["1", "2", "3"])
-    tags   = optional(map(string), {})
+    deploy              = optional(bool, true)
+    name                = optional(string)
+    sku                 = optional(string, "AZFW_VNet")
+    tier                = optional(string, "Standard")
+    zones               = optional(list(string), ["1", "2", "3"])
+    tags                = optional(map(string), {})
+    resource_group_name = optional(string)
   })
   default     = {}
   description = <<DESCRIPTION
@@ -427,6 +435,7 @@ Configuration object for the Azure Firewall to be deployed.
 - `tier` - (Optional) The tier of the Azure Firewall. Default is "Standard".
 - `zones` - (Optional) List of availability zones for the Azure Firewall. Default is ["1", "2", "3"].
 - `tags` - (Optional) Map of tags to assign to the Azure Firewall.
+- `resource_group_name` - (Optional) The name of the resource group to deploy the Azure Firewall into. If not provided, the module's resource group will be used.
 DESCRIPTION
 }
 
@@ -443,6 +452,7 @@ variable "firewall_policy_definition" {
       source_addresses      = list(string)
       protocols             = list(string)
     })), null)
+    resource_group_name = optional(string)
   })
   default     = {}
   description = <<DESCRIPTION
@@ -457,6 +467,7 @@ Configuration object for the Azure Firewall Policy to be deployed.
   - `destination_ports` - List of destination ports for the rule.
   - `source_addresses` - List of source addresses for the rule.
   - `protocols` - List of protocols for the rule (TCP/UDP/ICMP/Any).
+- `resource_group_name` - (Optional) The name of the resource group to deploy the Firewall Policy into. If not provided, the module's resource group will be used.
 DESCRIPTION
 }
 
@@ -487,6 +498,7 @@ variable "nsgs_definition" {
         update = optional(string)
       }))
     })))
+    resource_group_name = optional(string)
   })
   default     = {}
   description = <<DESCRIPTION
@@ -515,6 +527,7 @@ Configuration object for Network Security Groups (NSGs) to be deployed.
     - `delete` - (Optional) Delete timeout.
     - `read` - (Optional) Read timeout.
     - `update` - (Optional) Update timeout.
+  - `resource_group_name` - (Optional) The name of the resource group to deploy the NSG into. If not provided, the module's resource group will be used.
 DESCRIPTION
 }
 
@@ -538,6 +551,27 @@ Configuration object for Private DNS Zones and their network links.
   - `vnetlinkname` - The name of the virtual network link.
   - `vnetid` - The resource ID of the virtual network to link.
   - `resolutionPolicy` - (Optional) The resolution policy for the virtual network link. Default is "Default".
+DESCRIPTION
+}
+
+variable "use_internet_routing" {
+  type        = bool
+  default     = false
+  description = <<DESCRIPTION
+Use direct internet routing instead of firewall routing for subnets when platform landing zone is enabled.
+
+When set to true and `flag_platform_landing_zone` is true, route tables will use NextHopType = "Internet"
+for 0.0.0.0/0 traffic instead of NextHopType = "VirtualAppliance" routing through the Azure Firewall.
+
+This setting is particularly useful for Azure Application Gateway v2 deployments that require direct
+internet connectivity and cannot use virtual appliance routing.
+
+**Security Considerations**: Enabling this setting bypasses the Azure Firewall for internet-bound traffic
+from associated subnets, which may impact security posture. Ensure proper network security group rules
+are in place when using this option.
+
+**Compatibility**: This setting only applies when `flag_platform_landing_zone = true`. When
+`flag_platform_landing_zone = false`, no route tables are created regardless of this setting.
 DESCRIPTION
 }
 

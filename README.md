@@ -37,6 +37,7 @@ The following resources are used by this module:
 - [time_sleep.purge_ai_foundry_cooldown](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
 - [azapi_client_config.telemetry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config) (data source)
 - [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
+- [azurerm_virtual_network.ai_lz_vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/virtual_network) (data source)
 - [modtm_module_source.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/data-sources/module_source) (data source)
 
 <!-- markdownlint-disable MD013 -->
@@ -65,16 +66,18 @@ Type: `string`
 Description: Configuration object for the Virtual Network (VNet) to be deployed.
 
 - `name` - (Optional) The name of the Virtual Network. If not provided, a name will be generated.
-- `address_space` - (Required) The address space for the Virtual Network in CIDR notation.
-- `ddos_protection_plan_resource_id` - (Optional) Resource ID of the DDoS Protection Plan to associate with the VNet.
+- `existing_byo_vnet` - (Optional) Map to configure use of an existing Virtual Network (BYO VNet). If provided, no new VNet will be created. The module will add subnets to the existing VNet during deployment, so ensure that the deployer account has sufficient permissions to create subnets. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `vnet_resource_id` - Resource ID of the existing Virtual Network to use.
+  - `firewall_ip_address` - (Optional) IP address of the firewall if a firewall is deployed for use by the BYO vnet. This IP address wlll be used to configure the route table for the subnets when provided. If using a BYO Vnet, the firewall is assumed to be deployed and configured outside of this module.
+- `address_space` - (Optional) The address space for the Virtual Network in CIDR notation. Defaults to 192.168.0.0/20 if none provided. Not used when `existing_byo_vnet` is configured.
+- `ddos_protection_plan_resource_id` - (Optional) Resource ID of the DDoS Protection Plan to associate with the VNet. This is not used for BYO VNet configurations as that is assumed to be handled outside the module.
 - `dns_servers` - (Optional) Set of custom DNS server IP addresses for the VNet.
-- `subnets` - (Optional) Map of subnet configurations. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+- `subnets` - (Optional) Map of subnet configurations that can be used to override the default subnet configurations. The map key must match the desired subnet usage to override the default configuration.
   - `enabled` - (Optional) Whether the subnet is enabled. Default is true.
   - `name` - (Optional) The name of the subnet. If not provided, a name will be generated.
   - `address_prefix` - (Optional) The address prefix for the subnet in CIDR notation.
-- `vnet_peering_configuration` - (Optional) Configuration for VNet peering.
+- `vnet_peering_configuration` - (Optional) Configuration for VNet peering. This is not used for BYO VNet configurations as that is assumed to be handled outside the module.
   - `peer_vnet_resource_id` - (Optional) Resource ID of the peer VNet.
-  - `firewall_ip_address` - (Optional) IP address of the firewall for routing.
   - `name` - (Optional) Name of the peering connection.
   - `allow_forwarded_traffic` - (Optional) Whether forwarded traffic is allowed. Default is true.
   - `allow_gateway_transit` - (Optional) Whether gateway transit is allowed. Default is true.
@@ -86,15 +89,20 @@ Description: Configuration object for the Virtual Network (VNet) to be deployed.
   - `reverse_name` - (Optional) Name of the reverse peering connection.
   - `reverse_use_remote_gateways` - (Optional) Whether to use remote gateways in reverse direction. Default is false.
   - `use_remote_gateways` - (Optional) Whether to use remote gateways. Default is false.
-- `vwan_hub_peering_configuration` - (Optional) Configuration for Virtual WAN hub peering.
+- `vwan_hub_peering_configuration` - (Optional) Configuration for Virtual WAN hub peering. This is not used for BYO VNet configurations as that is assumed to be handled outside the module.
   - `peer_vwan_hub_resource_id` - (Optional) Resource ID of the Virtual WAN hub to peer with.
 
 Type:
 
 ```hcl
 object({
-    name                             = optional(string)
-    address_space                    = string
+    name = optional(string)
+    existing_byo_vnet = optional(map(object({
+      vnet_resource_id    = string
+      firewall_ip_address = optional(string)
+      }
+    )), {})
+    address_space                    = optional(string, "192.168.0.0/20")
     ddos_protection_plan_resource_id = optional(string)
     dns_servers                      = optional(set(string), [])
     subnets = optional(map(object({
@@ -105,7 +113,6 @@ object({
     )), {})
     vnet_peering_configuration = optional(object({
       peer_vnet_resource_id                = optional(string)
-      firewall_ip_address                  = optional(string)
       name                                 = optional(string)
       allow_forwarded_traffic              = optional(bool, true)
       allow_gateway_transit                = optional(bool, true)
@@ -122,7 +129,6 @@ object({
       peer_vwan_hub_resource_id = optional(string)
       #TODO: Add other connection properties here?
     }), {})
-
   })
 ```
 
@@ -827,7 +833,7 @@ Type:
 
 ```hcl
 object({
-    deploy       = optional(bool, true)
+    deploy       = optional(bool, false)
     name         = optional(string)
     http2_enable = optional(bool, true)
     authentication_certificate = optional(map(object({
@@ -1039,16 +1045,18 @@ Description: Configuration object for the Azure Bastion service to be deployed.
 - `sku` - (Optional) The SKU of the Bastion service. Default is "Standard".
 - `tags` - (Optional) Map of tags to assign to the Bastion service.
 - `zones` - (Optional) List of availability zones for the Bastion service. Default is ["1", "2", "3"].
+- `resource_group_name` - (Optional) The name of the resource group to deploy the Bastion service into. If not provided, the module's resource group will be used.
 
 Type:
 
 ```hcl
 object({
-    deploy = optional(bool, true)
-    name   = optional(string)
-    sku    = optional(string, "Standard")
-    tags   = optional(map(string), {})
-    zones  = optional(list(string), ["1", "2", "3"])
+    deploy              = optional(bool, true)
+    name                = optional(string)
+    sku                 = optional(string, "Standard")
+    tags                = optional(map(string), {})
+    zones               = optional(list(string), ["1", "2", "3"])
+    resource_group_name = optional(string)
   })
 ```
 
@@ -1170,17 +1178,19 @@ Description: Configuration object for the Azure Firewall to be deployed.
 - `tier` - (Optional) The tier of the Azure Firewall. Default is "Standard".
 - `zones` - (Optional) List of availability zones for the Azure Firewall. Default is ["1", "2", "3"].
 - `tags` - (Optional) Map of tags to assign to the Azure Firewall.
+- `resource_group_name` - (Optional) The name of the resource group to deploy the Azure Firewall into. If not provided, the module's resource group will be used.
 
 Type:
 
 ```hcl
 object({
-    deploy = optional(bool, true)
-    name   = optional(string)
-    sku    = optional(string, "AZFW_VNet")
-    tier   = optional(string, "Standard")
-    zones  = optional(list(string), ["1", "2", "3"])
-    tags   = optional(map(string), {})
+    deploy              = optional(bool, true)
+    name                = optional(string)
+    sku                 = optional(string, "AZFW_VNet")
+    tier                = optional(string, "Standard")
+    zones               = optional(list(string), ["1", "2", "3"])
+    tags                = optional(map(string), {})
+    resource_group_name = optional(string)
   })
 ```
 
@@ -1199,6 +1209,7 @@ Description: Configuration object for the Azure Firewall Policy to be deployed.
   - `destination_ports` - List of destination ports for the rule.
   - `source_addresses` - List of source addresses for the rule.
   - `protocols` - List of protocols for the rule (TCP/UDP/ICMP/Any).
+- `resource_group_name` - (Optional) The name of the resource group to deploy the Firewall Policy into. If not provided, the module's resource group will be used.
 
 Type:
 
@@ -1214,6 +1225,7 @@ object({
       source_addresses      = list(string)
       protocols             = list(string)
     })), null)
+    resource_group_name = optional(string)
   })
 ```
 
@@ -1690,6 +1702,7 @@ Description: Configuration object for Network Security Groups (NSGs) to be deplo
     - `delete` - (Optional) Delete timeout.
     - `read` - (Optional) Read timeout.
     - `update` - (Optional) Update timeout.
+  - `resource_group_name` - (Optional) The name of the resource group to deploy the NSG into. If not provided, the module's resource group will be used.
 
 Type:
 
@@ -1720,6 +1733,7 @@ object({
         update = optional(string)
       }))
     })))
+    resource_group_name = optional(string)
   })
 ```
 
@@ -1761,6 +1775,27 @@ Tags are key-value pairs that help organize and manage Azure resources. These ta
 Type: `map(string)`
 
 Default: `null`
+
+### <a name="input_use_internet_routing"></a> [use\_internet\_routing](#input\_use\_internet\_routing)
+
+Description: Use direct internet routing instead of firewall routing for subnets when platform landing zone is enabled.
+
+When set to true and `flag_platform_landing_zone` is true, route tables will use NextHopType = "Internet"  
+for 0.0.0.0/0 traffic instead of NextHopType = "VirtualAppliance" routing through the Azure Firewall.
+
+This setting is particularly useful for Azure Application Gateway v2 deployments that require direct  
+internet connectivity and cannot use virtual appliance routing.
+
+**Security Considerations**: Enabling this setting bypasses the Azure Firewall for internet-bound traffic  
+from associated subnets, which may impact security posture. Ensure proper network security group rules  
+are in place when using this option.
+
+**Compatibility**: This setting only applies when `flag_platform_landing_zone = true`. When
+`flag_platform_landing_zone = false`, no route tables are created regardless of this setting.
+
+Type: `bool`
+
+Default: `false`
 
 ### <a name="input_waf_policy_definition"></a> [waf\_policy\_definition](#input\_waf\_policy\_definition)
 
@@ -1866,7 +1901,7 @@ The following Modules are called:
 
 Source: Azure/avm-res-network-virtualnetwork/azurerm
 
-Version: =0.7.1
+Version: =0.16.0
 
 ### <a name="module_apim"></a> [apim](#module\_apim)
 
@@ -1878,7 +1913,7 @@ Version: 0.0.5
 
 Source: Azure/avm-res-appconfiguration-configurationstore/azure
 
-Version: 0.4.1
+Version: 0.5.1
 
 ### <a name="module_app_gateway_waf_policy"></a> [app\_gateway\_waf\_policy](#module\_app\_gateway\_waf\_policy)
 
@@ -1896,13 +1931,13 @@ Version: 0.4.2
 
 Source: Azure/avm-res-keyvault-vault/azurerm
 
-Version: =0.10.0
+Version: =0.10.2
 
 ### <a name="module_avm_utl_regions"></a> [avm\_utl\_regions](#module\_avm\_utl\_regions)
 
 Source: Azure/avm-utl-regions/azurerm
 
-Version: 0.5.2
+Version: 0.9.2
 
 ### <a name="module_azure_bastion"></a> [azure\_bastion](#module\_azure\_bastion)
 
@@ -1914,7 +1949,13 @@ Version: 0.7.2
 
 Source: Azure/avm-res-compute-virtualmachine/azurerm
 
-Version: 0.19.3
+Version: 0.20.0
+
+### <a name="module_byo_subnets"></a> [byo\_subnets](#module\_byo\_subnets)
+
+Source: Azure/avm-res-network-virtualnetwork/azurerm//modules/subnet
+
+Version: 0.16.0
 
 ### <a name="module_container_apps_managed_environment"></a> [container\_apps\_managed\_environment](#module\_container\_apps\_managed\_environment)
 
@@ -1926,19 +1967,19 @@ Version: 0.3.0
 
 Source: Azure/avm-res-containerregistry-registry/azurerm
 
-Version: 0.4.0
+Version: 0.5.0
 
 ### <a name="module_cosmosdb"></a> [cosmosdb](#module\_cosmosdb)
 
 Source: Azure/avm-res-documentdb-databaseaccount/azurerm
 
-Version: 0.8.0
+Version: 0.10.0
 
 ### <a name="module_firewall"></a> [firewall](#module\_firewall)
 
 Source: Azure/avm-res-network-azurefirewall/azurerm
 
-Version: 0.3.0
+Version: 0.4.0
 
 ### <a name="module_firewall_network_rule_collection_group"></a> [firewall\_network\_rule\_collection\_group](#module\_firewall\_network\_rule\_collection\_group)
 
@@ -1962,7 +2003,7 @@ Version: 0.4.1
 
 Source: Azure/avm-ptn-aiml-ai-foundry/azurerm
 
-Version: 0.6.0
+Version: 0.8.0
 
 ### <a name="module_fw_pip"></a> [fw\_pip](#module\_fw\_pip)
 
@@ -1974,13 +2015,13 @@ Version: 0.2.0
 
 Source: Azure/avm-res-network-virtualnetwork/azurerm//modules/peering
 
-Version: 0.9.0
+Version: 0.16.0
 
 ### <a name="module_jumpvm"></a> [jumpvm](#module\_jumpvm)
 
 Source: Azure/avm-res-compute-virtualmachine/azurerm
 
-Version: 0.19.3
+Version: 0.20.0
 
 ### <a name="module_log_analytics_workspace"></a> [log\_analytics\_workspace](#module\_log\_analytics\_workspace)
 
@@ -1992,25 +2033,25 @@ Version: 0.4.2
 
 Source: Azure/avm-res-network-networksecuritygroup/azurerm
 
-Version: 0.4.0
+Version: 0.5.0
 
 ### <a name="module_private_dns_zones"></a> [private\_dns\_zones](#module\_private\_dns\_zones)
 
 Source: Azure/avm-res-network-privatednszone/azurerm
 
-Version: 0.3.4
+Version: 0.4.2
 
 ### <a name="module_search_service"></a> [search\_service](#module\_search\_service)
 
 Source: Azure/avm-res-search-searchservice/azurerm
 
-Version: 0.1.5
+Version: 0.2.0
 
 ### <a name="module_storage_account"></a> [storage\_account](#module\_storage\_account)
 
 Source: Azure/avm-res-storage-storageaccount/azurerm
 
-Version: 0.6.3
+Version: 0.6.6
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

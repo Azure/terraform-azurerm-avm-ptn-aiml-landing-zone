@@ -1,6 +1,6 @@
 module "buildvm" {
   source  = "Azure/avm-res-compute-virtualmachine/azurerm"
-  version = "0.19.3"
+  version = "0.20.0"
   count   = var.flag_platform_landing_zone && var.buildvm_definition.deploy ? 1 : 0
 
   location = azurerm_resource_group.this.location
@@ -11,7 +11,7 @@ module "buildvm" {
       ip_configurations = {
         ip_configuration_1 = {
           name                          = "${local.build_vm_name}-nic1-ipconfig1"
-          private_ip_subnet_resource_id = module.ai_lz_vnet.subnets["DevOpsBuildSubnet"].resource_id
+          private_ip_subnet_resource_id = local.subnet_ids["DevOpsBuildSubnet"]
         }
       }
     }
