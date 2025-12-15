@@ -12,83 +12,49 @@ locals {
       vnetid            = local.vnet_resource_id
       autoregistration  = false
       resolution_policy = var.private_dns_zones.allow_internet_resolution_fallback == false ? "Default" : "NxDomainRedirect"
+      tags              = local.private_dns_zone_tags
     }
   }
   deployed_subnets = { for subnet_name, subnet in local.subnets : subnet_name => subnet if subnet.enabled }
   firewall_name    = try(var.firewall_definition.name, null) != null ? var.firewall_definition.name : (var.name_prefix != null ? "${var.name_prefix}-fw" : "ai-alz-fw")
+  # Private DNS zones names needed for Private Endpoints
   private_dns_zone_map = {
-    key_vault_zone = {
-      name = "privatelink.vaultcore.azure.net"
-    }
-    apim_zone = {
-      name = "privatelink.azure-api.net"
-    }
-    cosmos_sql_zone = {
-      name = "privatelink.documents.azure.com"
-    }
-    cosmos_mongo_zone = {
-      name = "privatelink.mongo.cosmos.azure.com"
-    }
-    cosmos_cassandra_zone = {
-      name = "privatelink.cassandra.cosmos.azure.com"
-    }
-    cosmos_gremlin_zone = {
-      name = "privatelink.gremlin.cosmos.azure.com"
-    }
-    cosmos_table_zone = {
-      name = "privatelink.table.cosmos.azure.com"
-    }
-    cosmos_analytical_zone = {
-      name = "privatelink.analytics.cosmos.azure.com"
-    }
-    cosmos_postgres_zone = {
-      name = "privatelink.postgres.cosmos.azure.com"
-    }
-    storage_blob_zone = {
-      name = "privatelink.blob.core.windows.net"
-    }
-    storage_queue_zone = {
-      name = "privatelink.queue.core.windows.net"
-    }
-    storage_table_zone = {
-      name = "privatelink.table.core.windows.net"
-    }
-    storage_file_zone = {
-      name = "privatelink.file.core.windows.net"
-    }
-    storage_dlfs_zone = {
-      name = "privatelink.dfs.core.windows.net"
-    }
-    storage_web_zone = {
-      name = "privatelink.web.core.windows.net"
-    }
-    ai_search_zone = {
-      name = "privatelink.search.windows.net"
-    }
-    container_registry_zone = {
-      name = "privatelink.azurecr.io"
-    }
-    app_configuration_zone = {
-      name = "privatelink.azconfig.io"
-    }
-    ai_foundry_openai_zone = {
-      name = "privatelink.openai.azure.com"
-    }
-    ai_foundry_ai_services_zone = {
-      name = "privatelink.services.ai.azure.com"
-    }
-    ai_foundry_cognitive_services_zone = {
-      name = "privatelink.cognitiveservices.azure.com"
+    key_vault_zone                     = "privatelink.vaultcore.azure.net"
+    apim_zone                          = "privatelink.azure-api.net"
+    cosmos_sql_zone                    = "privatelink.documents.azure.com"
+    cosmos_mongo_zone                  = "privatelink.mongo.cosmos.azure.com"
+    cosmos_cassandra_zone              = "privatelink.cassandra.cosmos.azure.com"
+    cosmos_gremlin_zone                = "privatelink.gremlin.cosmos.azure.com"
+    cosmos_table_zone                  = "privatelink.table.cosmos.azure.com"
+    cosmos_analytical_zone             = "privatelink.analytics.cosmos.azure.com"
+    cosmos_postgres_zone               = "privatelink.postgres.cosmos.azure.com"
+    storage_blob_zone                  = "privatelink.blob.core.windows.net"
+    storage_queue_zone                 = "privatelink.queue.core.windows.net"
+    storage_table_zone                 = "privatelink.table.core.windows.net"
+    storage_file_zone                  = "privatelink.file.core.windows.net"
+    storage_dlfs_zone                  = "privatelink.dfs.core.windows.net"
+    storage_web_zone                   = "privatelink.web.core.windows.net"
+    ai_search_zone                     = "privatelink.search.windows.net"
+    container_registry_zone            = "privatelink.azurecr.io"
+    app_configuration_zone             = "privatelink.azconfig.io"
+    ai_foundry_openai_zone             = "privatelink.openai.azure.com"
+    ai_foundry_ai_services_zone        = "privatelink.services.ai.azure.com"
+    ai_foundry_cognitive_services_zone = "privatelink.cognitiveservices.azure.com"
+  }
+  # Maps of Private DNS zone resource IDs, either from exiating or created zones
+  private_dns_zone_resource_map = { for k, v in local.private_dns_zone_map : k =>
+    {
+      name = v
+      id = try(coalesce(
+        try("${var.private_dns_zones.existing_zones_resource_group_resource_id}/providers/Microsoft.Network/privateDnsZones/${v}", null),
+        try(module.private_dns_zones[k].resource_id, null)
+      ), null)
     }
   }
-  private_dns_zones = var.flag_platform_landing_zone == true ? local.private_dns_zone_map : {}
-  private_dns_zones_existing = var.flag_platform_landing_zone == false ? { for key, value in local.private_dns_zone_map : key => {
-    name        = value.name
-    resource_id = "${coalesce(var.private_dns_zones.existing_zones_resource_group_resource_id, "notused")}/providers/Microsoft.Network/privateDnsZones/${value.name}" #TODO: determine if there is a more elegant way to do this while avoiding errors
-    }
-  } : {}
-  route_table_name = "${local.vnet_name}-firewall-route-table"
-  subnet_ids       = length(var.vnet_definition.existing_byo_vnet) > 0 ? { for key, m in module.byo_subnets : key => try(m.resource_id, m.id) } : { for key, s in module.ai_lz_vnet[0].subnets : key => s.resource_id }
+  # Tags for Private DNS zones, excluding any with ":" in the name - Odd quirk of Private DNS zones, they don't like that char
+  private_dns_zone_tags = { for k, v in var.private_dns_zones.tags != null ? var.private_dns_zones.tags : var.tags : k => v if !strcontains(k, ":") }
+  route_table_name      = "${local.vnet_name}-firewall-route-table"
+  subnet_ids            = length(var.vnet_definition.existing_byo_vnet) > 0 ? { for key, m in module.byo_subnets : key => try(m.resource_id, m.id) } : { for key, s in module.ai_lz_vnet[0].subnets : key => s.resource_id }
   subnets = {
     AzureBastionSubnet = {
       enabled          = var.flag_platform_landing_zone == true ? try(local.subnets_definition["AzureBastionSubnet"].enabled, true) : try(local.subnets_definition["AzureBastionSubnet"].enabled, false)
