@@ -41,7 +41,7 @@ locals {
     ai_foundry_ai_services_zone        = "privatelink.services.ai.azure.com"
     ai_foundry_cognitive_services_zone = "privatelink.cognitiveservices.azure.com"
   }
-  # Maps of Private DNS zone resource IDs, either from exiating or created zones
+  # Maps of Private DNS zone resource IDs, either from existing or created zones
   private_dns_zone_resource_map = { for k, v in local.private_dns_zone_map : k =>
     {
       name = v
