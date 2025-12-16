@@ -1651,7 +1651,7 @@ Default: `{}`
 ### <a name="input_law_definition"></a> [law\_definition](#input\_law\_definition)
 
 Description: Configuration object for the Log Analytics Workspace to be created for monitoring and logging.
-
+- `deploy` - (Optional) Boolean to indicate whether to deploy a new Log Analytics Workspace if no resource\_id is provided. Default is true.
 - `resource_id` - (Optional) The resource ID of an existing Log Analytics Workspace to use. If provided, the workspace will not be created and the other inputs will be ignored.
 - `name` - (Optional) The name of the Log Analytics Workspace. If not provided, a name will be generated.
 - `retention` - (Optional) The data retention period in days for the workspace. Default is 30.
@@ -1662,6 +1662,7 @@ Type:
 
 ```hcl
 object({
+    deploy      = optional(bool, true)
     resource_id = optional(string)
     name        = optional(string)
     retention   = optional(number, 30)
@@ -1891,6 +1892,10 @@ Default: `{}`
 ## Outputs
 
 The following outputs are exported:
+
+### <a name="output_log_analytics_workspace_id"></a> [log\_analytics\_workspace\_id](#output\_log\_analytics\_workspace\_id)
+
+Description: The ID of the Log Analytics Workspace used for monitoring.
 
 ### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
 
