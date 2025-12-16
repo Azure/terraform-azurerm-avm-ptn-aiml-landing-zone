@@ -126,30 +126,64 @@ resource "azurerm_virtual_hub_connection" "this" {
   virtual_hub_id            = var.vnet_definition.vwan_hub_peering_configuration.peer_vwan_hub_resource_id
 }
 
+module "apim_route_table" {
+  source  = "Azure/avm-res-network-routetable/azurerm"
+  version = "0.4.1"
+  count = anytrue([
+    var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0,
+    var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null,
+    local.apim_networking.management_return_via_internet
+  ]) ? 1 : 0
+
+  location                      = local.route_table_apim.resource_group.location
+  name                          = local.route_table_apim.name
+  resource_group_name           = local.route_table_apim.resource_group.name
+  bgp_route_propagation_enabled = true
+  routes = { for k, v in {
+    internet_route = var.use_internet_routing && var.flag_platform_landing_zone ? {
+      name           = "default-to-internet"
+      address_prefix = "0.0.0.0/0"
+      next_hop_type  = "Internet"
+    } : null
+    azure_firewall = !var.use_internet_routing && var.flag_platform_landing_zone ? {
+      name                   = "default-to-firewall"
+      address_prefix         = "0.0.0.0/0"
+      next_hop_type          = "VirtualAppliance"
+      next_hop_in_ip_address = module.firewall[0].resource.ip_configuration[0].private_ip_address
+    } : null
+    apim_direct_return = local.apim_networking.management_return_via_internet ? {
+      name           = "apim-management-to-internet"
+      address_prefix = "ApiManagement"
+      next_hop_type  = "Internet"
+    } : null
+  } : k => v if v != null }
+  tags = local.route_table_apim.tags
+}
+
 module "firewall_route_table" {
   source  = "Azure/avm-res-network-routetable/azurerm"
   version = "0.4.1"
   count = ((var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
   (var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? 1 : 0
 
-  location                      = azurerm_resource_group.this.location
-  name                          = local.route_table_name
-  resource_group_name           = var.firewall_definition.resource_group_name != null ? var.firewall_definition.resource_group_name : azurerm_resource_group.this.name
+  location                      = local.route_table_firewall.resource_group.location
+  name                          = local.route_table_firewall.name
+  resource_group_name           = local.route_table_firewall.resource_group.name
   bgp_route_propagation_enabled = true
-  routes = var.use_internet_routing ? {
-    internet_route = {
+  routes = { for k, v in {
+    internet_route = var.use_internet_routing ? {
       name           = "default-to-internet"
       address_prefix = "0.0.0.0/0"
       next_hop_type  = "Internet"
-    }
-    } : {
-    azure_firewall = {
+    } : null
+    azure_firewall = !var.use_internet_routing ? {
       name                   = "default-to-firewall"
       address_prefix         = "0.0.0.0/0"
       next_hop_type          = "VirtualAppliance"
-      next_hop_in_ip_address = length(var.vnet_definition.existing_byo_vnet) == 0 ? module.firewall[0].resource.ip_configuration[0].private_ip_address : values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address
-    }
-  }
+      next_hop_in_ip_address = module.firewall[0].resource.ip_configuration[0].private_ip_address
+    } : null
+  } : k => v if v != null }
+  tags = local.route_table_firewall.tags
 }
 
 module "fw_pip" {

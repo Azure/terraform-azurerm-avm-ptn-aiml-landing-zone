@@ -612,6 +612,21 @@ Description: Configuration object for the Azure API Management service to be dep
 - `tags` - (Optional) Map of tags to assign to the API Management service.
 - `tenant_access` - (Optional) Tenant access configuration.
   - `enabled` - Whether tenant access is enabled.
+- 'virtual\_network\_integration' - (Optional) Virtual network integration configuration.
+
+  For Developer and Premium SKUs: If enabled is true then the integration will be "External" if public is also true, otherwise "Internal".  
+    If "External" no internal IPs or Private Endpoints will be created.  
+    If "Internal" internal IPs will be created (no Private Endpoints) and the Developer Portal will not be externally accessible.  
+    The module will pick sensible defaults for `use_service_endpoints` and `management_return_via_internet` unless explicitly overridden.  
+  For StandardV2 and PremiumV2 SKUs:  
+    Internal Private endpoints will always be created. `public` determines whether the Gateway is publicly accessible or not.  
+  For Basic, Standard, and Consumption SKUs: virtual\_network\_integration is not supported and will be ignored.
+
+  - `enabled` - (Optional) Whether to enable virtual network integration. Default is false.
+  - `public` - (Optional) Whether to make the Gateway publicly accessible when virtual network integration is enabled. Default is false.
+  - `use_service_endpoints` - (Optional) Whether to enable SQL service endpoint on the APIM subnet.
+  - `management_return_via_internet` - (Optional) Whether management traffic should return directly via the internet and ignore any other UDRs.
+- `zones` - (Optional) List of availability zones for the API Management service. If not set, Automatic zone assignment will be used for supported SKUs. If an empty list is provided, zones will be calculated based on capacity and avalability zones in the region.
 
 Type:
 
@@ -716,6 +731,13 @@ object({
     tenant_access = optional(object({
       enabled = bool
     }), null)
+    virtual_network_integration = optional(object({
+      enabled                        = optional(bool, false)
+      public                         = optional(bool, false)
+      service_endpoints              = optional(bool)
+      management_return_via_internet = optional(bool)
+    }), {})
+    zones = optional(list(number))
   })
 ```
 
@@ -1789,6 +1811,47 @@ object({
 
 Default: `{}`
 
+### <a name="input_rt_definitions"></a> [rt\_definitions](#input\_rt\_definitions)
+
+Description: Configuration object for Route Tables to be deployed.
+- `firewall` - (Optional) Configuration for the firewall route table.
+  - `name` - (Optional) The name of the firewall route table. If not provided, a name will be generated.
+  - `resource_group` - (Optional) Resource group configuration for the firewall route table. If not provided, the module's resource group will be used.
+    - `name` - The name of the resource group.
+    - `location` - The location of the resource group. If not provided, the module's resource group location will be used.
+  - `tags` - (Optional) Map of tags to assign to the firewall route table.
+- `apim` - (Optional) Configuration for the API Management route table.
+  - `name` - (Optional) The name of the API Management route table. If not provided, a name will be generated.
+  - `resource_group` - (Optional) Resource group configuration for the API Management route table. If not provided, the module's resource group will be used.
+    - `name` - The name of the resource group.
+    - `location` - The location of the resource group. If not provided, the module's resource group location will be used.
+  - `tags` - (Optional) Map of tags to assign to the API Management route table.
+
+Type:
+
+```hcl
+object({
+    firewall = optional(object({
+      name = optional(string)
+      resource_group = optional(object({
+        name     = string
+        location = string
+      }))
+      tags = optional(map(string))
+    }), {})
+    apim = optional(object({
+      name = optional(string)
+      resource_group = optional(object({
+        name     = string
+        location = string
+      }))
+      tags = optional(map(string))
+    }), {})
+  })
+```
+
+Default: `{}`
+
 ### <a name="input_tags"></a> [tags](#input\_tags)
 
 Description: Map of tags to be assigned to all resources created by this module.
@@ -1939,6 +2002,12 @@ Version: 0.16.0
 Source: Azure/avm-res-apimanagement-service/azurerm
 
 Version: 0.0.5
+
+### <a name="module_apim_route_table"></a> [apim\_route\_table](#module\_apim\_route\_table)
+
+Source: Azure/avm-res-network-routetable/azurerm
+
+Version: 0.4.1
 
 ### <a name="module_app_configuration"></a> [app\_configuration](#module\_app\_configuration)
 
