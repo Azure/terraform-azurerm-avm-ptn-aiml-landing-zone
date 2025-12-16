@@ -201,14 +201,35 @@ module "azure_bastion" {
 module "private_dns_zones" {
   source   = "Azure/avm-res-network-privatednszone/azurerm"
   version  = "0.4.2"
-  for_each = var.flag_platform_landing_zone ? local.private_dns_zones : {}
+  for_each = var.flag_platform_landing_zone ? local.private_dns_zone_map : {}
 
   domain_name           = each.value.name
   parent_id             = azurerm_resource_group.this.id
   enable_telemetry      = var.enable_telemetry
+  tags                  = local.private_dns_zone_tags
   virtual_network_links = local.virtual_network_links
 
   depends_on = [module.hub_vnet_peering]
+}
+
+# Link existing Private DNS zones to created vNet
+module "private_dns_zones_link" {
+  source  = "Azure/avm-res-network-privatednszone/azurerm//modules/private_dns_virtual_network_link"
+  version = "0.4.2"
+  for_each = alltrue([
+    var.private_dns_zones.existing_zones_resource_group_resource_id != null,
+    length(module.ai_lz_vnet) > 0,
+    length(module.private_dns_zones) == 0
+  ]) ? local.private_dns_zone_resource_map : {}
+
+  parent_id = each.value.id
+  # Mandatory resource attributes
+  name                                   = local.vnet_name
+  private_dns_zone_supports_private_link = true
+  resolution_policy                      = var.private_dns_zones.allow_internet_resolution_fallback == false ? "Default" : "NxDomainRedirect"
+  # Optional resource attributes
+  tags               = local.private_dns_zone_tags
+  virtual_network_id = local.vnet_resource_id
 }
 
 module "app_gateway_waf_policy" {

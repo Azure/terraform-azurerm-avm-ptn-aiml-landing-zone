@@ -24,7 +24,7 @@ module "apim" {
   notification_sender_email = var.apim_definition.notification_sender_email
   private_endpoints = {
     endpoint1 = {
-      private_dns_zone_resource_ids = var.flag_platform_landing_zone ? [module.private_dns_zones.apim_zone.resource_id] : [local.private_dns_zones_existing.apim_zone.resource_id]
+      private_dns_zone_resource_ids = compact([local.private_dns_zone_resource_map.apim_zone.id])
       subnet_resource_id            = local.subnet_ids["PrivateEndpointSubnet"]
     }
   }

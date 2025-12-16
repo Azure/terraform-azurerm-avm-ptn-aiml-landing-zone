@@ -18,7 +18,7 @@ module "avm_res_keyvault_vault" {
   network_acls                    = var.genai_key_vault_definition.network_acls
   private_endpoints = {
     primary = {
-      private_dns_zone_resource_ids = var.flag_platform_landing_zone ? [module.private_dns_zones.key_vault_zone.resource_id] : [local.private_dns_zones_existing.key_vault_zone.resource_id]
+      private_dns_zone_resource_ids = compact([local.private_dns_zone_resource_map.key_vault_zone.id])
       subnet_resource_id            = local.subnet_ids["PrivateEndpointSubnet"]
     }
   }
@@ -88,7 +88,7 @@ module "cosmosdb" {
     "sql" = {
       subnet_resource_id            = local.subnet_ids["PrivateEndpointSubnet"]
       subresource_name              = "sql"
-      private_dns_zone_resource_ids = var.flag_platform_landing_zone ? [module.private_dns_zones.cosmos_sql_zone.resource_id] : [local.private_dns_zones_existing.cosmos_sql_zone.resource_id]
+      private_dns_zone_resource_ids = compact([local.private_dns_zone_resource_map.cosmos_sql_zone.id])
     }
   }
   public_network_access_enabled = var.genai_cosmosdb_definition.public_network_access_enabled
@@ -125,7 +125,7 @@ module "storage_account" {
     for endpoint in var.genai_storage_account_definition.endpoint_types :
     endpoint => {
       name                          = "${local.genai_storage_account_name}-${endpoint}-pe"
-      private_dns_zone_resource_ids = var.flag_platform_landing_zone ? [module.private_dns_zones["storage_${lower(endpoint)}_zone"].resource_id] : [local.private_dns_zones_existing["storage_${lower(endpoint)}_zone"].resource_id]
+      private_dns_zone_resource_ids = compact([local.private_dns_zone_resource_map["storage_${lower(endpoint)}_zone"].id])
       subnet_resource_id            = local.subnet_ids["PrivateEndpointSubnet"]
       subresource_name              = endpoint
     }
@@ -156,7 +156,7 @@ module "containerregistry" {
   enable_telemetry = var.enable_telemetry
   private_endpoints = {
     container_registry = {
-      private_dns_zone_resource_ids = var.flag_platform_landing_zone ? [module.private_dns_zones.container_registry_zone.resource_id] : [local.private_dns_zones_existing.container_registry_zone.resource_id]
+      private_dns_zone_resource_ids = compact([local.private_dns_zone_resource_map.container_registry_zone.id])
       subnet_resource_id            = local.subnet_ids["PrivateEndpointSubnet"]
     }
   }
@@ -181,7 +181,7 @@ module "app_configuration" {
   local_auth_enabled              = var.genai_app_configuration_definition.local_auth_enabled
   private_endpoints = {
     app_configuration = {
-      private_dns_zone_resource_ids = var.flag_platform_landing_zone ? [module.private_dns_zones.app_configuration_zone.resource_id] : [local.private_dns_zones_existing.app_configuration_zone.resource_id]
+      private_dns_zone_resource_ids = compact([local.private_dns_zone_resource_map.app_configuration_zone.id])
       subnet_resource_id            = local.subnet_ids["PrivateEndpointSubnet"]
     }
   }

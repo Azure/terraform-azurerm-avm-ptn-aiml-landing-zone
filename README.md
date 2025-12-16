@@ -1749,6 +1749,7 @@ Description: Configuration object for Private DNS Zones and their network links.
   - `vnetlinkname` - The name of the virtual network link.
   - `vnetid` - The resource ID of the virtual network to link.
   - `resolutionPolicy` - (Optional) The resolution policy for the virtual network link. Default is "Default".
+- `tags` - (Optional) Map of tags to assign to the Private DNS Zones.
 
 Type:
 
@@ -1761,6 +1762,7 @@ object({
       vnetid           = string
       resolutionPolicy = optional(string, "Default")
     })), {})
+    tags = optional(map(string))
   })
 ```
 
@@ -2038,6 +2040,12 @@ Version: 0.5.0
 ### <a name="module_private_dns_zones"></a> [private\_dns\_zones](#module\_private\_dns\_zones)
 
 Source: Azure/avm-res-network-privatednszone/azurerm
+
+Version: 0.4.2
+
+### <a name="module_private_dns_zones_link"></a> [private\_dns\_zones\_link](#module\_private\_dns\_zones\_link)
+
+Source: Azure/avm-res-network-privatednszone/azurerm//modules/private_dns_virtual_network_link
 
 Version: 0.4.2
 

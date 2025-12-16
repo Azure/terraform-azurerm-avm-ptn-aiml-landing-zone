@@ -17,7 +17,7 @@ module "search_service" {
   partition_count              = var.ks_ai_search_definition.partition_count
   private_endpoints = {
     primary = {
-      private_dns_zone_resource_ids = var.flag_platform_landing_zone ? [module.private_dns_zones.ai_search_zone.resource_id] : [local.private_dns_zones_existing.ai_search_zone.resource_id]
+      private_dns_zone_resource_ids = compact([local.private_dns_zone_resource_map.ai_search_zone.id])
       subnet_resource_id            = local.subnet_ids["PrivateEndpointSubnet"]
     }
   }
