@@ -1,3 +1,7 @@
+# Ignore all mcp.json files in any directory
+**/mcp.json
+# Ignore VSCode MCP config
+.vscode/mcp.json
 # Local .terraform directories
 **/.terraform/*
 
@@ -52,3 +56,6 @@ avm.tflint_module.merged.hcl
 examples/*/policy
 *.mptfbackup
 .avm
+
+# MCP configuration
+# mcp.json (temporarily removed from ignore to allow deletion)
