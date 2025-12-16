@@ -27,6 +27,7 @@ The following resources are used by this module:
 
 - [azapi_resource.bing_grounding](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource_action.purge_ai_foundry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action) (resource)
+- [azurerm_network_security_rule.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_security_rule) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [azurerm_role_assignment.deployment_user_kv_admin](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [azurerm_virtual_hub_connection.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_hub_connection) (resource)
@@ -70,12 +71,18 @@ Description: Configuration object for the Virtual Network (VNet) to be deployed.
   - `vnet_resource_id` - Resource ID of the existing Virtual Network to use.
   - `firewall_ip_address` - (Optional) IP address of the firewall if a firewall is deployed for use by the BYO vnet. This IP address wlll be used to configure the route table for the subnets when provided. If using a BYO Vnet, the firewall is assumed to be deployed and configured outside of this module.
 - `address_space` - (Optional) The address space for the Virtual Network in CIDR notation. Defaults to 192.168.0.0/20 if none provided. Not used when `existing_byo_vnet` is configured.
+- `ipam_pools` - (Optional) List of IPAM pools to associate with the VNet. If present, the address\_space will be ignored and IPAM pools will be used for address allocation.
+  - `id` - The ID of the IPAM pool.
+  - `prefix_length` - The prefix length to request from the IPAM pool.
 - `ddos_protection_plan_resource_id` - (Optional) Resource ID of the DDoS Protection Plan to associate with the VNet. This is not used for BYO VNet configurations as that is assumed to be handled outside the module.
 - `dns_servers` - (Optional) Set of custom DNS server IP addresses for the VNet.
 - `subnets` - (Optional) Map of subnet configurations that can be used to override the default subnet configurations. The map key must match the desired subnet usage to override the default configuration.
   - `enabled` - (Optional) Whether the subnet is enabled. Default is true.
   - `name` - (Optional) The name of the subnet. If not provided, a name will be generated.
   - `address_prefix` - (Optional) The address prefix for the subnet in CIDR notation.
+  - `ipam_pools` - (Optional) List of IPAM pools to associate with the subnet. If present, the address\_prefix will be ignored and IPAM pools will be used for address allocation.
+    - `pool_id` - The ID of the IPAM pool.
+    - `prefix_length` - The prefix length to request from the IPAM pool.
 - `vnet_peering_configuration` - (Optional) Configuration for VNet peering. This is not used for BYO VNet configurations as that is assumed to be handled outside the module.
   - `peer_vnet_resource_id` - (Optional) Resource ID of the peer VNet.
   - `name` - (Optional) Name of the peering connection.
@@ -102,13 +109,21 @@ object({
       firewall_ip_address = optional(string)
       }
     )), {})
-    address_space                    = optional(string, "192.168.0.0/20")
+    address_space = optional(string, "192.168.0.0/20")
+    ipam_pools = optional(list(object({
+      id            = string
+      prefix_length = string
+    })))
     ddos_protection_plan_resource_id = optional(string)
     dns_servers                      = optional(set(string), [])
     subnets = optional(map(object({
       enabled        = optional(bool, true)
       name           = optional(string)
       address_prefix = optional(string)
+      ipam_pools = optional(list(object({
+        pool_id       = string
+        prefix_length = string
+      })))
       }
     )), {})
     vnet_peering_configuration = optional(object({
@@ -568,6 +583,9 @@ Description: Configuration object for the Azure API Management service to be dep
     - `negotiate_client_certificate` - (Optional) Whether to negotiate client certificates.
     - `ssl_keyvault_identity_client_id` - (Optional) Client ID of the user-assigned managed identity for Key Vault access.
     - `default_ssl_binding` - (Optional, proxy only) Whether this is the default SSL binding.
+- `managed_identities` - (Optional) Managed identities configuration.
+  - `system_assigned` - (Optional) Whether to enable system-assigned managed identity. Default is false.
+  - `user_assigned_resource_ids` - (Optional) Set of user-assigned managed identity resource IDs.
 - `min_api_version` - (Optional) The minimum API version that the API Management service will accept.
 - `notification_sender_email` - (Optional) Email address from which notifications will be sent.
 - `protocols` - (Optional) Protocol configuration.
@@ -662,6 +680,10 @@ object({
         ssl_keyvault_identity_client_id = optional(string, null)
       })), [])
     }), null)
+    managed_identities = optional(object({
+      system_assigned            = optional(bool, false)
+      user_assigned_resource_ids = optional(set(string), [])
+    }))
     min_api_version           = optional(string)
     notification_sender_email = optional(string, null)
     protocols = optional(object({
@@ -1644,7 +1666,7 @@ Default: `{}`
 ### <a name="input_law_definition"></a> [law\_definition](#input\_law\_definition)
 
 Description: Configuration object for the Log Analytics Workspace to be created for monitoring and logging.
-
+- `deploy` - (Optional) Boolean to indicate whether to deploy a new Log Analytics Workspace if no resource\_id is provided. Default is true.
 - `resource_id` - (Optional) The resource ID of an existing Log Analytics Workspace to use. If provided, the workspace will not be created and the other inputs will be ignored.
 - `name` - (Optional) The name of the Log Analytics Workspace. If not provided, a name will be generated.
 - `retention` - (Optional) The data retention period in days for the workspace. Default is 30.
@@ -1655,6 +1677,7 @@ Type:
 
 ```hcl
 object({
+    deploy      = optional(bool, true)
     resource_id = optional(string)
     name        = optional(string)
     retention   = optional(number, 30)
@@ -1885,6 +1908,10 @@ Default: `{}`
 
 The following outputs are exported:
 
+### <a name="output_log_analytics_workspace_id"></a> [log\_analytics\_workspace\_id](#output\_log\_analytics\_workspace\_id)
+
+Description: The ID of the Log Analytics Workspace used for monitoring.
+
 ### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
 
 Description: Future resource ID output for the LZA.
@@ -1892,6 +1919,10 @@ Description: Future resource ID output for the LZA.
 ### <a name="output_subnets"></a> [subnets](#output\_subnets)
 
 Description: A map of the deployed subnets in the AI PTN LZA.
+
+### <a name="output_virtual_network"></a> [virtual\_network](#output\_virtual\_network)
+
+Description: The deployed virtual network in the AI PTN LZA.
 
 ## Modules
 
@@ -1901,7 +1932,7 @@ The following Modules are called:
 
 Source: Azure/avm-res-network-virtualnetwork/azurerm
 
-Version: =0.16.0
+Version: 0.16.0
 
 ### <a name="module_apim"></a> [apim](#module\_apim)
 
