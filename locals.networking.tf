@@ -91,24 +91,60 @@ locals {
   subnet_ids       = length(var.vnet_definition.existing_byo_vnet) > 0 ? { for key, m in module.byo_subnets : key => try(m.resource_id, m.id) } : { for key, s in module.ai_lz_vnet[0].subnets : key => s.resource_id }
   subnets = {
     AzureBastionSubnet = {
-      enabled          = var.flag_platform_landing_zone == true ? try(local.subnets_definition["AzureBastionSubnet"].enabled, true) : try(local.subnets_definition["AzureBastionSubnet"].enabled, false)
-      name             = "AzureBastionSubnet"
-      address_prefixes = try(local.subnets_definition["AzureBastionSubnet"].address_prefix, null) != null ? [local.subnets_definition["AzureBastionSubnet"].address_prefix] : [cidrsubnet(local.vnet_address_space, 3, 5)]
-      route_table      = null
+      enabled = var.flag_platform_landing_zone == true ? try(local.subnets_definition["AzureBastionSubnet"].enabled, true) : try(local.subnets_definition["AzureBastionSubnet"].enabled, false)
+      name    = "AzureBastionSubnet"
+      address_prefixes = (var.vnet_definition.ipam_pools == null ?
+        try(local.subnets_definition["AzureBastionSubnet"].address_prefix, null) != null ?
+        [local.subnets_definition["AzureBastionSubnet"].address_prefix] :
+        [cidrsubnet(local.vnet_address_space, 3, 5)]
+      : null)
+      ipam_pools = (var.vnet_definition.ipam_pools != null ?
+        try(local.subnets_definition["AzureBastionSubnet"].ipam_pools, null) != null ?
+        local.subnets_definition["AzureBastionSubnet"].ipam_pools :
+        [{
+          pool_id       = var.vnet_definition.ipam_pools[0].id
+          prefix_length = var.vnet_definition.ipam_pools[0].prefix_length + 3
+        }]
+      : null)
+      route_table = null
       #network_security_group = {
       #  id = module.nsgs.resource_id
       #}
     }
     AzureFirewallSubnet = {
-      enabled          = var.flag_platform_landing_zone == true ? try(local.subnets_definition["AzureFirewallSubnet"].enabled, true) : try(local.subnets_definition["AzureFirewallSubnet"].enabled, false)
-      name             = "AzureFirewallSubnet"
-      address_prefixes = try(local.subnets_definition["AzureFirewallSubnet"].address_prefix, null) != null ? [local.subnets_definition["AzureFirewallSubnet"].address_prefix] : [cidrsubnet(local.vnet_address_space, 3, 4)]
-      route_table      = null
+      enabled = var.flag_platform_landing_zone == true ? try(local.subnets_definition["AzureFirewallSubnet"].enabled, true) : try(local.subnets_definition["AzureFirewallSubnet"].enabled, false)
+      name    = "AzureFirewallSubnet"
+      address_prefixes = (var.vnet_definition.ipam_pools == null ?
+        try(local.subnets_definition["AzureFirewallSubnet"].address_prefix, null) != null ?
+        [local.subnets_definition["AzureFirewallSubnet"].address_prefix] :
+        [cidrsubnet(local.vnet_address_space, 3, 4)]
+      : null)
+      ipam_pools = (var.vnet_definition.ipam_pools != null ?
+        try(local.subnets_definition["AzureFirewallSubnet"].ipam_pools, null) != null ?
+        local.subnets_definition["AzureFirewallSubnet"].ipam_pools :
+        [{
+          pool_id       = var.vnet_definition.ipam_pools[0].id
+          prefix_length = var.vnet_definition.ipam_pools[0].prefix_length + 3
+        }]
+      : null)
+      route_table = null
     }
     JumpboxSubnet = {
-      enabled          = var.flag_platform_landing_zone == true ? try(local.subnets_definition["JumpboxSubnet"].enabled, true) : try(local.subnets_definition["JumpboxSubnet"].enabled, false)
-      name             = try(local.subnets_definition["JumpboxSubnet"].name, null) != null ? local.subnets_definition["JumpboxSubnet"].name : "JumpboxSubnet"
-      address_prefixes = try(local.subnets_definition["JumpboxSubnet"].address_prefix, null) != null ? [local.subnets_definition["JumpboxSubnet"].address_prefix] : [cidrsubnet(local.vnet_address_space, 4, 6)]
+      enabled = var.flag_platform_landing_zone == true ? try(local.subnets_definition["JumpboxSubnet"].enabled, true) : try(local.subnets_definition["JumpboxSubnet"].enabled, false)
+      name    = try(local.subnets_definition["JumpboxSubnet"].name, null) != null ? local.subnets_definition["JumpboxSubnet"].name : "JumpboxSubnet"
+      address_prefixes = (var.vnet_definition.ipam_pools == null ?
+        try(local.subnets_definition["JumpboxSubnet"].address_prefix, null) != null ?
+        [local.subnets_definition["JumpboxSubnet"].address_prefix] :
+        [cidrsubnet(local.vnet_address_space, 4, 6)]
+      : null)
+      ipam_pools = (var.vnet_definition.ipam_pools != null ?
+        try(local.subnets_definition["JumpboxSubnet"].ipam_pools, null) != null ?
+        local.subnets_definition["JumpboxSubnet"].ipam_pools :
+        [{
+          pool_id       = var.vnet_definition.ipam_pools[0].id
+          prefix_length = var.vnet_definition.ipam_pools[0].prefix_length + 4
+        }]
+      : null)
       route_table = ((var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
         (var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? {
         id = module.firewall_route_table[0].resource_id
@@ -118,9 +154,21 @@ locals {
       }
     }
     AppGatewaySubnet = {
-      enabled          = true
-      name             = try(local.subnets_definition["AppGatewaySubnet"].name, null) != null ? local.subnets_definition["AppGatewaySubnet"].name : "AppGatewaySubnet"
-      address_prefixes = try(local.subnets_definition["AppGatewaySubnet"].address_prefix, null) != null ? [local.subnets_definition["AppGatewaySubnet"].address_prefix] : [cidrsubnet(local.vnet_address_space, 4, 5)]
+      enabled = true
+      name    = try(local.subnets_definition["AppGatewaySubnet"].name, null) != null ? local.subnets_definition["AppGatewaySubnet"].name : "AppGatewaySubnet"
+      address_prefixes = (var.vnet_definition.ipam_pools == null ?
+        try(local.subnets_definition["AppGatewaySubnet"].address_prefix, null) != null ?
+        [local.subnets_definition["AppGatewaySubnet"].address_prefix] :
+        [cidrsubnet(local.vnet_address_space, 4, 5)]
+      : null)
+      ipam_pools = (var.vnet_definition.ipam_pools != null ?
+        try(local.subnets_definition["AppGatewaySubnet"].ipam_pools, null) != null ?
+        local.subnets_definition["AppGatewaySubnet"].ipam_pools :
+        [{
+          pool_id       = var.vnet_definition.ipam_pools[0].id
+          prefix_length = var.vnet_definition.ipam_pools[0].prefix_length + 4
+        }]
+      : null)
       route_table = ((var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
         (var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? {
         id = module.firewall_route_table[0].resource_id
@@ -136,9 +184,21 @@ locals {
       }]
     }
     APIMSubnet = {
-      enabled          = true
-      name             = try(local.subnets_definition["APIMSubnet"].name, null) != null ? local.subnets_definition["APIMSubnet"].name : "APIMSubnet"
-      address_prefixes = try(local.subnets_definition["APIMSubnet"].address_prefix, null) != null ? [local.subnets_definition["APIMSubnet"].address_prefix] : [cidrsubnet(local.vnet_address_space, 4, 4)]
+      enabled = true
+      name    = try(local.subnets_definition["APIMSubnet"].name, null) != null ? local.subnets_definition["APIMSubnet"].name : "APIMSubnet"
+      address_prefixes = (var.vnet_definition.ipam_pools == null ?
+        try(local.subnets_definition["APIMSubnet"].address_prefix, null) != null ?
+        [local.subnets_definition["APIMSubnet"].address_prefix] :
+        [cidrsubnet(local.vnet_address_space, 4, 4)]
+      : null)
+      ipam_pools = (var.vnet_definition.ipam_pools != null ?
+        try(local.subnets_definition["APIMSubnet"].ipam_pools, null) != null ?
+        local.subnets_definition["APIMSubnet"].ipam_pools :
+        [{
+          pool_id       = var.vnet_definition.ipam_pools[0].id
+          prefix_length = var.vnet_definition.ipam_pools[0].prefix_length + 4
+        }]
+      : null)
       route_table = ((var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
         (var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? {
         id = module.firewall_route_table[0].resource_id
@@ -148,9 +208,21 @@ locals {
       }
     }
     AIFoundrySubnet = {
-      enabled          = true
-      name             = try(local.subnets_definition["AIFoundrySubnet"].name, null) != null ? local.subnets_definition["AIFoundrySubnet"].name : "AIFoundrySubnet"
-      address_prefixes = try(local.subnets_definition["AIFoundrySubnet"].address_prefix, null) != null ? [local.subnets_definition["AIFoundrySubnet"].address_prefix] : [cidrsubnet(local.vnet_address_space, 4, 3)]
+      enabled = true
+      name    = try(local.subnets_definition["AIFoundrySubnet"].name, null) != null ? local.subnets_definition["AIFoundrySubnet"].name : "AIFoundrySubnet"
+      address_prefixes = (var.vnet_definition.ipam_pools == null ?
+        try(local.subnets_definition["AIFoundrySubnet"].address_prefix, null) != null ?
+        [local.subnets_definition["AIFoundrySubnet"].address_prefix] :
+        [cidrsubnet(local.vnet_address_space, 4, 3)]
+      : null)
+      ipam_pools = (var.vnet_definition.ipam_pools != null ?
+        try(local.subnets_definition["AIFoundrySubnet"].ipam_pools, null) != null ?
+        local.subnets_definition["AIFoundrySubnet"].ipam_pools :
+        [{
+          pool_id       = var.vnet_definition.ipam_pools[0].id
+          prefix_length = var.vnet_definition.ipam_pools[0].prefix_length + 4
+        }]
+      : null)
       route_table = ((var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
         (var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? {
         id = module.firewall_route_table[0].resource_id
@@ -167,9 +239,21 @@ locals {
       }]
     }
     DevOpsBuildSubnet = {
-      enabled          = true
-      name             = try(local.subnets_definition["DevOpsBuildSubnet"].name, null) != null ? local.subnets_definition["DevOpsBuildSubnet"].name : "DevOpsBuildSubnet"
-      address_prefixes = try(local.subnets_definition["DevOpsBuildSubnet"].address_prefix, null) != null ? [local.subnets_definition["DevOpsBuildSubnet"].address_prefix] : [cidrsubnet(local.vnet_address_space, 4, 2)]
+      enabled = true
+      name    = try(local.subnets_definition["DevOpsBuildSubnet"].name, null) != null ? local.subnets_definition["DevOpsBuildSubnet"].name : "DevOpsBuildSubnet"
+      address_prefixes = (var.vnet_definition.ipam_pools == null ?
+        try(local.subnets_definition["DevOpsBuildSubnet"].address_prefix, null) != null ?
+        [local.subnets_definition["DevOpsBuildSubnet"].address_prefix] :
+        [cidrsubnet(local.vnet_address_space, 4, 2)]
+      : null)
+      ipam_pools = (var.vnet_definition.ipam_pools != null ?
+        try(local.subnets_definition["DevOpsBuildSubnet"].ipam_pools, null) != null ?
+        local.subnets_definition["DevOpsBuildSubnet"].ipam_pools :
+        [{
+          pool_id       = var.vnet_definition.ipam_pools[0].id
+          prefix_length = var.vnet_definition.ipam_pools[0].prefix_length + 4
+        }]
+      : null)
       route_table = ((var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
         (var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? {
         id = module.firewall_route_table[0].resource_id
@@ -185,18 +269,42 @@ locals {
           name = "Microsoft.App/environments"
         }
       }]
-      enabled          = true
-      name             = try(local.subnets_definition["ContainerAppEnvironmentSubnet"].name, null) != null ? local.subnets_definition["ContainerAppEnvironmentSubnet"].name : "ContainerAppEnvironmentSubnet"
-      address_prefixes = try(local.subnets_definition["ContainerAppEnvironmentSubnet"].address_prefix, null) != null ? [local.subnets_definition["ContainerAppEnvironmentSubnet"].address_prefix] : [cidrsubnet(local.vnet_address_space, 4, 1)]
+      enabled = true
+      name    = try(local.subnets_definition["ContainerAppEnvironmentSubnet"].name, null) != null ? local.subnets_definition["ContainerAppEnvironmentSubnet"].name : "ContainerAppEnvironmentSubnet"
+      address_prefixes = (var.vnet_definition.ipam_pools == null ?
+        try(local.subnets_definition["ContainerAppEnvironmentSubnet"].address_prefix, null) != null ?
+        [local.subnets_definition["ContainerAppEnvironmentSubnet"].address_prefix] :
+        [cidrsubnet(local.vnet_address_space, 4, 1)]
+      : null)
+      ipam_pools = (var.vnet_definition.ipam_pools != null ?
+        try(local.subnets_definition["ContainerAppEnvironmentSubnet"].ipam_pools, null) != null ?
+        local.subnets_definition["ContainerAppEnvironmentSubnet"].ipam_pools :
+        [{
+          pool_id       = var.vnet_definition.ipam_pools[0].id
+          prefix_length = var.vnet_definition.ipam_pools[0].prefix_length + 4
+        }]
+      : null)
       route_table = ((var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
         (var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? {
         id = module.firewall_route_table[0].resource_id
       } : null
     }
     PrivateEndpointSubnet = {
-      enabled          = true
-      name             = try(local.subnets_definition["PrivateEndpointSubnet"].name, null) != null ? local.subnets_definition["PrivateEndpointSubnet"].name : "PrivateEndpointSubnet"
-      address_prefixes = try(local.subnets_definition["PrivateEndpointSubnet"].address_prefix, null) != null ? [local.subnets_definition["PrivateEndpointSubnet"].address_prefix] : [cidrsubnet(local.vnet_address_space, 4, 0)]
+      enabled = true
+      name    = try(local.subnets_definition["PrivateEndpointSubnet"].name, null) != null ? local.subnets_definition["PrivateEndpointSubnet"].name : "PrivateEndpointSubnet"
+      address_prefixes = (var.vnet_definition.ipam_pools == null ?
+        try(local.subnets_definition["PrivateEndpointSubnet"].address_prefix, null) != null ?
+        [local.subnets_definition["PrivateEndpointSubnet"].address_prefix] :
+        [cidrsubnet(local.vnet_address_space, 4, 0)]
+      : null)
+      ipam_pools = (var.vnet_definition.ipam_pools != null ?
+        try(local.subnets_definition["PrivateEndpointSubnet"].ipam_pools, null) != null ?
+        local.subnets_definition["PrivateEndpointSubnet"].ipam_pools :
+        [{
+          pool_id       = var.vnet_definition.ipam_pools[0].id
+          prefix_length = var.vnet_definition.ipam_pools[0].prefix_length + 4
+        }]
+      : null)
       route_table = ((var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
         (var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? {
         id = module.firewall_route_table[0].resource_id

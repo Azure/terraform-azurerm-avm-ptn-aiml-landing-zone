@@ -1,7 +1,7 @@
 module "log_analytics_workspace" {
   source  = "Azure/avm-res-operationalinsights-workspace/azurerm"
   version = "0.4.2"
-  count   = var.law_definition.resource_id == null ? 1 : 0
+  count   = var.law_definition.resource_id == null && var.law_definition.deploy ? 1 : 0
 
   location                                  = azurerm_resource_group.this.location
   name                                      = local.log_analytics_workspace_name

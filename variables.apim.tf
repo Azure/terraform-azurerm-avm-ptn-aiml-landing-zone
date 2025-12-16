@@ -63,6 +63,10 @@ variable "apim_definition" {
         ssl_keyvault_identity_client_id = optional(string, null)
       })), [])
     }), null)
+    managed_identities = optional(object({
+      system_assigned            = optional(bool, false)
+      user_assigned_resource_ids = optional(set(string), [])
+    }))
     min_api_version           = optional(string)
     notification_sender_email = optional(string, null)
     protocols = optional(object({
@@ -134,6 +138,9 @@ Configuration object for the Azure API Management service to be deployed.
     - `negotiate_client_certificate` - (Optional) Whether to negotiate client certificates.
     - `ssl_keyvault_identity_client_id` - (Optional) Client ID of the user-assigned managed identity for Key Vault access.
     - `default_ssl_binding` - (Optional, proxy only) Whether this is the default SSL binding.
+- `managed_identities` - (Optional) Managed identities configuration.
+  - `system_assigned` - (Optional) Whether to enable system-assigned managed identity. Default is false.
+  - `user_assigned_resource_ids` - (Optional) Set of user-assigned managed identity resource IDs.
 - `min_api_version` - (Optional) The minimum API version that the API Management service will accept.
 - `notification_sender_email` - (Optional) Email address from which notifications will be sent.
 - `protocols` - (Optional) Protocol configuration.
