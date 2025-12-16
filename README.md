@@ -1457,6 +1457,7 @@ Default: `{}`
 
 Description: Configuration object for the Azure Key Vault to be created for GenAI services.
 
+- `deploy` - (Optional) Whether to deploy the Key Vault. Default is true.
 - `name` - (Optional) The name of the Key Vault. If not provided, a name will be generated.
 - `network_acls` - (Optional) Network access control list configuration for the Key Vault.
   - `bypass` - (Optional) Services that can bypass the network ACLs. Default is "AzureServices".
@@ -1481,7 +1482,8 @@ Type:
 
 ```hcl
 object({
-    name = optional(string)
+    deploy = optional(bool, true)
+    name   = optional(string)
     network_acls = optional(object({
       bypass                     = optional(string, "AzureServices")
       default_action             = optional(string, "Deny")

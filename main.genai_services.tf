@@ -1,6 +1,16 @@
+moved {
+  from = module.avm_res_keyvault_vault
+  to   = module.avm_res_keyvault_vault[0]
+}
+moved {
+  from = azurerm_role_assignment.deployment_user_kv_admin
+  to   = azurerm_role_assignment.deployment_user_kv_admin[0]
+}
+
 module "avm_res_keyvault_vault" {
   source  = "Azure/avm-res-keyvault-vault/azurerm"
   version = "=0.10.2"
+  count   = var.genai_key_vault_definition.deploy ? 1 : 0
 
   location            = azurerm_resource_group.this.location
   name                = local.genai_key_vault_name
@@ -38,8 +48,10 @@ module "avm_res_keyvault_vault" {
 #moving this outside of the KV AVM module so I can set an implicit dependency from the jump vm module to order deletion properly.
 #TODO: Review if this permission is too permissive.  Can this be Secrets User instead?
 resource "azurerm_role_assignment" "deployment_user_kv_admin" {
+  count = var.genai_key_vault_definition.deploy ? 1 : 0
+
   principal_id         = data.azurerm_client_config.current.object_id
-  scope                = module.avm_res_keyvault_vault.resource_id
+  scope                = module.avm_res_keyvault_vault[0].resource_id
   role_definition_name = "Key Vault Administrator"
 }
 

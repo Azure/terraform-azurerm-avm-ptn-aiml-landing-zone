@@ -25,11 +25,9 @@ module "jumpvm" {
   }
   resource_group_name = azurerm_resource_group.this.name
   zone                = length(local.region_zones) > 0 ? random_integer.zone_index[0].result : null
-  account_credentials = {
-    key_vault_configuration = {
-      resource_id = module.avm_res_keyvault_vault.resource_id
-    }
-  }
+  account_credentials = var.genai_key_vault_definition.deploy ? {
+    resource_id = module.avm_res_keyvault_vault[0].resource_id
+  } : null
   enable_telemetry = var.enable_telemetry
   sku_size         = var.jumpvm_definition.sku
   tags             = var.jumpvm_definition.tags
