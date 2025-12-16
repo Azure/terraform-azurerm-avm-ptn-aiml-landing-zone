@@ -95,7 +95,7 @@ variable "apim_definition" {
     }), null)
     sku_root     = optional(string, "Premium")
     sku_capacity = optional(number, 3)
-    tags         = optional(map(string), {})
+    tags         = optional(map(string))
     tenant_access = optional(object({
       enabled = bool
     }), null)

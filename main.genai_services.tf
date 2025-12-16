@@ -20,11 +20,12 @@ module "avm_res_keyvault_vault" {
     primary = {
       private_dns_zone_resource_ids = var.flag_platform_landing_zone ? [module.private_dns_zones.key_vault_zone.resource_id] : [local.private_dns_zones_existing.key_vault_zone.resource_id]
       subnet_resource_id            = local.subnet_ids["PrivateEndpointSubnet"]
+      tags                          = var.genai_key_vault_definition.tags != null ? var.genai_key_vault_definition.tags : var.tags
     }
   }
   public_network_access_enabled = var.genai_key_vault_definition.public_network_access_enabled
   role_assignments              = local.genai_key_vault_role_assignments
-  tags                          = var.genai_key_vault_definition.tags
+  tags                          = var.genai_key_vault_definition.tags != null ? var.genai_key_vault_definition.tags : var.tags
   wait_for_rbac_before_key_operations = {
     create = "60s"
   }
@@ -89,9 +90,11 @@ module "cosmosdb" {
       subnet_resource_id            = local.subnet_ids["PrivateEndpointSubnet"]
       subresource_name              = "sql"
       private_dns_zone_resource_ids = var.flag_platform_landing_zone ? [module.private_dns_zones.cosmos_sql_zone.resource_id] : [local.private_dns_zones_existing.cosmos_sql_zone.resource_id]
+      tags                          = var.genai_cosmosdb_definition.tags != null ? var.genai_cosmosdb_definition.tags : var.tags
     }
   }
   public_network_access_enabled = var.genai_cosmosdb_definition.public_network_access_enabled
+  tags                          = var.genai_cosmosdb_definition.tags != null ? var.genai_cosmosdb_definition.tags : var.tags
 
   depends_on = [module.private_dns_zones, module.hub_vnet_peering]
 }
@@ -128,12 +131,13 @@ module "storage_account" {
       private_dns_zone_resource_ids = var.flag_platform_landing_zone ? [module.private_dns_zones["storage_${lower(endpoint)}_zone"].resource_id] : [local.private_dns_zones_existing["storage_${lower(endpoint)}_zone"].resource_id]
       subnet_resource_id            = local.subnet_ids["PrivateEndpointSubnet"]
       subresource_name              = endpoint
+      tags                          = var.genai_storage_account_definition.tags != null ? var.genai_storage_account_definition.tags : var.tags
     }
   }
   public_network_access_enabled = var.genai_storage_account_definition.public_network_access_enabled
   role_assignments              = local.genai_storage_account_role_assignments
   shared_access_key_enabled     = var.genai_storage_account_definition.shared_access_key_enabled
-  tags                          = var.genai_storage_account_definition.tags
+  tags                          = var.genai_storage_account_definition.tags != null ? var.genai_storage_account_definition.tags : var.tags
 
   depends_on = [module.private_dns_zones, module.hub_vnet_peering]
 }
@@ -158,10 +162,12 @@ module "containerregistry" {
     container_registry = {
       private_dns_zone_resource_ids = var.flag_platform_landing_zone ? [module.private_dns_zones.container_registry_zone.resource_id] : [local.private_dns_zones_existing.container_registry_zone.resource_id]
       subnet_resource_id            = local.subnet_ids["PrivateEndpointSubnet"]
+      tags                          = var.genai_container_registry_definition.tags != null ? var.genai_container_registry_definition.tags : var.tags
     }
   }
   public_network_access_enabled = var.genai_container_registry_definition.public_network_access_enabled
   role_assignments              = local.genai_container_registry_role_assignments
+  tags                          = var.genai_container_registry_definition.tags != null ? var.genai_container_registry_definition.tags : var.tags
   zone_redundancy_enabled       = length(local.region_zones) > 1 ? var.genai_container_registry_definition.zone_redundancy_enabled : false
 
   depends_on = [module.private_dns_zones, module.hub_vnet_peering]
@@ -183,11 +189,12 @@ module "app_configuration" {
     app_configuration = {
       private_dns_zone_resource_ids = var.flag_platform_landing_zone ? [module.private_dns_zones.app_configuration_zone.resource_id] : [local.private_dns_zones_existing.app_configuration_zone.resource_id]
       subnet_resource_id            = local.subnet_ids["PrivateEndpointSubnet"]
+      tags                          = var.genai_app_configuration_definition.tags != null ? var.genai_app_configuration_definition.tags : var.tags
     }
   }
   role_assignments           = local.genai_app_configuration_role_assignments
   sku                        = var.genai_app_configuration_definition.sku
   soft_delete_retention_days = var.genai_app_configuration_definition.soft_delete_retention_in_days
-  tags                       = var.genai_app_configuration_definition.tags
+  tags                       = var.genai_app_configuration_definition.tags != null ? var.genai_app_configuration_definition.tags : var.tags
 }
 

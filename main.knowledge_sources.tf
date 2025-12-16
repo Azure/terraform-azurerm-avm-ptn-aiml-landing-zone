@@ -25,6 +25,7 @@ module "search_service" {
   replica_count                 = var.ks_ai_search_definition.replica_count
   semantic_search_sku           = var.ks_ai_search_definition.semantic_search_sku
   sku                           = var.ks_ai_search_definition.sku
+  tags                          = var.ks_ai_search_definition.tags != null ? var.ks_ai_search_definition.tags : var.tags
 
   depends_on = [module.private_dns_zones, module.hub_vnet_peering]
 }
@@ -46,6 +47,6 @@ resource "azapi_resource" "bing_grounding" {
   delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   read_headers              = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   schema_validation_enabled = false
-  tags                      = var.ks_bing_grounding_definition.tags
+  tags                      = var.ks_bing_grounding_definition.tags != null ? var.ks_bing_grounding_definition.tags : var.tags
   update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 }

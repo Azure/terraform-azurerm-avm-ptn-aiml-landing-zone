@@ -5,7 +5,7 @@ variable "law_definition" {
     name        = optional(string)
     retention   = optional(number, 30)
     sku         = optional(string, "PerGB2018")
-    tags        = optional(map(string), {})
+    tags        = optional(map(string))
   })
   default     = {}
   description = <<DESCRIPTION

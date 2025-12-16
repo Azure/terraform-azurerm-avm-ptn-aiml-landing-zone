@@ -9,4 +9,5 @@ module "log_analytics_workspace" {
   enable_telemetry                          = var.enable_telemetry
   log_analytics_workspace_retention_in_days = var.law_definition.retention
   log_analytics_workspace_sku               = var.law_definition.sku
+  tags                                      = var.law_definition.tags != null ? var.law_definition.tags : var.tags
 }

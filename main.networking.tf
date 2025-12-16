@@ -26,6 +26,7 @@ module "ai_lz_vnet" {
   ipam_pools       = var.vnet_definition.ipam_pools
   name             = local.vnet_name
   subnets          = local.deployed_subnets
+  tags             = var.vnet_definition.tags != null ? var.vnet_definition.tags : var.tags
 }
 
 data "azurerm_virtual_network" "ai_lz_vnet" {
@@ -57,6 +58,7 @@ module "nsgs" {
   location            = azurerm_resource_group.this.location
   name                = local.nsg_name
   resource_group_name = var.nsgs_definition.resource_group_name != null ? var.nsgs_definition.resource_group_name : azurerm_resource_group.this.name
+  tags                = var.nsgs_definition.tags != null ? var.nsgs_definition.tags : var.tags
 }
 
 # NSGs are required during subnet creation but rules use cidrs which are not known until after vnet creation.
@@ -150,6 +152,7 @@ module "firewall_route_table" {
       next_hop_in_ip_address = length(var.vnet_definition.existing_byo_vnet) == 0 ? module.firewall[0].resource.ip_configuration[0].private_ip_address : values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address
     }
   }
+  tags = var.firewall_definition.tags != null ? var.firewall_definition.tags : var.tags
 }
 
 module "fw_pip" {
@@ -161,6 +164,7 @@ module "fw_pip" {
   name                = "${local.firewall_name}-pip"
   resource_group_name = var.firewall_definition.resource_group_name != null ? var.firewall_definition.resource_group_name : azurerm_resource_group.this.name
   enable_telemetry    = var.enable_telemetry
+  tags                = var.firewall_definition.tags != null ? var.firewall_definition.tags : var.tags
   zones               = var.firewall_definition.zones
 }
 
@@ -191,6 +195,7 @@ module "firewall" {
     }
   ]
   firewall_zones = var.firewall_definition.zones
+  tags           = var.firewall_definition.tags != null ? var.firewall_definition.tags : var.tags
 }
 
 module "firewall_policy" {
@@ -230,7 +235,7 @@ module "azure_bastion" {
     subnet_id = local.subnet_ids["AzureBastionSubnet"]
   }
   sku   = var.bastion_definition.sku
-  tags  = var.bastion_definition.tags
+  tags  = var.bastion_definition.tags != null ? var.bastion_definition.tags : var.tags
   zones = var.bastion_definition.zones
 }
 
@@ -257,6 +262,7 @@ module "app_gateway_waf_policy" {
   resource_group_name = azurerm_resource_group.this.name
   enable_telemetry    = var.enable_telemetry
   policy_settings     = var.waf_policy_definition.policy_settings
+  tags                = var.waf_policy_definition.tags != null ? var.waf_policy_definition.tags : var.tags
 }
 
 
