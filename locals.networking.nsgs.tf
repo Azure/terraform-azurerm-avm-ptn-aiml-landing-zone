@@ -26,7 +26,7 @@ locals {
     "appgw_rule02" = {
       name                         = "Allow-AppGW_Web"
       access                       = "Allow"
-      destination_address_prefixes = try(local.subnets["AppGatewaySubnet"].address_prefix, null) != null ? [local.subnets["AppGatewaySubnet"].address_prefix] : [cidrsubnet(local.vnet_address_space, 4, 5)]
+      destination_address_prefixes = length(var.vnet_definition.existing_byo_vnet) > 0 ? module.byo_subnets["AppGatewaySubnet"].address_prefixes : module.ai_lz_vnet[0].subnets["AppGatewaySubnet"].address_prefixes
       destination_port_ranges      = ["80", "443"]
       direction                    = "Inbound"
       priority                     = 120
@@ -37,7 +37,7 @@ locals {
     "appgw_rule03" = {
       name                         = "Allow-AppGW_LoadBalancer"
       access                       = "Allow"
-      destination_address_prefixes = try(local.subnets["AppGatewaySubnet"].address_prefix, null) != null ? [local.subnets["AppGatewaySubnet"].address_prefix] : [cidrsubnet(local.vnet_address_space, 4, 5)]
+      destination_address_prefixes = length(var.vnet_definition.existing_byo_vnet) > 0 ? module.byo_subnets["AppGatewaySubnet"].address_prefixes : module.ai_lz_vnet[0].subnets["AppGatewaySubnet"].address_prefixes
       destination_port_range       = "*"
       direction                    = "Inbound"
       priority                     = 4000
