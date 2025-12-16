@@ -20,6 +20,7 @@ module "apim" {
   }
   enable_telemetry          = var.enable_telemetry
   hostname_configuration    = var.apim_definition.hostname_configuration
+  managed_identities        = var.apim_definition.managed_identities
   min_api_version           = var.apim_definition.min_api_version
   notification_sender_email = var.apim_definition.notification_sender_email
   private_endpoints = {
