@@ -95,9 +95,9 @@ locals {
       name             = "AzureBastionSubnet"
       address_prefixes = try(local.subnets_definition["AzureBastionSubnet"].address_prefix, null) != null ? [local.subnets_definition["AzureBastionSubnet"].address_prefix] : [cidrsubnet(local.vnet_address_space, 3, 5)]
       route_table      = null
-      #network_security_group = {
-      #  id = module.nsgs.resource_id
-      #}
+      network_security_group = local.bastion_subnet_enabled ? {
+        id = module.bastion_nsg[0].resource_id
+      } : null
     }
     AzureFirewallSubnet = {
       enabled          = var.flag_platform_landing_zone == true ? try(local.subnets_definition["AzureFirewallSubnet"].enabled, true) : try(local.subnets_definition["AzureFirewallSubnet"].enabled, false)
@@ -192,6 +192,9 @@ locals {
         (var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? {
         id = module.firewall_route_table[0].resource_id
       } : null
+      network_security_group = {
+        id = module.container_app_nsg.resource_id
+      }
     }
     PrivateEndpointSubnet = {
       enabled          = true

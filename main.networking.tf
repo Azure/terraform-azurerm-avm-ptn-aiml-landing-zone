@@ -58,6 +58,27 @@ module "nsgs" {
   security_rules      = local.nsg_rules
 }
 
+module "bastion_nsg" {
+  source  = "Azure/avm-res-network-networksecuritygroup/azurerm"
+  version = "0.4.0"
+  count   = local.bastion_subnet_enabled ? 1 : 0
+
+  location            = azurerm_resource_group.this.location
+  name                = local.bastion_nsg_name
+  resource_group_name = azurerm_resource_group.this.name
+  security_rules      = local.bastion_nsg_rules
+}
+
+module "container_app_nsg" {
+  source  = "Azure/avm-res-network-networksecuritygroup/azurerm"
+  version = "0.4.0"
+
+  location            = azurerm_resource_group.this.location
+  name                = local.container_app_nsg_name
+  resource_group_name = azurerm_resource_group.this.name
+  security_rules      = local.container_app_nsg_rules
+}
+
 
 #TODO: Add the platform landing zone flag as a secondary decision point for the hub vnet peering?
 module "hub_vnet_peering" {
