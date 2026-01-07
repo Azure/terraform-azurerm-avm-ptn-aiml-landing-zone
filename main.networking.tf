@@ -211,9 +211,15 @@ module "private_dns_zones" {
   depends_on = [module.hub_vnet_peering]
 }
 
+moved {
+  from = module.app_gateway_waf_policy
+  to   = module.app_gateway_waf_policy[0]
+}
+
 module "app_gateway_waf_policy" {
   source  = "Azure/avm-res-network-applicationgatewaywebapplicationfirewallpolicy/azurerm"
   version = "0.2.0"
+  count   = var.app_gateway_definition.deploy ? 1 : 0
 
   location            = azurerm_resource_group.this.location
   managed_rules       = var.waf_policy_definition.managed_rules #local.web_application_firewall_managed_rules
@@ -240,7 +246,7 @@ module "application_gateway" {
   name                               = local.application_gateway_name
   request_routing_rules              = var.app_gateway_definition.request_routing_rules
   resource_group_name                = azurerm_resource_group.this.name
-  app_gateway_waf_policy_resource_id = module.app_gateway_waf_policy.resource_id
+  app_gateway_waf_policy_resource_id = one(module.app_gateway_waf_policy[*].resource_id)
   authentication_certificate         = var.app_gateway_definition.authentication_certificate
   autoscale_configuration            = var.app_gateway_definition.autoscale_configuration
   diagnostic_settings = {
