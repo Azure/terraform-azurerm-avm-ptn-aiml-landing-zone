@@ -139,25 +139,21 @@ module "test" {
     }
     ai_search_definition = {
       this = {
-        enable_diagnostic_settings = true
       }
     }
     cosmosdb_definition = {
       this = {
-        enable_diagnostic_settings = true
-        consistency_level          = "Session"
+        consistency_level = "Session"
       }
     }
     key_vault_definition = {
       this = {
-        enable_diagnostic_settings = true
       }
     }
 
     storage_account_definition = {
       this = {
-        enable_diagnostic_settings = true
-        shared_access_key_enabled  = true #configured for testing
+        shared_access_key_enabled = true #configured for testing
         endpoints = {
           blob = {
             type = "blob"

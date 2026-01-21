@@ -6,8 +6,20 @@ variable "ai_foundry_definition" {
     create_byor      = optional(bool, true)
     purge_on_destroy = optional(bool, false)
     ai_foundry = optional(object({
-      name                     = optional(string, null)
-      disable_local_auth       = optional(bool, false)
+      name               = optional(string, null)
+      disable_local_auth = optional(bool, false)
+      diagnostic_settings = optional(map(object({
+        name                                     = optional(string, null)
+        log_categories                           = optional(set(string), [])
+        log_groups                               = optional(set(string), ["allLogs"])
+        metric_categories                        = optional(set(string), ["AllMetrics"])
+        log_analytics_destination_type           = optional(string, "Dedicated")
+        workspace_resource_id                    = optional(string, null)
+        storage_account_resource_id              = optional(string, null)
+        event_hub_authorization_rule_resource_id = optional(string, null)
+        event_hub_name                           = optional(string, null)
+        marketplace_partner_resource_id          = optional(string, null)
+      })), {})
       allow_project_management = optional(bool, true)
       create_ai_agent_service  = optional(bool, false)
       #network_injections is statically set to vnet/subnet created in the module.
@@ -73,15 +85,26 @@ variable "ai_foundry_definition" {
       name                                    = optional(string)
       private_dns_zone_resource_id            = optional(string, null)
       private_endpoints_manage_dns_zone_group = optional(bool, true)
-      enable_diagnostic_settings              = optional(bool, true)
-      sku                                     = optional(string, "standard")
-      local_authentication_enabled            = optional(bool, true)
-      partition_count                         = optional(number, 1)
-      replica_count                           = optional(number, 2)
-      semantic_search_sku                     = optional(string, "standard")
-      semantic_search_enabled                 = optional(bool, false)
-      hosting_mode                            = optional(string, "default")
-      tags                                    = optional(map(string), {})
+      diagnostic_settings = optional(map(object({
+        name                                     = optional(string, null)
+        log_categories                           = optional(set(string), [])
+        log_groups                               = optional(set(string), ["allLogs"])
+        metric_categories                        = optional(set(string), ["AllMetrics"])
+        log_analytics_destination_type           = optional(string, "Dedicated")
+        workspace_resource_id                    = optional(string, null)
+        storage_account_resource_id              = optional(string, null)
+        event_hub_authorization_rule_resource_id = optional(string, null)
+        event_hub_name                           = optional(string, null)
+        marketplace_partner_resource_id          = optional(string, null)
+      })), {})
+      sku                          = optional(string, "standard")
+      local_authentication_enabled = optional(bool, true)
+      partition_count              = optional(number, 1)
+      replica_count                = optional(number, 2)
+      semantic_search_sku          = optional(string, "standard")
+      semantic_search_enabled      = optional(bool, false)
+      hosting_mode                 = optional(string, "default")
+      tags                         = optional(map(string), {})
       role_assignments = optional(map(object({
         role_definition_id_or_name             = string
         principal_id                           = string
@@ -99,8 +122,19 @@ variable "ai_foundry_definition" {
       existing_resource_id                    = optional(string, null)
       private_dns_zone_resource_id            = optional(string, null)
       private_endpoints_manage_dns_zone_group = optional(bool, true)
-      enable_diagnostic_settings              = optional(bool, true)
-      name                                    = optional(string)
+      diagnostic_settings = optional(map(object({
+        name                                     = optional(string, null)
+        log_categories                           = optional(set(string), [])
+        log_groups                               = optional(set(string), ["allLogs"])
+        metric_categories                        = optional(set(string), ["AllMetrics"])
+        log_analytics_destination_type           = optional(string, "Dedicated")
+        workspace_resource_id                    = optional(string, null)
+        storage_account_resource_id              = optional(string, null)
+        event_hub_authorization_rule_resource_id = optional(string, null)
+        event_hub_name                           = optional(string, null)
+        marketplace_partner_resource_id          = optional(string, null)
+      })), {})
+      name = optional(string)
       secondary_regions = optional(list(object({
         location          = string
         zone_redundant    = optional(bool, true)
@@ -158,9 +192,20 @@ variable "ai_foundry_definition" {
       name                                    = optional(string)
       private_dns_zone_resource_id            = optional(string, null)
       private_endpoints_manage_dns_zone_group = optional(bool, true)
-      enable_diagnostic_settings              = optional(bool, true)
-      sku                                     = optional(string, "standard")
-      tenant_id                               = optional(string)
+      diagnostic_settings = optional(map(object({
+        name                                     = optional(string, null)
+        log_categories                           = optional(set(string), [])
+        log_groups                               = optional(set(string), ["allLogs"])
+        metric_categories                        = optional(set(string), ["AllMetrics"])
+        log_analytics_destination_type           = optional(string, "Dedicated")
+        workspace_resource_id                    = optional(string, null)
+        storage_account_resource_id              = optional(string, null)
+        event_hub_authorization_rule_resource_id = optional(string, null)
+        event_hub_name                           = optional(string, null)
+        marketplace_partner_resource_id          = optional(string, null)
+      })), {})
+      sku       = optional(string, "standard")
+      tenant_id = optional(string)
       role_assignments = optional(map(object({
         role_definition_id_or_name             = string
         principal_id                           = string
@@ -172,14 +217,6 @@ variable "ai_foundry_definition" {
         principal_type                         = optional(string, null)
       })), {})
       tags = optional(map(string), {})
-    })), {})
-
-    law_definition = optional(map(object({
-      existing_resource_id = optional(string)
-      name                 = optional(string)
-      retention            = optional(number, 30)
-      sku                  = optional(string, "PerGB2018")
-      tags                 = optional(map(string), {})
     })), {})
 
     storage_account_definition = optional(map(object({
@@ -219,10 +256,20 @@ Configuration object for the Azure AI Foundry deployment (hub, projects, and Bri
 
 - `create_byor` - (Optional) Whether to create BYOR resources managed by this module. Default is true.
 - `purge_on_destroy` - (Optional) Whether to purge soft-delete–capable resources on destroy. Default is false.
-
 - `ai_foundry` - (Optional) Azure AI Foundry hub settings.
   - `name` - (Optional) Name of the hub. If not provided, a name will be generated.
   - `disable_local_auth` - (Optional) Whether to disable local authentication. Default is false.
+  - `diagnostic_settings` - (Optional) - map of diagnostic settings for the main foundry module and resource
+    - `name` - (Optional) The name of the diagnostic setting. One will be generated if not set, however this will not be unique if you want to create multiple diagnostic setting resources.
+    - `log_categories` - (Optional) A set of log categories to send to the log analytics workspace. Defaults to `[]`.
+    - `log_groups` - (Optional) A set of log groups to send to the log analytics workspace. Defaults to `["allLogs"]`.
+    - `metric_categories` - (Optional) A set of metric categories to send to the log analytics workspace. Defaults to `["AllMetrics"]`.
+    - `log_analytics_destination_type` - (Optional) The destination type for the diagnostic setting. Possible values are `Dedicated` and `AzureDiagnostics`. Defaults to `Dedicated`.
+    - `workspace_resource_id` - (Optional) The resource ID of the log analytics workspace to send logs and metrics to.
+    - `storage_account_resource_id` - (Optional) The resource ID of the storage account to send logs and metrics to.
+    - `event_hub_authorization_rule_resource_id` - (Optional) The resource ID of the event hub authorization rule to send logs and metrics to.
+    - `event_hub_name` - (Optional) The name of the event hub. If none is specified, the default event hub will be selected.
+    - `marketplace_partner_resource_id` - (Optional) The full ARM resource ID of the Marketplace resource to which you would like to send Diagnostic Logs.
   - `allow_project_management` - (Optional) Whether project management is allowed from the hub. Default is true.
   - `create_ai_agent_service` - (Optional) Whether to create the AI Agent service in the hub. Default is false.
   - `private_dns_zone_resource_ids` - (Optional) List of private DNS zone resource IDs for hub endpoints. Default is [].
@@ -277,7 +324,17 @@ Configuration object for the Azure AI Foundry deployment (hub, projects, and Bri
     - `name` - (Optional) Name of the service if creating new.
     - `private_dns_zone_resource_id` - (Optional) Private DNS zone resource ID for the service.
     - `private_endpoints_manage_dns_zone_group` - (Optional) Whether to manage private DNS zone groups with this module. If set to false, you must manage private DNS zone groups externally, e.g. using Azure Policy. Default is true.
-    - `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
+    - `diagnostic_settings` - (Optional) - map of diagnostic settings for the main foundry module's byor ai_search resource
+        - `name` - (Optional) The name of the diagnostic setting. One will be generated if not set, however this will not be unique if you want to create multiple diagnostic setting resources.
+        - `log_categories` - (Optional) A set of log categories to send to the log analytics workspace. Defaults to `[]`.
+        - `log_groups` - (Optional) A set of log groups to send to the log analytics workspace. Defaults to `["allLogs"]`.
+        - `metric_categories` - (Optional) A set of metric categories to send to the log analytics workspace. Defaults to `["AllMetrics"]`.
+        - `log_analytics_destination_type` - (Optional) The destination type for the diagnostic setting. Possible values are `Dedicated` and `AzureDiagnostics`. Defaults to `Dedicated`.
+        - `workspace_resource_id` - (Optional) The resource ID of the log analytics workspace to send logs and metrics to.
+        - `storage_account_resource_id` - (Optional) The resource ID of the storage account to send logs and metrics to.
+        - `event_hub_authorization_rule_resource_id` - (Optional) The resource ID of the event hub authorization rule to send logs and metrics to.
+        - `event_hub_name` - (Optional) The name of the event hub. If none is specified, the default event hub will be selected.
+        - `marketplace_partner_resource_id` - (Optional) The full ARM resource ID of the Marketplace resource to which you would like to send Diagnostic Logs.
     - `sku` - (Optional) Service SKU. Default is "standard".
     - `local_authentication_enabled` - (Optional) Whether local auth is enabled. Default is true.
     - `partition_count` - (Optional) Number of partitions. Default is 1.
@@ -301,7 +358,17 @@ Configuration object for the Azure AI Foundry deployment (hub, projects, and Bri
     - `existing_resource_id` - (Optional) Resource ID of an existing account to reuse.
     - `private_dns_zone_resource_id` - (Optional) Private DNS zone resource ID.
     - `private_endpoints_manage_dns_zone_group` - (Optional) Whether to manage private DNS zone groups with this module. If set to false, you must manage private DNS zone groups externally, e.g. using Azure Policy. Default is true.
-    - `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
+    - `diagnostic_settings` - (Optional) - map of diagnostic settings for the foundry module's byor cosmos resource
+        - `name` - (Optional) The name of the diagnostic setting. One will be generated if not set, however this will not be unique if you want to create multiple diagnostic setting resources.
+        - `log_categories` - (Optional) A set of log categories to send to the log analytics workspace. Defaults to `[]`.
+        - `log_groups` - (Optional) A set of log groups to send to the log analytics workspace. Defaults to `["allLogs"]`.
+        - `metric_categories` - (Optional) A set of metric categories to send to the log analytics workspace. Defaults to `["AllMetrics"]`.
+        - `log_analytics_destination_type` - (Optional) The destination type for the diagnostic setting. Possible values are `Dedicated` and `AzureDiagnostics`. Defaults to `Dedicated`.
+        - `workspace_resource_id` - (Optional) The resource ID of the log analytics workspace to send logs and metrics to.
+        - `storage_account_resource_id` - (Optional) The resource ID of the storage account to send logs and metrics to.
+        - `event_hub_authorization_rule_resource_id` - (Optional) The resource ID of the event hub authorization rule to send logs and metrics to.
+        - `event_hub_name` - (Optional) The name of the event hub. If none is specified, the default event hub will be selected.
+        - `marketplace_partner_resource_id` - (Optional) The full ARM resource ID of the Marketplace resource to which you would like to send Diagnostic Logs.
     - `name` - (Optional) Name of the account if creating new.
     - `secondary_regions` - (Optional) List of secondary regions for geo-replication. Default is [].
       - `location` - Azure region name for the secondary location.
@@ -351,7 +418,17 @@ Configuration object for the Azure AI Foundry deployment (hub, projects, and Bri
     - `name` - (Optional) Name of the vault if creating new.
     - `private_dns_zone_resource_id` - (Optional) Private DNS zone resource ID.
     - `private_endpoints_manage_dns_zone_group` - (Optional) Whether to manage private DNS zone groups with this module. If set to false, you must manage private DNS zone groups externally, e.g. using Azure Policy. Default is true.
-    - `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
+    - `diagnostic_settings` - (Optional) - map of diagnostic settings for the foundry module's byor key vault resource
+        - `name` - (Optional) The name of the diagnostic setting. One will be generated if not set, however this will not be unique if you want to create multiple diagnostic setting resources.
+        - `log_categories` - (Optional) A set of log categories to send to the log analytics workspace. Defaults to `[]`.
+        - `log_groups` - (Optional) A set of log groups to send to the log analytics workspace. Defaults to `["allLogs"]`.
+        - `metric_categories` - (Optional) A set of metric categories to send to the log analytics workspace. Defaults to `["AllMetrics"]`.
+        - `log_analytics_destination_type` - (Optional) The destination type for the diagnostic setting. Possible values are `Dedicated` and `AzureDiagnostics`. Defaults to `Dedicated`.
+        - `workspace_resource_id` - (Optional) The resource ID of the log analytics workspace to send logs and metrics to.
+        - `storage_account_resource_id` - (Optional) The resource ID of the storage account to send logs and metrics to.
+        - `event_hub_authorization_rule_resource_id` - (Optional) The resource ID of the event hub authorization rule to send logs and metrics to.
+        - `event_hub_name` - (Optional) The name of the event hub. If none is specified, the default event hub will be selected.
+        - `marketplace_partner_resource_id` - (Optional) The full ARM resource ID of the Marketplace resource to which you would like to send Diagnostic Logs.
     - `sku` - (Optional) Vault SKU. Default is "standard".
     - `tenant_id` - (Optional) Tenant ID for the Key Vault.
     - `role_assignments` - (Optional) Map of role assignments on the vault.
@@ -365,16 +442,19 @@ Configuration object for the Azure AI Foundry deployment (hub, projects, and Bri
       - `principal_type` - (Optional) Type of the principal (User, Group, ServicePrincipal).
     - `tags` - (Optional) Map of tags for the vault.
 
-  - `law_definition` - (Optional) Map defining one or more Log Analytics Workspaces.
-    - `existing_resource_id` - (Optional) Resource ID of an existing workspace to reuse.
-    - `name` - (Optional) Name of the workspace if creating new.
-    - `retention` - (Optional) Data retention in days. Default is 30.
-    - `sku` - (Optional) Workspace SKU. Default is "PerGB2018".
-    - `tags` - (Optional) Map of tags for the workspace.
-
   - `storage_account_definition` - (Optional) Map defining one or more Storage Accounts.
     - `existing_resource_id` - (Optional) Resource ID of an existing account to reuse.
-    - `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
+    - `diagnostic_settings` - (Optional) - map of diagnostic settings for the foundry module's byor storage account resource
+      - `name` - (Optional) The name of the diagnostic setting. One will be generated if not set, however this will not be unique if you want to create multiple diagnostic setting resources.
+      - `log_categories` - (Optional) A set of log categories to send to the log analytics workspace. Defaults to `[]`.
+      - `log_groups` - (Optional) A set of log groups to send to the log analytics workspace. Defaults to `["allLogs"]`.
+      - `metric_categories` - (Optional) A set of metric categories to send to the log analytics workspace. Defaults to `["AllMetrics"]`.
+      - `log_analytics_destination_type` - (Optional) The destination type for the diagnostic setting. Possible values are `Dedicated` and `AzureDiagnostics`. Defaults to `Dedicated`.
+      - `workspace_resource_id` - (Optional) The resource ID of the log analytics workspace to send logs and metrics to.
+      - `storage_account_resource_id` - (Optional) The resource ID of the storage account to send logs and metrics to.
+      - `event_hub_authorization_rule_resource_id` - (Optional) The resource ID of the event hub authorization rule to send logs and metrics to.
+      - `event_hub_name` - (Optional) The name of the event hub. If none is specified, the default event hub will be selected.
+      - `marketplace_partner_resource_id` - (Optional) The full ARM resource ID of the Marketplace resource to which you would like to send Diagnostic Logs.
     - `name` - (Optional) Name of the account if creating new.
     - `account_kind` - (Optional) Storage account kind. Default is "StorageV2".
     - `account_tier` - (Optional) Storage account tier. Default is "Standard".
