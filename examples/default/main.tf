@@ -132,24 +132,24 @@ module "test" {
     }
     ai_search_definition = {
       this = {
-        enable_diagnostic_settings = false
+        enable_diagnostic_settings = true
       }
     }
     cosmosdb_definition = {
       this = {
-        enable_diagnostic_settings = false
+        enable_diagnostic_settings = true
         consistency_level          = "Session"
       }
     }
     key_vault_definition = {
       this = {
-        enable_diagnostic_settings = false
+        enable_diagnostic_settings = true
       }
     }
 
     storage_account_definition = {
       this = {
-        enable_diagnostic_settings = false
+        enable_diagnostic_settings = true
         shared_access_key_enabled  = true #configured for testing
         endpoints = {
           blob = {
@@ -200,9 +200,10 @@ module "test" {
     }
   }
   bastion_definition = {
+    enable_diagnostic_settings = true
   }
   container_app_environment_definition = {
-    enable_diagnostic_settings = false
+    enable_diagnostic_settings = true
   }
   enable_telemetry           = var.enable_telemetry
   flag_platform_landing_zone = false
@@ -210,10 +211,10 @@ module "test" {
   # for Azure Application Gateway v2 compatibility by setting:
   # use_internet_routing = true
   genai_container_registry_definition = {
-    enable_diagnostic_settings = false
+    enable_diagnostic_settings = true
   }
   genai_cosmosdb_definition = {
-    enable_diagnostic_settings = false
+    enable_diagnostic_settings = true
     consistency_level          = "Session"
   }
   genai_key_vault_definition = {
@@ -224,10 +225,10 @@ module "test" {
     }
   }
   genai_storage_account_definition = {
-    enable_diagnostic_settings = false
+    enable_diagnostic_settings = true
   }
   ks_ai_search_definition = {
-    enable_diagnostic_settings = false
+    enable_diagnostic_settings = true
   }
   private_dns_zones = {
     existing_zones_resource_group_resource_id = module.example_hub.resource_group_resource_id

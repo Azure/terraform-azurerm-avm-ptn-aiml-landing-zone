@@ -214,6 +214,7 @@ Description: Configuration object for the Azure AI Foundry deployment (hub, proj
     - `existing_resource_id` - (Optional) Resource ID of an existing service to reuse.
     - `name` - (Optional) Name of the service if creating new.
     - `private_dns_zone_resource_id` - (Optional) Private DNS zone resource ID for the service.
+    - `private_endpoints_manage_dns_zone_group` - (Optional) Whether to manage private DNS zone groups with this module. If set to false, you must manage private DNS zone groups externally, e.g. using Azure Policy. Default is true.
     - `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
     - `sku` - (Optional) Service SKU. Default is "standard".
     - `local_authentication_enabled` - (Optional) Whether local auth is enabled. Default is true.
@@ -237,6 +238,7 @@ Description: Configuration object for the Azure AI Foundry deployment (hub, proj
   - `cosmosdb_definition` - (Optional) Map defining one or more Azure Cosmos DB accounts.
     - `existing_resource_id` - (Optional) Resource ID of an existing account to reuse.
     - `private_dns_zone_resource_id` - (Optional) Private DNS zone resource ID.
+    - `private_endpoints_manage_dns_zone_group` - (Optional) Whether to manage private DNS zone groups with this module. If set to false, you must manage private DNS zone groups externally, e.g. using Azure Policy. Default is true.
     - `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
     - `name` - (Optional) Name of the account if creating new.
     - `secondary_regions` - (Optional) List of secondary regions for geo-replication. Default is [].
@@ -286,6 +288,7 @@ Description: Configuration object for the Azure AI Foundry deployment (hub, proj
     - `existing_resource_id` - (Optional) Resource ID of an existing vault to reuse.
     - `name` - (Optional) Name of the vault if creating new.
     - `private_dns_zone_resource_id` - (Optional) Private DNS zone resource ID.
+    - `private_endpoints_manage_dns_zone_group` - (Optional) Whether to manage private DNS zone groups with this module. If set to false, you must manage private DNS zone groups externally, e.g. using Azure Policy. Default is true.
     - `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
     - `sku` - (Optional) Vault SKU. Default is "standard".
     - `tenant_id` - (Optional) Tenant ID for the Key Vault.
@@ -318,6 +321,7 @@ Description: Configuration object for the Azure AI Foundry deployment (hub, proj
       - map key - Endpoint name (e.g., `blob`).
       - `type` - Endpoint type (e.g., "blob").
       - `private_dns_zone_resource_id` - (Optional) Private DNS zone resource ID for the endpoint.
+      - `private_endpoints_manage_dns_zone_group` - (Optional) Whether to manage private DNS zone groups with this module. If set to false, you must manage private DNS zone groups externally, e.g. using Azure Policy. Default is true.
     - `access_tier` - (Optional) Access tier for the account. Default is "Hot".
     - `shared_access_key_enabled` - (Optional) Whether shared access keys are enabled. Default is false.
     - `role_assignments` - (Optional) Map of role assignments on the storage account.
@@ -404,18 +408,19 @@ object({
     # Bring Your Own Resources (BYOR) Configuration
     # One or more AI search installations.
     ai_search_definition = optional(map(object({
-      existing_resource_id         = optional(string, null)
-      name                         = optional(string)
-      private_dns_zone_resource_id = optional(string, null)
-      enable_diagnostic_settings   = optional(bool, true)
-      sku                          = optional(string, "standard")
-      local_authentication_enabled = optional(bool, true)
-      partition_count              = optional(number, 1)
-      replica_count                = optional(number, 2)
-      semantic_search_sku          = optional(string, "standard")
-      semantic_search_enabled      = optional(bool, false)
-      hosting_mode                 = optional(string, "default")
-      tags                         = optional(map(string), {})
+      existing_resource_id                    = optional(string, null)
+      name                                    = optional(string)
+      private_dns_zone_resource_id            = optional(string, null)
+      private_endpoints_manage_dns_zone_group = optional(bool, true)
+      enable_diagnostic_settings              = optional(bool, true)
+      sku                                     = optional(string, "standard")
+      local_authentication_enabled            = optional(bool, true)
+      partition_count                         = optional(number, 1)
+      replica_count                           = optional(number, 2)
+      semantic_search_sku                     = optional(string, "standard")
+      semantic_search_enabled                 = optional(bool, false)
+      hosting_mode                            = optional(string, "default")
+      tags                                    = optional(map(string), {})
       role_assignments = optional(map(object({
         role_definition_id_or_name             = string
         principal_id                           = string
@@ -430,10 +435,11 @@ object({
     })), {})
 
     cosmosdb_definition = optional(map(object({
-      existing_resource_id         = optional(string, null)
-      private_dns_zone_resource_id = optional(string, null)
-      enable_diagnostic_settings   = optional(bool, true)
-      name                         = optional(string)
+      existing_resource_id                    = optional(string, null)
+      private_dns_zone_resource_id            = optional(string, null)
+      private_endpoints_manage_dns_zone_group = optional(bool, true)
+      enable_diagnostic_settings              = optional(bool, true)
+      name                                    = optional(string)
       secondary_regions = optional(list(object({
         location          = string
         zone_redundant    = optional(bool, true)
@@ -487,12 +493,13 @@ object({
     })), {})
 
     key_vault_definition = optional(map(object({
-      existing_resource_id         = optional(string, null)
-      name                         = optional(string)
-      private_dns_zone_resource_id = optional(string, null)
-      enable_diagnostic_settings   = optional(bool, true)
-      sku                          = optional(string, "standard")
-      tenant_id                    = optional(string)
+      existing_resource_id                    = optional(string, null)
+      name                                    = optional(string)
+      private_dns_zone_resource_id            = optional(string, null)
+      private_endpoints_manage_dns_zone_group = optional(bool, true)
+      enable_diagnostic_settings              = optional(bool, true)
+      sku                                     = optional(string, "standard")
+      tenant_id                               = optional(string)
       role_assignments = optional(map(object({
         role_definition_id_or_name             = string
         principal_id                           = string
@@ -522,8 +529,9 @@ object({
       account_tier               = optional(string, "Standard")
       account_replication_type   = optional(string, "ZRS")
       endpoints = optional(map(object({
-        type                         = string
-        private_dns_zone_resource_id = optional(string, null)
+        type                                    = string
+        private_dns_zone_resource_id            = optional(string, null)
+        private_endpoints_manage_dns_zone_group = optional(bool, true)
         })), {
         blob = {
           type = "blob"
@@ -2034,7 +2042,7 @@ Version: 0.4.1
 
 Source: Azure/avm-ptn-aiml-ai-foundry/azurerm
 
-Version: 0.8.0
+Version: 0.10.0
 
 ### <a name="module_fw_pip"></a> [fw\_pip](#module\_fw\_pip)
 
