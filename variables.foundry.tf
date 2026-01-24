@@ -220,12 +220,23 @@ variable "ai_foundry_definition" {
     })), {})
 
     storage_account_definition = optional(map(object({
-      existing_resource_id       = optional(string, null)
-      enable_diagnostic_settings = optional(bool, true)
-      name                       = optional(string, null)
-      account_kind               = optional(string, "StorageV2")
-      account_tier               = optional(string, "Standard")
-      account_replication_type   = optional(string, "ZRS")
+      existing_resource_id = optional(string, null)
+      diagnostic_settings = optional(map(object({
+        name                                     = optional(string, null)
+        log_categories                           = optional(set(string), [])
+        log_groups                               = optional(set(string), ["allLogs"])
+        metric_categories                        = optional(set(string), ["AllMetrics"])
+        log_analytics_destination_type           = optional(string, "Dedicated")
+        workspace_resource_id                    = optional(string, null)
+        storage_account_resource_id              = optional(string, null)
+        event_hub_authorization_rule_resource_id = optional(string, null)
+        event_hub_name                           = optional(string, null)
+        marketplace_partner_resource_id          = optional(string, null)
+      })), {})
+      name                     = optional(string, null)
+      account_kind             = optional(string, "StorageV2")
+      account_tier             = optional(string, "Standard")
+      account_replication_type = optional(string, "ZRS")
       endpoints = optional(map(object({
         type                                    = string
         private_dns_zone_resource_id            = optional(string, null)

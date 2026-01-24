@@ -25,6 +25,21 @@ locals {
       private_dns_zone_resource_id = var.flag_platform_landing_zone ? module.private_dns_zones.cosmos_sql_zone.resource_id : local.private_dns_zones_existing.cosmos_sql_zone.resource_id
     }
   ) }
+  foundry_diagnostic_settings = length(var.ai_foundry_definition.ai_foundry.diagnostic_settings) > 0 ? var.ai_foundry_definition.ai_foundry.diagnostic_settings : local.foundry_diagnostic_settings_inner
+  foundry_diagnostic_settings_inner = ((try(var.law_definition.deploy, false) == true) ? {
+    sendToLogAnalytics = {
+      name                                     = "sendToLogAnalytics-foundry-${random_string.name_suffix.result}"
+      workspace_resource_id                    = local.log_analytics_workspace_id
+      log_analytics_destination_type           = "Dedicated"
+      log_groups                               = ["allLogs"]
+      metric_categories                        = ["AllMetrics"]
+      log_categories                           = []
+      storage_account_resource_id              = null
+      event_hub_authorization_rule_resource_id = null
+      event_hub_name                           = null
+      marketplace_partner_resource_id          = null
+    }
+  } : {})
   foundry_key_vault_definition = { for key, value in var.ai_foundry_definition.key_vault_definition : key => merge(
     var.ai_foundry_definition.key_vault_definition[key], {
       private_dns_zone_resource_id = var.flag_platform_landing_zone ? module.private_dns_zones.key_vault_zone.resource_id : local.private_dns_zones_existing.key_vault_zone.resource_id

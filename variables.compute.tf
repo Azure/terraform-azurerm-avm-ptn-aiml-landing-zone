@@ -1,8 +1,19 @@
 variable "container_app_environment_definition" {
   type = object({
-    deploy                              = optional(bool, true)
-    name                                = optional(string)
-    enable_diagnostic_settings          = optional(bool, true)
+    deploy = optional(bool, true)
+    name   = optional(string)
+    diagnostic_settings = optional(map(object({
+      name                                     = optional(string, null)
+      log_categories                           = optional(set(string), [])
+      log_groups                               = optional(set(string), ["allLogs"])
+      metric_categories                        = optional(set(string), ["AllMetrics"])
+      log_analytics_destination_type           = optional(string, "Dedicated")
+      workspace_resource_id                    = optional(string, null)
+      storage_account_resource_id              = optional(string, null)
+      event_hub_authorization_rule_resource_id = optional(string, null)
+      event_hub_name                           = optional(string, null)
+      marketplace_partner_resource_id          = optional(string, null)
+    })), {})
     tags                                = optional(map(string), {})
     internal_load_balancer_enabled      = optional(bool, true)
     log_analytics_workspace_resource_id = optional(string)

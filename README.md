@@ -75,6 +75,17 @@ Description: Configuration object for the Virtual Network (VNet) to be deployed.
   - `id` - The ID of the IPAM pool.
   - `prefix_length` - The prefix length to request from the IPAM pool.
 - `ddos_protection_plan_resource_id` - (Optional) Resource ID of the DDoS Protection Plan to associate with the VNet. This is not used for BYO VNet configurations as that is assumed to be handled outside the module.
+- `diagnostic_settings` - (Optional) Map of diagnostic settings configurations for the VNet. If you set a configuration then all diagnostic preset configuration included in the module will be ignored. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `name` - (Optional) The name of the diagnostic setting.
+  - `log_categories` - (Optional) Set of log categories to enable. Default is an empty set.
+  - `log_groups` - (Optional) Set of log groups to enable. Default is ["allLogs"].
+  - `metric_categories` - (Optional) Set of metric categories to enable. Default is ["AllMetrics"].
+  - `log_analytics_destination_type` - (Optional) The destination type for Log Analytics. Default is "Dedicated".
+  - `workspace_resource_id` - (Optional) Resource ID of the Log Analytics workspace.
+  - `storage_account_resource_id` - (Optional) Resource ID of the storage account for diagnostics.
+  - `event_hub_authorization_rule_resource_id` - (Optional) Resource ID of the Event Hub authorization rule.
+  - `event_hub_name` - (Optional) Name of the Event Hub.
+  - `marketplace_partner_resource_id` - (Optional) Resource ID of the marketplace partner resource.
 - `dns_servers` - (Optional) Set of custom DNS server IP addresses for the VNet.
 - `subnets` - (Optional) Map of subnet configurations that can be used to override the default subnet configurations. The map key must match the desired subnet usage to override the default configuration.
   - `enabled` - (Optional) Whether the subnet is enabled. Default is true.
@@ -109,13 +120,35 @@ object({
       firewall_ip_address = optional(string)
       }
     )), {})
-    address_space = optional(string, "192.168.0.0/20")
+    address_space = optional(list(string), ["192.168.0.0/20"])
     ipam_pools = optional(list(object({
       id            = string
       prefix_length = string
     })))
     ddos_protection_plan_resource_id = optional(string)
-    dns_servers                      = optional(set(string), [])
+    diagnostic_settings = optional(map(object({
+      name                                     = optional(string, null)
+      log_categories                           = optional(set(string), [])
+      log_groups                               = optional(set(string), ["allLogs"])
+      metric_categories                        = optional(set(string), ["AllMetrics"])
+      log_analytics_destination_type           = optional(string, "Dedicated")
+      workspace_resource_id                    = optional(string, null)
+      storage_account_resource_id              = optional(string, null)
+      event_hub_authorization_rule_resource_id = optional(string, null)
+      event_hub_name                           = optional(string, null)
+      marketplace_partner_resource_id          = optional(string, null)
+    })), {})
+    dns_servers = optional(set(string), [])
+    role_assignments = optional(map(object({
+      role_definition_id_or_name             = string
+      principal_id                           = string
+      description                            = optional(string, null)
+      skip_service_principal_aad_check       = optional(bool, false)
+      condition                              = optional(string, null)
+      condition_version                      = optional(string, null)
+      delegated_managed_identity_resource_id = optional(string, null)
+      principal_type                         = optional(string, null)
+    })), {})
     subnets = optional(map(object({
       enabled        = optional(bool, true)
       name           = optional(string)
@@ -126,6 +159,7 @@ object({
       })))
       }
     )), {})
+    tags = optional(map(string), {})
     vnet_peering_configuration = optional(object({
       peer_vnet_resource_id                = optional(string)
       name                                 = optional(string)
@@ -602,12 +636,23 @@ object({
     })), {})
 
     storage_account_definition = optional(map(object({
-      existing_resource_id       = optional(string, null)
-      enable_diagnostic_settings = optional(bool, true)
-      name                       = optional(string, null)
-      account_kind               = optional(string, "StorageV2")
-      account_tier               = optional(string, "Standard")
-      account_replication_type   = optional(string, "ZRS")
+      existing_resource_id = optional(string, null)
+      diagnostic_settings = optional(map(object({
+        name                                     = optional(string, null)
+        log_categories                           = optional(set(string), [])
+        log_groups                               = optional(set(string), ["allLogs"])
+        metric_categories                        = optional(set(string), ["AllMetrics"])
+        log_analytics_destination_type           = optional(string, "Dedicated")
+        workspace_resource_id                    = optional(string, null)
+        storage_account_resource_id              = optional(string, null)
+        event_hub_authorization_rule_resource_id = optional(string, null)
+        event_hub_name                           = optional(string, null)
+        marketplace_partner_resource_id          = optional(string, null)
+      })), {})
+      name                     = optional(string, null)
+      account_kind             = optional(string, "StorageV2")
+      account_tier             = optional(string, "Standard")
+      account_replication_type = optional(string, "ZRS")
       endpoints = optional(map(object({
         type                                    = string
         private_dns_zone_resource_id            = optional(string, null)
@@ -725,6 +770,18 @@ object({
       certificate_password = optional(string, null)
     })), [])
     client_certificate_enabled = optional(bool, false)
+    diagnostic_settings = optional(map(object({
+      name                                     = optional(string, null)
+      log_categories                           = optional(set(string), [])
+      log_groups                               = optional(set(string), ["allLogs"])
+      metric_categories                        = optional(set(string), ["AllMetrics"])
+      log_analytics_destination_type           = optional(string, "Dedicated")
+      workspace_resource_id                    = optional(string, null)
+      storage_account_resource_id              = optional(string, null)
+      event_hub_authorization_rule_resource_id = optional(string, null)
+      event_hub_name                           = optional(string, null)
+      marketplace_partner_resource_id          = optional(string, null)
+    })), {})
     hostname_configuration = optional(object({
       management = optional(list(object({
         host_name                       = string
@@ -1131,6 +1188,18 @@ object({
     })), null)
 
     tags = optional(map(string), {})
+    diagnostic_settings = optional(map(object({
+      name                                     = optional(string, null)
+      log_categories                           = optional(set(string), [])
+      log_groups                               = optional(set(string), ["allLogs"])
+      metric_categories                        = optional(set(string), ["AllMetrics"])
+      log_analytics_destination_type           = optional(string, "Dedicated")
+      workspace_resource_id                    = optional(string, null)
+      storage_account_resource_id              = optional(string, null)
+      event_hub_authorization_rule_resource_id = optional(string, null)
+      event_hub_name                           = optional(string, null)
+      marketplace_partner_resource_id          = optional(string, null)
+    })), {})
     role_assignments = optional(map(object({
       role_definition_id_or_name             = string
       principal_id                           = string
@@ -1230,9 +1299,20 @@ Type:
 
 ```hcl
 object({
-    deploy                              = optional(bool, true)
-    name                                = optional(string)
-    enable_diagnostic_settings          = optional(bool, true)
+    deploy = optional(bool, true)
+    name   = optional(string)
+    diagnostic_settings = optional(map(object({
+      name                                     = optional(string, null)
+      log_categories                           = optional(set(string), [])
+      log_groups                               = optional(set(string), ["allLogs"])
+      metric_categories                        = optional(set(string), ["AllMetrics"])
+      log_analytics_destination_type           = optional(string, "Dedicated")
+      workspace_resource_id                    = optional(string, null)
+      storage_account_resource_id              = optional(string, null)
+      event_hub_authorization_rule_resource_id = optional(string, null)
+      event_hub_name                           = optional(string, null)
+      marketplace_partner_resource_id          = optional(string, null)
+    })), {})
     tags                                = optional(map(string), {})
     internal_load_balancer_enabled      = optional(bool, true)
     log_analytics_workspace_resource_id = optional(string)
@@ -1294,11 +1374,33 @@ Type:
 
 ```hcl
 object({
-    deploy              = optional(bool, true)
-    name                = optional(string)
-    sku                 = optional(string, "AZFW_VNet")
-    tier                = optional(string, "Standard")
-    zones               = optional(list(string), ["1", "2", "3"])
+    deploy = optional(bool, true)
+    name   = optional(string)
+    sku    = optional(string, "AZFW_VNet")
+    tier   = optional(string, "Standard")
+    zones  = optional(list(string), ["1", "2", "3"])
+    diagnostic_settings = optional(map(object({
+      name                                     = optional(string, null)
+      log_categories                           = optional(set(string), [])
+      log_groups                               = optional(set(string), ["allLogs"])
+      metric_categories                        = optional(set(string), ["AllMetrics"])
+      log_analytics_destination_type           = optional(string, "Dedicated")
+      workspace_resource_id                    = optional(string, null)
+      storage_account_resource_id              = optional(string, null)
+      event_hub_authorization_rule_resource_id = optional(string, null)
+      event_hub_name                           = optional(string, null)
+      marketplace_partner_resource_id          = optional(string, null)
+    })), {})
+    role_assignments = optional(map(object({
+      role_definition_id_or_name             = string
+      principal_id                           = string
+      description                            = optional(string, null)
+      skip_service_principal_aad_check       = optional(bool, false)
+      condition                              = optional(string, null)
+      condition_version                      = optional(string, null)
+      delegated_managed_identity_resource_id = optional(string, null)
+      principal_type                         = optional(string, null)
+    })), {})
     tags                = optional(map(string), {})
     resource_group_name = optional(string)
   })
@@ -1400,6 +1502,18 @@ object({
       delegated_managed_identity_resource_id = optional(string, null)
       principal_type                         = optional(string, null)
     })), {})
+    diagnostic_settings = optional(map(object({
+      name                                     = optional(string, null)
+      log_categories                           = optional(set(string), [])
+      log_groups                               = optional(set(string), ["allLogs"])
+      metric_categories                        = optional(set(string), ["AllMetrics"])
+      log_analytics_destination_type           = optional(string, "Dedicated")
+      workspace_resource_id                    = optional(string, null)
+      storage_account_resource_id              = optional(string, null)
+      event_hub_authorization_rule_resource_id = optional(string, null)
+      event_hub_name                           = optional(string, null)
+      marketplace_partner_resource_id          = optional(string, null)
+    })), {})
   })
 ```
 
@@ -1434,8 +1548,19 @@ object({
     sku                           = optional(string, "Premium")
     zone_redundancy_enabled       = optional(bool, true)
     public_network_access_enabled = optional(bool, false)
-    enable_diagnostic_settings    = optional(bool, true)
-    tags                          = optional(map(string), {})
+    diagnostic_settings = optional(map(object({
+      name                                     = optional(string, null)
+      log_categories                           = optional(set(string), [])
+      log_groups                               = optional(set(string), ["allLogs"])
+      metric_categories                        = optional(set(string), ["AllMetrics"])
+      log_analytics_destination_type           = optional(string, "Dedicated")
+      workspace_resource_id                    = optional(string, null)
+      storage_account_resource_id              = optional(string, null)
+      event_hub_authorization_rule_resource_id = optional(string, null)
+      event_hub_name                           = optional(string, null)
+      marketplace_partner_resource_id          = optional(string, null)
+    })), {})
+    tags = optional(map(string), {})
     role_assignments = optional(map(object({
       role_definition_id_or_name             = string
       principal_id                           = string
@@ -1494,9 +1619,20 @@ Type:
 
 ```hcl
 object({
-    deploy                     = optional(bool, true)
-    name                       = optional(string)
-    enable_diagnostic_settings = optional(bool, true)
+    deploy = optional(bool, true)
+    name   = optional(string)
+    diagnostic_settings = optional(map(object({
+      name                                     = optional(string, null)
+      log_categories                           = optional(set(string), [])
+      log_groups                               = optional(set(string), ["allLogs"])
+      metric_categories                        = optional(set(string), ["AllMetrics"])
+      log_analytics_destination_type           = optional(string, "Dedicated")
+      workspace_resource_id                    = optional(string, null)
+      storage_account_resource_id              = optional(string, null)
+      event_hub_authorization_rule_resource_id = optional(string, null)
+      event_hub_name                           = optional(string, null)
+      marketplace_partner_resource_id          = optional(string, null)
+    })), {})
     secondary_regions = optional(list(object({
       location          = string
       zone_redundant    = optional(bool, true)
@@ -1579,6 +1715,18 @@ object({
     public_network_access_enabled = optional(bool, false)
     sku                           = optional(string, "standard")
     tenant_id                     = optional(string)
+    diagnostic_settings = optional(map(object({
+      name                                     = optional(string, null)
+      log_categories                           = optional(set(string), [])
+      log_groups                               = optional(set(string), ["allLogs"])
+      metric_categories                        = optional(set(string), ["AllMetrics"])
+      log_analytics_destination_type           = optional(string, "Dedicated")
+      workspace_resource_id                    = optional(string, null)
+      storage_account_resource_id              = optional(string, null)
+      event_hub_authorization_rule_resource_id = optional(string, null)
+      event_hub_name                           = optional(string, null)
+      marketplace_partner_resource_id          = optional(string, null)
+    })), {})
     role_assignments = optional(map(object({
       role_definition_id_or_name             = string
       principal_id                           = string
@@ -1623,9 +1771,20 @@ Type:
 
 ```hcl
 object({
-    deploy                        = optional(bool, true)
-    name                          = optional(string)
-    enable_diagnostic_settings    = optional(bool, true)
+    deploy = optional(bool, true)
+    name   = optional(string)
+    diagnostic_settings = optional(map(object({
+      name                                     = optional(string, null)
+      log_categories                           = optional(set(string), [])
+      log_groups                               = optional(set(string), ["allLogs"])
+      metric_categories                        = optional(set(string), ["AllMetrics"])
+      log_analytics_destination_type           = optional(string, "Dedicated")
+      workspace_resource_id                    = optional(string, null)
+      storage_account_resource_id              = optional(string, null)
+      event_hub_authorization_rule_resource_id = optional(string, null)
+      event_hub_name                           = optional(string, null)
+      marketplace_partner_resource_id          = optional(string, null)
+    })), {})
     account_kind                  = optional(string, "StorageV2")
     account_tier                  = optional(string, "Standard")
     account_replication_type      = optional(string, "GRS")
@@ -1703,9 +1862,20 @@ Type:
 
 ```hcl
 object({
-    deploy                        = optional(bool, true)
-    name                          = optional(string)
-    enable_diagnostic_settings    = optional(bool, true)
+    deploy = optional(bool, true)
+    name   = optional(string)
+    diagnostic_settings = optional(map(object({
+      name                                     = optional(string, null)
+      log_categories                           = optional(set(string), [])
+      log_groups                               = optional(set(string), ["allLogs"])
+      metric_categories                        = optional(set(string), ["AllMetrics"])
+      log_analytics_destination_type           = optional(string, "Dedicated")
+      workspace_resource_id                    = optional(string, null)
+      storage_account_resource_id              = optional(string, null)
+      event_hub_authorization_rule_resource_id = optional(string, null)
+      event_hub_name                           = optional(string, null)
+      marketplace_partner_resource_id          = optional(string, null)
+    })), {})
     sku                           = optional(string, "standard")
     local_authentication_enabled  = optional(bool, true)
     partition_count               = optional(number, 1)
@@ -1753,7 +1923,7 @@ Default: `{}`
 
 ### <a name="input_law_definition"></a> [law\_definition](#input\_law\_definition)
 
-Description: Configuration object for the Log Analytics Workspace to be created for monitoring and logging.
+Description: Configuration object for the Log Analytics Workspace to be created for monitoring and logging. If no resource\_id is provided, and deploy is set to false, then each resource will default to not including diagnostic settings unless an explicit diagnostic\_setting value is provided for that resource. Explicitly set resource diagnostic\_settings values will always be preferred.
 - `deploy` - (Optional) Boolean to indicate whether to deploy a new Log Analytics Workspace if no resource\_id is provided. Default is true.
 - `resource_id` - (Optional) The resource ID of an existing Log Analytics Workspace to use. If provided, the workspace will not be created and the other inputs will be ignored.
 - `name` - (Optional) The name of the Log Analytics Workspace. If not provided, a name will be generated.

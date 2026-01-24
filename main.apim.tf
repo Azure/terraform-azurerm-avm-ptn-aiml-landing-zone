@@ -12,17 +12,12 @@ module "apim" {
   additional_location        = var.apim_definition.additional_locations
   certificate                = var.apim_definition.certificate
   client_certificate_enabled = var.apim_definition.client_certificate_enabled
-  diagnostic_settings = local.deploy_diagnostics_settings ? {
-    storage = {
-      name                  = "sendToLogAnalytics-apim-${random_string.name_suffix.result}"
-      workspace_resource_id = local.log_analytics_workspace_id
-    }
-  } : null
-  enable_telemetry          = var.enable_telemetry
-  hostname_configuration    = var.apim_definition.hostname_configuration
-  managed_identities        = var.apim_definition.managed_identities
-  min_api_version           = var.apim_definition.min_api_version
-  notification_sender_email = var.apim_definition.notification_sender_email
+  diagnostic_settings        = local.apim_diagnostic_settings
+  enable_telemetry           = var.enable_telemetry
+  hostname_configuration     = var.apim_definition.hostname_configuration
+  managed_identities         = var.apim_definition.managed_identities
+  min_api_version            = var.apim_definition.min_api_version
+  notification_sender_email  = var.apim_definition.notification_sender_email
   private_endpoints = {
     endpoint1 = {
       private_dns_zone_resource_ids = var.flag_platform_landing_zone ? [module.private_dns_zones.apim_zone.resource_id] : [local.private_dns_zones_existing.apim_zone.resource_id]

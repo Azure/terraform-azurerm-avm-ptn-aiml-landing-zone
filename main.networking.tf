@@ -7,25 +7,21 @@ module "ai_lz_vnet" {
 
   location      = azurerm_resource_group.this.location
   parent_id     = azurerm_resource_group.this.id
-  address_space = var.vnet_definition.ipam_pools == null ? [var.vnet_definition.address_space] : null
+  address_space = var.vnet_definition.ipam_pools == null ? var.vnet_definition.address_space : null
   ddos_protection_plan = var.vnet_definition.ddos_protection_plan_resource_id != null ? {
     id     = var.vnet_definition.ddos_protection_plan_resource_id
     enable = true
   } : null
-  diagnostic_settings = local.deploy_diagnostics_settings ? {
-    sendToLogAnalytics = {
-      name                           = "sendToLogAnalytics-vnet-${random_string.name_suffix.result}"
-      workspace_resource_id          = local.log_analytics_workspace_id
-      log_analytics_destination_type = "Dedicated"
-    }
-  } : null
+  diagnostic_settings = local.vnet_diagnostic_settings
   dns_servers = {
     dns_servers = var.vnet_definition.dns_servers
   }
   enable_telemetry = var.enable_telemetry
   ipam_pools       = var.vnet_definition.ipam_pools
   name             = local.vnet_name
+  role_assignments = var.vnet_definition.role_assignments
   subnets          = local.deployed_subnets
+  tags             = var.vnet_definition.tags
 }
 
 data "azurerm_virtual_network" "ai_lz_vnet" {
@@ -174,15 +170,8 @@ module "firewall" {
   location            = azurerm_resource_group.this.location
   name                = local.firewall_name
   resource_group_name = var.firewall_definition.resource_group_name != null ? var.firewall_definition.resource_group_name : azurerm_resource_group.this.name
-  diagnostic_settings = local.deploy_diagnostics_settings ? {
-    to_law = {
-      name                  = "sendToLogAnalytics-fwpip-${random_string.name_suffix.result}"
-      workspace_resource_id = local.log_analytics_workspace_id
-      log_groups            = ["allLogs"]
-      metric_categories     = ["AllMetrics"]
-    }
-  } : null
-  enable_telemetry = var.enable_telemetry
+  diagnostic_settings = local.az_fw_diagnostic_settings
+  enable_telemetry    = var.enable_telemetry
   firewall_ip_configuration = [
     {
       name                 = "${local.firewall_name}-ipconfig1"
@@ -190,7 +179,9 @@ module "firewall" {
       public_ip_address_id = module.fw_pip[0].resource_id
     }
   ]
-  firewall_zones = var.firewall_definition.zones
+  firewall_zones   = var.firewall_definition.zones
+  role_assignments = var.firewall_definition.role_assignments
+  tags             = var.firewall_definition.tags
 }
 
 module "firewall_policy" {
@@ -279,30 +270,23 @@ module "application_gateway" {
   app_gateway_waf_policy_resource_id = module.app_gateway_waf_policy.resource_id
   authentication_certificate         = var.app_gateway_definition.authentication_certificate
   autoscale_configuration            = var.app_gateway_definition.autoscale_configuration
-  diagnostic_settings = local.deploy_diagnostics_settings ? {
-    to_law = {
-      name                  = "sendToLogAnalytics-appgw-${random_string.name_suffix.result}"
-      workspace_resource_id = local.log_analytics_workspace_id
-      log_groups            = ["allLogs"]
-      metric_categories     = ["AllMetrics"]
-    }
-  } : null
-  enable_telemetry            = var.enable_telemetry
-  http2_enable                = var.app_gateway_definition.http2_enable
-  probe_configurations        = var.app_gateway_definition.probe_configurations
-  public_ip_name              = "${local.application_gateway_name}-pip"
-  redirect_configuration      = var.app_gateway_definition.redirect_configuration
-  rewrite_rule_set            = var.app_gateway_definition.rewrite_rule_set
-  role_assignments            = local.application_gateway_role_assignments
-  sku                         = var.app_gateway_definition.sku
-  ssl_certificates            = var.app_gateway_definition.ssl_certificates
-  ssl_policy                  = var.app_gateway_definition.ssl_policy
-  ssl_profile                 = var.app_gateway_definition.ssl_profile
-  tags                        = var.app_gateway_definition.tags
-  trusted_client_certificate  = var.app_gateway_definition.trusted_client_certificate
-  trusted_root_certificate    = var.app_gateway_definition.trusted_root_certificate
-  url_path_map_configurations = var.app_gateway_definition.url_path_map_configurations
-  zones                       = local.region_zones
+  diagnostic_settings                = local.app_gw_diagnostic_settings
+  enable_telemetry                   = var.enable_telemetry
+  http2_enable                       = var.app_gateway_definition.http2_enable
+  probe_configurations               = var.app_gateway_definition.probe_configurations
+  public_ip_name                     = "${local.application_gateway_name}-pip"
+  redirect_configuration             = var.app_gateway_definition.redirect_configuration
+  rewrite_rule_set                   = var.app_gateway_definition.rewrite_rule_set
+  role_assignments                   = local.application_gateway_role_assignments
+  sku                                = var.app_gateway_definition.sku
+  ssl_certificates                   = var.app_gateway_definition.ssl_certificates
+  ssl_policy                         = var.app_gateway_definition.ssl_policy
+  ssl_profile                        = var.app_gateway_definition.ssl_profile
+  tags                               = var.app_gateway_definition.tags
+  trusted_client_certificate         = var.app_gateway_definition.trusted_client_certificate
+  trusted_root_certificate           = var.app_gateway_definition.trusted_root_certificate
+  url_path_map_configurations        = var.app_gateway_definition.url_path_map_configurations
+  zones                              = local.region_zones
 
   depends_on = [
     azurerm_network_security_rule.this
