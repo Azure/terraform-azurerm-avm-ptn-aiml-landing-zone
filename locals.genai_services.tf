@@ -1,6 +1,6 @@
 locals {
   genai_app_configuration_default_role_assignments = {}
-  genai_app_configuration_diagnostic_settings      = length(var.genai_app_configuration_definition.diagnostic_settings) > 0 ? var.genai_app_configuration_definition.diagnostic_settings : local.genai_app_configuration_diagnostic_settings_inner
+  genai_app_configuration_diagnostic_settings      = var.genai_app_configuration_definition.enable_diagnostic_settings ? (length(var.genai_app_configuration_definition.diagnostic_settings) > 0 ? var.genai_app_configuration_definition.diagnostic_settings : local.genai_app_configuration_diagnostic_settings_inner) : {}
   genai_app_configuration_diagnostic_settings_inner = ((try(var.law_definition.deploy, false) == true) ? {
     sendToLogAnalytics = {
       name                                     = "sendToLogAnalytics-genai-appconfig-${random_string.name_suffix.result}"
@@ -21,12 +21,12 @@ locals {
     var.genai_app_configuration_definition.role_assignments
   )
   genai_container_registry_default_role_assignments = {}
-  genai_container_registry_diagnostic_settings      = length(var.genai_container_registry_definition.diagnostic_settings) > 0 ? var.genai_container_registry_definition.diagnostic_settings : local.genai_container_registry_diagnostic_settings_inner
+  genai_container_registry_diagnostic_settings      = var.genai_container_registry_definition.enable_diagnostic_settings ? (length(var.genai_container_registry_definition.diagnostic_settings) > 0 ? var.genai_container_registry_definition.diagnostic_settings : local.genai_container_registry_diagnostic_settings_inner) : {}
   genai_container_registry_diagnostic_settings_inner = ((try(var.law_definition.deploy, false) == true) ? {
     sendToLogAnalytics = {
       name                                     = "sendToLogAnalytics-genai-acr-${random_string.name_suffix.result}"
       workspace_resource_id                    = local.log_analytics_workspace_id
-      log_analytics_destination_type           = "Dedicated"
+      log_analytics_destination_type           = null
       log_groups                               = ["allLogs"]
       metric_categories                        = ["AllMetrics"]
       log_categories                           = []
@@ -41,7 +41,7 @@ locals {
     local.genai_container_registry_default_role_assignments,
     var.genai_container_registry_definition.role_assignments
   )
-  genai_cosmosdb_diagnostic_settings = length(var.genai_cosmosdb_definition.diagnostic_settings) > 0 ? var.genai_cosmosdb_definition.diagnostic_settings : local.genai_cosmosdb_diagnostic_settings_inner
+  genai_cosmosdb_diagnostic_settings = var.genai_cosmosdb_definition.enable_diagnostic_settings ? (length(var.genai_cosmosdb_definition.diagnostic_settings) > 0 ? var.genai_cosmosdb_definition.diagnostic_settings : local.genai_cosmosdb_diagnostic_settings_inner) : {}
   genai_cosmosdb_diagnostic_settings_inner = ((try(var.law_definition.deploy, false) == true) ? {
     sendToLogAnalytics = {
       name                                     = "sendToLogAnalytics-genai-cosmosdb-${random_string.name_suffix.result}"
@@ -77,7 +77,7 @@ locals {
   )
   genai_key_vault_default_role_assignments = {
   }
-  genai_key_vault_diagnostic_settings = length(var.genai_key_vault_definition.diagnostic_settings) > 0 ? var.genai_key_vault_definition.diagnostic_settings : local.genai_key_vault_diagnostic_settings_inner
+  genai_key_vault_diagnostic_settings = var.genai_key_vault_definition.enable_diagnostic_settings ? (length(var.genai_key_vault_definition.diagnostic_settings) > 0 ? var.genai_key_vault_definition.diagnostic_settings : local.genai_key_vault_diagnostic_settings_inner) : {}
   genai_key_vault_diagnostic_settings_inner = ((try(var.law_definition.deploy, false) == true) ? {
     sendToLogAnalytics = {
       name                                     = "sendToLogAnalytics-genai-kv-${random_string.name_suffix.result}"
@@ -99,14 +99,14 @@ locals {
   )
   genai_storage_account_default_role_assignments = {
   }
-  genai_storage_account_diagnostic_settings = length(var.genai_storage_account_definition.diagnostic_settings) > 0 ? var.genai_storage_account_definition.diagnostic_settings : local.genai_storage_account_diagnostic_settings_inner
+  genai_storage_account_diagnostic_settings = var.genai_storage_account_definition.enable_diagnostic_settings ? (length(var.genai_storage_account_definition.diagnostic_settings) > 0 ? var.genai_storage_account_definition.diagnostic_settings : local.genai_storage_account_diagnostic_settings_inner) : {}
   genai_storage_account_diagnostic_settings_inner = ((try(var.law_definition.deploy, false) == true) ? {
     sendToLogAnalytics = {
       name                                     = "sendToLogAnalytics-genai-sa-${random_string.name_suffix.result}"
       workspace_resource_id                    = local.log_analytics_workspace_id
       log_analytics_destination_type           = "Dedicated"
       log_groups                               = ["allLogs"]
-      metric_categories                        = ["AllMetrics"]
+      metric_categories                        = ["Capacity", "Transaction"]
       log_categories                           = []
       storage_account_resource_id              = null
       event_hub_authorization_rule_resource_id = null

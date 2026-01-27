@@ -1,5 +1,5 @@
 locals {
-  ks_ai_search_diagnostic_settings = length(var.ks_ai_search_definition.diagnostic_settings) > 0 ? var.ks_ai_search_definition.diagnostic_settings : local.ks_ai_search_diagnostic_settings_inner
+  ks_ai_search_diagnostic_settings = var.ks_ai_search_definition.enable_diagnostic_settings ? (length(var.ks_ai_search_definition.diagnostic_settings) > 0 ? var.ks_ai_search_definition.diagnostic_settings : local.ks_ai_search_diagnostic_settings_inner) : {}
   ks_ai_search_diagnostic_settings_inner = ((try(var.law_definition.deploy, false) == true) ? {
     sendToLogAnalytics = {
       name                                     = "sendToLogAnalytics-ks-ai-search-${random_string.name_suffix.result}"
@@ -18,3 +18,4 @@ locals {
   ks_ai_search_role_assignments = try(var.ks_ai_search_definition.role_assignments, {})
   ks_bing_grounding_name        = try(var.ks_bing_grounding_definition.name, null) != null ? var.ks_bing_grounding_definition.name : (var.name_prefix != null ? "${var.name_prefix}-ks-bing-grounding" : "ai-alz-ks-bing-grounding-${random_string.name_suffix.result}")
 }
+

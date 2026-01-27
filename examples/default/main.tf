@@ -97,7 +97,8 @@ module "test" {
   ai_foundry_definition = {
     purge_on_destroy = true
     ai_foundry = {
-      create_ai_agent_service = true
+      create_ai_agent_service    = true
+      enable_diagnostic_settings = false
     }
     ai_model_deployments = {
       "gpt-4o" = {
@@ -196,22 +197,22 @@ module "test" {
     }
   }
   bastion_definition = {
-    enable_diagnostic_settings = true
+
   }
   container_app_environment_definition = {
-    enable_diagnostic_settings = true
+    enable_diagnostic_settings = false
   }
   enable_telemetry           = var.enable_telemetry
   flag_platform_landing_zone = false
-  # Note: When flag_platform_landing_zone = true, you can enable direct internet routing
-  # for Azure Application Gateway v2 compatibility by setting:
-  # use_internet_routing = true
+  genai_app_configuration_definition = {
+    enable_diagnostic_settings = false
+  }
   genai_container_registry_definition = {
-    enable_diagnostic_settings = true
+    enable_diagnostic_settings = false
   }
   genai_cosmosdb_definition = {
-    enable_diagnostic_settings = true
-    consistency_level          = "Session"
+
+    consistency_level = "Session"
   }
   genai_key_vault_definition = {
     public_network_access_enabled = true # configured for testing
@@ -221,13 +222,11 @@ module "test" {
     }
   }
   genai_storage_account_definition = {
-    enable_diagnostic_settings = true
   }
   ks_ai_search_definition = {
-    enable_diagnostic_settings = true
+    enable_diagnostic_settings = false
   }
   private_dns_zones = {
     existing_zones_resource_group_resource_id = module.example_hub.resource_group_resource_id
   }
 }
-

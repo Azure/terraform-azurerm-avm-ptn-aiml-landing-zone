@@ -126,6 +126,7 @@ object({
       prefix_length = string
     })))
     ddos_protection_plan_resource_id = optional(string)
+    enable_diagnostic_settings       = optional(bool, true)
     diagnostic_settings = optional(map(object({
       name                                     = optional(string, null)
       log_categories                           = optional(set(string), [])
@@ -422,8 +423,9 @@ object({
     create_byor      = optional(bool, true)
     purge_on_destroy = optional(bool, false)
     ai_foundry = optional(object({
-      name               = optional(string, null)
-      disable_local_auth = optional(bool, false)
+      name                       = optional(string, null)
+      disable_local_auth         = optional(bool, false)
+      enable_diagnostic_settings = optional(bool, true)
       diagnostic_settings = optional(map(object({
         name                                     = optional(string, null)
         log_categories                           = optional(set(string), [])
@@ -770,6 +772,7 @@ object({
       certificate_password = optional(string, null)
     })), [])
     client_certificate_enabled = optional(bool, false)
+    enable_diagnostic_settings = optional(bool, true)
     diagnostic_settings = optional(map(object({
       name                                     = optional(string, null)
       log_categories                           = optional(set(string), [])
@@ -1187,7 +1190,8 @@ object({
       }))
     })), null)
 
-    tags = optional(map(string), {})
+    tags                       = optional(map(string), {})
+    enable_diagnostic_settings = optional(bool, true)
     diagnostic_settings = optional(map(object({
       name                                     = optional(string, null)
       log_categories                           = optional(set(string), [])
@@ -1299,8 +1303,9 @@ Type:
 
 ```hcl
 object({
-    deploy = optional(bool, true)
-    name   = optional(string)
+    deploy                     = optional(bool, true)
+    name                       = optional(string)
+    enable_diagnostic_settings = optional(bool, true)
     diagnostic_settings = optional(map(object({
       name                                     = optional(string, null)
       log_categories                           = optional(set(string), [])
@@ -1374,11 +1379,12 @@ Type:
 
 ```hcl
 object({
-    deploy = optional(bool, true)
-    name   = optional(string)
-    sku    = optional(string, "AZFW_VNet")
-    tier   = optional(string, "Standard")
-    zones  = optional(list(string), ["1", "2", "3"])
+    deploy                     = optional(bool, true)
+    name                       = optional(string)
+    sku                        = optional(string, "AZFW_VNet")
+    tier                       = optional(string, "Standard")
+    zones                      = optional(list(string), ["1", "2", "3"])
+    enable_diagnostic_settings = optional(bool, true)
     diagnostic_settings = optional(map(object({
       name                                     = optional(string, null)
       log_categories                           = optional(set(string), [])
@@ -1502,6 +1508,7 @@ object({
       delegated_managed_identity_resource_id = optional(string, null)
       principal_type                         = optional(string, null)
     })), {})
+    enable_diagnostic_settings = optional(bool, true)
     diagnostic_settings = optional(map(object({
       name                                     = optional(string, null)
       log_categories                           = optional(set(string), [])
@@ -1548,6 +1555,7 @@ object({
     sku                           = optional(string, "Premium")
     zone_redundancy_enabled       = optional(bool, true)
     public_network_access_enabled = optional(bool, false)
+    enable_diagnostic_settings    = optional(bool, true)
     diagnostic_settings = optional(map(object({
       name                                     = optional(string, null)
       log_categories                           = optional(set(string), [])
@@ -1619,8 +1627,9 @@ Type:
 
 ```hcl
 object({
-    deploy = optional(bool, true)
-    name   = optional(string)
+    deploy                     = optional(bool, true)
+    name                       = optional(string)
+    enable_diagnostic_settings = optional(bool, true)
     diagnostic_settings = optional(map(object({
       name                                     = optional(string, null)
       log_categories                           = optional(set(string), [])
@@ -1715,6 +1724,7 @@ object({
     public_network_access_enabled = optional(bool, false)
     sku                           = optional(string, "standard")
     tenant_id                     = optional(string)
+    enable_diagnostic_settings    = optional(bool, true)
     diagnostic_settings = optional(map(object({
       name                                     = optional(string, null)
       log_categories                           = optional(set(string), [])
@@ -1771,8 +1781,9 @@ Type:
 
 ```hcl
 object({
-    deploy = optional(bool, true)
-    name   = optional(string)
+    deploy                     = optional(bool, true)
+    name                       = optional(string)
+    enable_diagnostic_settings = optional(bool, true)
     diagnostic_settings = optional(map(object({
       name                                     = optional(string, null)
       log_categories                           = optional(set(string), [])
@@ -1862,8 +1873,9 @@ Type:
 
 ```hcl
 object({
-    deploy = optional(bool, true)
-    name   = optional(string)
+    deploy                     = optional(bool, true)
+    name                       = optional(string)
+    enable_diagnostic_settings = optional(bool, true)
     diagnostic_settings = optional(map(object({
       name                                     = optional(string, null)
       log_categories                           = optional(set(string), [])

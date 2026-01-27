@@ -1,10 +1,10 @@
 locals {
-  cae_diagnostic_settings = length(var.container_app_environment_definition.diagnostic_settings) > 0 ? var.container_app_environment_definition.diagnostic_settings : local.cae_diagnostic_settings_inner
+  cae_diagnostic_settings = var.container_app_environment_definition.enable_diagnostic_settings ? (length(var.container_app_environment_definition.diagnostic_settings) > 0 ? var.container_app_environment_definition.diagnostic_settings : local.cae_diagnostic_settings_inner) : {}
   cae_diagnostic_settings_inner = ((try(var.law_definition.deploy, false) == true) ? {
     sendToLogAnalytics = {
       name                                     = "sendToLogAnalytics-cae-${random_string.name_suffix.result}"
       workspace_resource_id                    = local.log_analytics_workspace_id
-      log_analytics_destination_type           = "Dedicated"
+      log_analytics_destination_type           = null
       log_groups                               = ["allLogs"]
       metric_categories                        = ["AllMetrics"]
       log_categories                           = []

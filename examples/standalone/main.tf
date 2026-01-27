@@ -100,7 +100,8 @@ module "test" {
   ai_foundry_definition = {
     purge_on_destroy = true
     ai_foundry = {
-      create_ai_agent_service = true
+      create_ai_agent_service    = true
+      enable_diagnostic_settings = false
     }
     ai_model_deployments = {
       "gpt-4o" = {
@@ -213,14 +214,14 @@ module "test" {
   }
   enable_telemetry           = var.enable_telemetry
   flag_platform_landing_zone = true
-  # Uncomment the following line to enable direct internet routing instead of firewall routing
-  # This is useful for Azure Application Gateway v2 deployments that require direct internet connectivity
-  # use_internet_routing = true
+  genai_app_configuration_definition = {
+    enable_diagnostic_settings = false
+  }
   genai_container_registry_definition = {
     enable_diagnostic_settings = false
   }
   genai_cosmosdb_definition = {
-    enable_diagnostic_settings = false
+    consistency_level = "Session"
   }
   genai_key_vault_definition = {
     #this is for AVM testing purposes only. Doing this as we don't have an easy for the test runner to be privately connected for testing.
@@ -231,7 +232,6 @@ module "test" {
     }
   }
   genai_storage_account_definition = {
-    enable_diagnostic_settings = false
   }
   ks_ai_search_definition = {
     enable_diagnostic_settings = false

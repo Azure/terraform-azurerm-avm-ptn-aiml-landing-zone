@@ -20,6 +20,7 @@ variable "apim_definition" {
       certificate_password = optional(string, null)
     })), [])
     client_certificate_enabled = optional(bool, false)
+    enable_diagnostic_settings = optional(bool, true)
     diagnostic_settings = optional(map(object({
       name                                     = optional(string, null)
       log_categories                           = optional(set(string), [])

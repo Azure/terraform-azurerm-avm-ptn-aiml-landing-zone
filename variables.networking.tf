@@ -12,6 +12,7 @@ variable "vnet_definition" {
       prefix_length = string
     })))
     ddos_protection_plan_resource_id = optional(string)
+    enable_diagnostic_settings       = optional(bool, true)
     diagnostic_settings = optional(map(object({
       name                                     = optional(string, null)
       log_categories                           = optional(set(string), [])
@@ -304,7 +305,8 @@ variable "app_gateway_definition" {
       }))
     })), null)
 
-    tags = optional(map(string), {})
+    tags                       = optional(map(string), {})
+    enable_diagnostic_settings = optional(bool, true)
     diagnostic_settings = optional(map(object({
       name                                     = optional(string, null)
       log_categories                           = optional(set(string), [])
@@ -477,11 +479,12 @@ DESCRIPTION
 
 variable "firewall_definition" {
   type = object({
-    deploy = optional(bool, true)
-    name   = optional(string)
-    sku    = optional(string, "AZFW_VNet")
-    tier   = optional(string, "Standard")
-    zones  = optional(list(string), ["1", "2", "3"])
+    deploy                     = optional(bool, true)
+    name                       = optional(string)
+    sku                        = optional(string, "AZFW_VNet")
+    tier                       = optional(string, "Standard")
+    zones                      = optional(list(string), ["1", "2", "3"])
+    enable_diagnostic_settings = optional(bool, true)
     diagnostic_settings = optional(map(object({
       name                                     = optional(string, null)
       log_categories                           = optional(set(string), [])

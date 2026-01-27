@@ -1,7 +1,8 @@
 variable "container_app_environment_definition" {
   type = object({
-    deploy = optional(bool, true)
-    name   = optional(string)
+    deploy                     = optional(bool, true)
+    name                       = optional(string)
+    enable_diagnostic_settings = optional(bool, true)
     diagnostic_settings = optional(map(object({
       name                                     = optional(string, null)
       log_categories                           = optional(set(string), [])

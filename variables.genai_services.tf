@@ -22,6 +22,7 @@ variable "genai_app_configuration_definition" {
       delegated_managed_identity_resource_id = optional(string, null)
       principal_type                         = optional(string, null)
     })), {})
+    enable_diagnostic_settings = optional(bool, true)
     diagnostic_settings = optional(map(object({
       name                                     = optional(string, null)
       log_categories                           = optional(set(string), [])
@@ -70,6 +71,7 @@ variable "genai_container_registry_definition" {
     sku                           = optional(string, "Premium")
     zone_redundancy_enabled       = optional(bool, true)
     public_network_access_enabled = optional(bool, false)
+    enable_diagnostic_settings    = optional(bool, true)
     diagnostic_settings = optional(map(object({
       name                                     = optional(string, null)
       log_categories                           = optional(set(string), [])
@@ -118,8 +120,9 @@ DESCRIPTION
 
 variable "genai_cosmosdb_definition" {
   type = object({
-    deploy = optional(bool, true)
-    name   = optional(string)
+    deploy                     = optional(bool, true)
+    name                       = optional(string)
+    enable_diagnostic_settings = optional(bool, true)
     diagnostic_settings = optional(map(object({
       name                                     = optional(string, null)
       log_categories                           = optional(set(string), [])
@@ -225,6 +228,7 @@ variable "genai_key_vault_definition" {
     public_network_access_enabled = optional(bool, false)
     sku                           = optional(string, "standard")
     tenant_id                     = optional(string)
+    enable_diagnostic_settings    = optional(bool, true)
     diagnostic_settings = optional(map(object({
       name                                     = optional(string, null)
       log_categories                           = optional(set(string), [])
@@ -277,8 +281,9 @@ DESCRIPTION
 
 variable "genai_storage_account_definition" {
   type = object({
-    deploy = optional(bool, true)
-    name   = optional(string)
+    deploy                     = optional(bool, true)
+    name                       = optional(string)
+    enable_diagnostic_settings = optional(bool, true)
     diagnostic_settings = optional(map(object({
       name                                     = optional(string, null)
       log_categories                           = optional(set(string), [])

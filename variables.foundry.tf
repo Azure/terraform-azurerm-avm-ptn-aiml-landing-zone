@@ -6,8 +6,9 @@ variable "ai_foundry_definition" {
     create_byor      = optional(bool, true)
     purge_on_destroy = optional(bool, false)
     ai_foundry = optional(object({
-      name               = optional(string, null)
-      disable_local_auth = optional(bool, false)
+      name                       = optional(string, null)
+      disable_local_auth         = optional(bool, false)
+      enable_diagnostic_settings = optional(bool, true)
       diagnostic_settings = optional(map(object({
         name                                     = optional(string, null)
         log_categories                           = optional(set(string), [])

@@ -1,5 +1,5 @@
 locals {
-  apim_diagnostic_settings = length(var.apim_definition.diagnostic_settings) > 0 ? var.apim_definition.diagnostic_settings : local.apim_diagnostic_settings_inner
+  apim_diagnostic_settings = var.apim_definition.enable_diagnostic_settings ? (length(var.apim_definition.diagnostic_settings) > 0 ? var.apim_definition.diagnostic_settings : local.apim_diagnostic_settings_inner) : {}
   apim_diagnostic_settings_inner = ((try(var.law_definition.deploy, false) == true) ? {
     sendToLogAnalytics = {
       name                                     = "sendToLogAnalytics-apim-${random_string.name_suffix.result}"
