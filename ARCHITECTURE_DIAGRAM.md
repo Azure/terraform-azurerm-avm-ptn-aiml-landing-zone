@@ -131,14 +131,14 @@ graph TB
     VNET -.->|Peers with| PEERING
     VNET -.->|Connects to| VWAN
 
-    style External fill:#E8D999,stroke:#A89A5C,color:#000
-    style Edge fill:#8BA882,stroke:#556B4D,color:#fff
+    style External fill:#D3D3D3,stroke:#999,color:#000
+    style Edge fill:#D3D3D3,stroke:#999,color:#000
     style APILayer fill:#A68BB8,stroke:#6B5A7B,color:#fff
     style Compute fill:#C9A4A4,stroke:#8B6666,color:#fff
     style AIFoundry fill:#8BA5C7,stroke:#5A7A99,color:#fff
     style DataServices fill:#D9B0B3,stroke:#8B6666,color:#fff
     style DataStorage fill:#A68BB8,stroke:#6B5A7B,color:#fff
-    style Network fill:#8BA882,stroke:#556B4D,color:#fff
+    style Network fill:#D3D3D3,stroke:#999,color:#000
     style Management fill:#C9A678,stroke:#8B6F47,color:#fff
     style Integration fill:#DDD4C4,stroke:#888,color:#000
 ```
@@ -195,7 +195,7 @@ graph TB
         end
     end
 
-    style NetComp fill:#8BA882,color:#fff
+    style NetComp fill:#D3D3D3,color:#000
     style EdgeComp fill:#C9A4A4,color:#fff
     style APIComp fill:#A68BB8,color:#fff
     style AIComp fill:#8BA5C7,color:#fff
@@ -293,10 +293,10 @@ graph TB
 
     PLZFW -.->|Optional| VNET
 
-    style Internet fill:#E8D999,stroke:#A89A5C,color:#000
+    style Internet fill:#D3D3D3,stroke:#999,color:#000
     style AILZ fill:#F5F5F5,stroke:#888,color:#000
     style HubSpoke fill:#CCC,stroke:#999,color:#000
-    style GW fill:#8BA882,color:#fff
+    style GW fill:#D3D3D3,color:#000
     style CASubnet fill:#C9A4A4,color:#fff
     style BasSubnet fill:#D4B896,color:#000
     style VMSubnet fill:#D4B896,color:#000
@@ -309,7 +309,7 @@ graph TB
 
 ```mermaid
 graph TB
-    subgraph AICore["🔵 AI Foundry Core"]
+    subgraph AICore["AI Foundry Core"]
         HUB["AI Foundry Account<br/>- Project Management<br/>- Model Catalog<br/>- Deployment Control"]
 
         P1["Project 1<br/>Development"]
@@ -335,7 +335,7 @@ graph TB
         BING["Bing Grounding<br/>Web Context"]
     end
 
-    subgraph DataSources["🟣 Data & Storage"]
+    subgraph DataSources["Data & Storage"]
         SA["Storage Account<br/>- Documents<br/>- Models<br/>- Artifacts"]
         COSMOS["Cosmos DB<br/>- Session Data<br/>- Custom Stores<br/>- Metadata"]
         KV["Key Vault<br/>- API Keys<br/>- Secrets<br/>- Model Keys"]
@@ -409,7 +409,7 @@ graph LR
     P6 --> P7
     P7 --> End
 
-    style P1 fill:#8BA882,color:#fff
+    style P1 fill:#D3D3D3,color:#000
     style P2 fill:#C9A4A4,color:#fff
     style P3 fill:#8BA5C7,color:#fff
     style P4 fill:#D9B0B3,color:#000
