@@ -3,28 +3,25 @@ module "search_service" {
   version = "0.2.0"
   count   = var.ks_ai_search_definition.deploy ? 1 : 0
 
-  location            = azurerm_resource_group.this.location
-  name                = local.ks_ai_search_name
-  resource_group_name = azurerm_resource_group.this.name
-  diagnostic_settings = var.ks_ai_search_definition.enable_diagnostic_settings ? {
-    search = {
-      name                  = "sendToLogAnalytics-search-${random_string.name_suffix.result}"
-      workspace_resource_id = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
-    }
-  } : {}
+  location                     = azurerm_resource_group.this.location
+  name                         = local.ks_ai_search_name
+  resource_group_name          = azurerm_resource_group.this.name
+  diagnostic_settings          = local.ks_ai_search_diagnostic_settings
   enable_telemetry             = var.enable_telemetry # see variables.tf
   local_authentication_enabled = var.ks_ai_search_definition.local_authentication_enabled
   partition_count              = var.ks_ai_search_definition.partition_count
   private_endpoints = {
     primary = {
-      private_dns_zone_resource_ids = var.flag_platform_landing_zone ? [module.private_dns_zones.ai_search_zone.resource_id] : [local.private_dns_zones_existing.ai_search_zone.resource_id]
+      private_dns_zone_resource_ids = var.private_dns_zones.azure_policy_pe_zone_linking_enabled ? null : (var.flag_platform_landing_zone ? [module.private_dns_zones.ai_search_zone.resource_id] : [local.private_dns_zones_existing.ai_search_zone.resource_id])
       subnet_resource_id            = local.subnet_ids["PrivateEndpointSubnet"]
     }
   }
   public_network_access_enabled = var.ks_ai_search_definition.public_network_access_enabled
   replica_count                 = var.ks_ai_search_definition.replica_count
+  role_assignments              = local.ks_ai_search_role_assignments
   semantic_search_sku           = var.ks_ai_search_definition.semantic_search_sku
   sku                           = var.ks_ai_search_definition.sku
+  tags                          = var.ks_ai_search_definition.tags
 
   depends_on = [module.private_dns_zones, module.hub_vnet_peering]
 }

@@ -6,15 +6,47 @@ variable "vnet_definition" {
       firewall_ip_address = optional(string)
       }
     )), {})
-    address_space                    = optional(string, "192.168.0.0/20")
+    address_space = optional(list(string), ["192.168.0.0/20"])
+    ipam_pools = optional(list(object({
+      id            = string
+      prefix_length = string
+    })))
     ddos_protection_plan_resource_id = optional(string)
-    dns_servers                      = optional(set(string), [])
+    enable_diagnostic_settings       = optional(bool, true)
+    diagnostic_settings = optional(map(object({
+      name                                     = optional(string, null)
+      log_categories                           = optional(set(string), [])
+      log_groups                               = optional(set(string), ["allLogs"])
+      metric_categories                        = optional(set(string), ["AllMetrics"])
+      log_analytics_destination_type           = optional(string, "Dedicated")
+      workspace_resource_id                    = optional(string, null)
+      storage_account_resource_id              = optional(string, null)
+      event_hub_authorization_rule_resource_id = optional(string, null)
+      event_hub_name                           = optional(string, null)
+      marketplace_partner_resource_id          = optional(string, null)
+    })), {})
+    dns_servers = optional(set(string), [])
+    role_assignments = optional(map(object({
+      role_definition_id_or_name             = string
+      principal_id                           = string
+      description                            = optional(string, null)
+      skip_service_principal_aad_check       = optional(bool, false)
+      condition                              = optional(string, null)
+      condition_version                      = optional(string, null)
+      delegated_managed_identity_resource_id = optional(string, null)
+      principal_type                         = optional(string, null)
+    })), {})
     subnets = optional(map(object({
       enabled        = optional(bool, true)
       name           = optional(string)
       address_prefix = optional(string)
+      ipam_pools = optional(list(object({
+        pool_id       = string
+        prefix_length = string
+      })))
       }
     )), {})
+    tags = optional(map(string), {})
     vnet_peering_configuration = optional(object({
       peer_vnet_resource_id                = optional(string)
       name                                 = optional(string)
@@ -42,12 +74,40 @@ Configuration object for the Virtual Network (VNet) to be deployed.
   - `vnet_resource_id` - Resource ID of the existing Virtual Network to use.
   - `firewall_ip_address` - (Optional) IP address of the firewall if a firewall is deployed for use by the BYO vnet. This IP address wlll be used to configure the route table for the subnets when provided. If using a BYO Vnet, the firewall is assumed to be deployed and configured outside of this module.
 - `address_space` - (Optional) The address space for the Virtual Network in CIDR notation. Defaults to 192.168.0.0/20 if none provided. Not used when `existing_byo_vnet` is configured.
+- `ipam_pools` - (Optional) List of IPAM pools to associate with the VNet. If present, the address_space will be ignored and IPAM pools will be used for address allocation.
+  - `id` - The ID of the IPAM pool.
+  - `prefix_length` - The prefix length to request from the IPAM pool.
 - `ddos_protection_plan_resource_id` - (Optional) Resource ID of the DDoS Protection Plan to associate with the VNet. This is not used for BYO VNet configurations as that is assumed to be handled outside the module.
+- `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
+- `diagnostic_settings` - (Optional) Map of diagnostic settings configurations for the VNet. If you set a configuration then all diagnostic preset configuration included in the module will be ignored. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `name` - (Optional) The name of the diagnostic setting.
+  - `log_categories` - (Optional) Set of log categories to enable. Default is an empty set.
+  - `log_groups` - (Optional) Set of log groups to enable. Default is ["allLogs"].
+  - `metric_categories` - (Optional) Set of metric categories to enable. Default is ["AllMetrics"].
+  - `log_analytics_destination_type` - (Optional) The destination type for Log Analytics. Default is "Dedicated".
+  - `workspace_resource_id` - (Optional) Resource ID of the Log Analytics workspace.
+  - `storage_account_resource_id` - (Optional) Resource ID of the storage account for diagnostics.
+  - `event_hub_authorization_rule_resource_id` - (Optional) Resource ID of the Event Hub authorization rule.
+  - `event_hub_name` - (Optional) Name of the Event Hub.
+  - `marketplace_partner_resource_id` - (Optional) Resource ID of the marketplace partner resource.
 - `dns_servers` - (Optional) Set of custom DNS server IP addresses for the VNet.
+- `role_assignments` - (Optional) Map of role assignments to create on the VNet. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `role_definition_id_or_name` - The role definition ID or name to assign.
+  - `principal_id` - The principal ID to assign the role to.
+  - `description` - (Optional) Description of the role assignment.
+  - `skip_service_principal_aad_check` - (Optional) Whether to skip AAD check for service principal.
+  - `condition` - (Optional) Condition for the role assignment.
+  - `condition_version` - (Optional) Version of the condition.
+  - `delegated_managed_identity_resource_id` - (Optional) Resource ID of the delegated managed identity.
+  - `principal_type` - (Optional) Type of the principal (User, Group, ServicePrincipal).
 - `subnets` - (Optional) Map of subnet configurations that can be used to override the default subnet configurations. The map key must match the desired subnet usage to override the default configuration.
   - `enabled` - (Optional) Whether the subnet is enabled. Default is true.
   - `name` - (Optional) The name of the subnet. If not provided, a name will be generated.
   - `address_prefix` - (Optional) The address prefix for the subnet in CIDR notation.
+  - `ipam_pools` - (Optional) List of IPAM pools to associate with the subnet. If present, the address_prefix will be ignored and IPAM pools will be used for address allocation.
+    - `pool_id` - The ID of the IPAM pool.
+    - `prefix_length` - The prefix length to request from the IPAM pool.
+- `tags` - (Optional) Map of tags to assign to the VNet.
 - `vnet_peering_configuration` - (Optional) Configuration for VNet peering. This is not used for BYO VNet configurations as that is assumed to be handled outside the module.
   - `peer_vnet_resource_id` - (Optional) Resource ID of the peer VNet.
   - `name` - (Optional) Name of the peering connection.
@@ -256,7 +316,20 @@ variable "app_gateway_definition" {
       }))
     })), null)
 
-    tags = optional(map(string), {})
+    tags                       = optional(map(string), {})
+    enable_diagnostic_settings = optional(bool, true)
+    diagnostic_settings = optional(map(object({
+      name                                     = optional(string, null)
+      log_categories                           = optional(set(string), [])
+      log_groups                               = optional(set(string), ["allLogs"])
+      metric_categories                        = optional(set(string), ["AllMetrics"])
+      log_analytics_destination_type           = optional(string, "Dedicated")
+      workspace_resource_id                    = optional(string, null)
+      storage_account_resource_id              = optional(string, null)
+      event_hub_authorization_rule_resource_id = optional(string, null)
+      event_hub_name                           = optional(string, null)
+      marketplace_partner_resource_id          = optional(string, null)
+    })), {})
     role_assignments = optional(map(object({
       role_definition_id_or_name             = string
       principal_id                           = string
@@ -381,6 +454,18 @@ Configuration object for the Azure Application Gateway to be deployed.
   - `default_backend_address_pool_name` - (Optional) Default backend address pool name.
   - `path_rules` - Map of path-based routing rules.
 - `tags` - (Optional) Map of tags to assign to the Application Gateway.
+- `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
+- `diagnostic_settings` - (Optional) Map of diagnostic settings configurations for the Application Gateway. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `name` - (Optional) The name of the diagnostic setting.
+  - `log_categories` - (Optional) Set of log categories to enable. Default is an empty set.
+  - `log_groups` - (Optional) Set of log groups to enable. Default is ["allLogs"].
+  - `metric_categories` - (Optional) Set of metric categories to enable. Default is ["AllMetrics"].
+  - `log_analytics_destination_type` - (Optional) The destination type for Log Analytics. Default is "Dedicated".
+  - `workspace_resource_id` - (Optional) Resource ID of the Log Analytics workspace.
+  - `storage_account_resource_id` - (Optional) Resource ID of the storage account for diagnostics.
+  - `event_hub_authorization_rule_resource_id` - (Optional) Resource ID of the Event Hub authorization rule.
+  - `event_hub_name` - (Optional) Name of the Event Hub.
+  - `marketplace_partner_resource_id` - (Optional) Resource ID of the marketplace partner resource.
 - `role_assignments` - (Optional) Map of role assignments to create on the Application Gateway. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
   - `role_definition_id_or_name` - The role definition ID or name to assign.
   - `principal_id` - The principal ID to assign the role to.
@@ -417,11 +502,34 @@ DESCRIPTION
 
 variable "firewall_definition" {
   type = object({
-    deploy              = optional(bool, true)
-    name                = optional(string)
-    sku                 = optional(string, "AZFW_VNet")
-    tier                = optional(string, "Standard")
-    zones               = optional(list(string), ["1", "2", "3"])
+    deploy                     = optional(bool, true)
+    name                       = optional(string)
+    sku                        = optional(string, "AZFW_VNet")
+    tier                       = optional(string, "Standard")
+    zones                      = optional(list(string), ["1", "2", "3"])
+    enable_diagnostic_settings = optional(bool, true)
+    diagnostic_settings = optional(map(object({
+      name                                     = optional(string, null)
+      log_categories                           = optional(set(string), [])
+      log_groups                               = optional(set(string), ["allLogs"])
+      metric_categories                        = optional(set(string), ["AllMetrics"])
+      log_analytics_destination_type           = optional(string, "Dedicated")
+      workspace_resource_id                    = optional(string, null)
+      storage_account_resource_id              = optional(string, null)
+      event_hub_authorization_rule_resource_id = optional(string, null)
+      event_hub_name                           = optional(string, null)
+      marketplace_partner_resource_id          = optional(string, null)
+    })), {})
+    role_assignments = optional(map(object({
+      role_definition_id_or_name             = string
+      principal_id                           = string
+      description                            = optional(string, null)
+      skip_service_principal_aad_check       = optional(bool, false)
+      condition                              = optional(string, null)
+      condition_version                      = optional(string, null)
+      delegated_managed_identity_resource_id = optional(string, null)
+      principal_type                         = optional(string, null)
+    })), {})
     tags                = optional(map(string), {})
     resource_group_name = optional(string)
   })
@@ -434,6 +542,27 @@ Configuration object for the Azure Firewall to be deployed.
 - `sku` - (Optional) The SKU of the Azure Firewall. Default is "AZFW_VNet".
 - `tier` - (Optional) The tier of the Azure Firewall. Default is "Standard".
 - `zones` - (Optional) List of availability zones for the Azure Firewall. Default is ["1", "2", "3"].
+- `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
+- `diagnostic_settings` - (Optional) Map of diagnostic settings configurations for the Azure Firewall. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `name` - (Optional) The name of the diagnostic setting.
+  - `log_categories` - (Optional) Set of log categories to enable. Default is an empty set.
+  - `log_groups` - (Optional) Set of log groups to enable. Default is ["allLogs"].
+  - `metric_categories` - (Optional) Set of metric categories to enable. Default is ["AllMetrics"].
+  - `log_analytics_destination_type` - (Optional) The destination type for Log Analytics. Default is "Dedicated".
+  - `workspace_resource_id` - (Optional) Resource ID of the Log Analytics workspace.
+  - `storage_account_resource_id` - (Optional) Resource ID of the storage account for diagnostics.
+  - `event_hub_authorization_rule_resource_id` - (Optional) Resource ID of the Event Hub authorization rule.
+  - `event_hub_name` - (Optional) Name of the Event Hub.
+  - `marketplace_partner_resource_id` - (Optional) Resource ID of the marketplace partner resource.
+- `role_assignments` - (Optional) Map of role assignments to create on the Azure Firewall. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `role_definition_id_or_name` - The role definition ID or name to assign.
+  - `principal_id` - The principal ID to assign the role to.
+  - `description` - (Optional) Description of the role assignment.
+  - `skip_service_principal_aad_check` - (Optional) Whether to skip AAD check for service principal.
+  - `condition` - (Optional) Condition for the role assignment.
+  - `condition_version` - (Optional) Version of the condition.
+  - `delegated_managed_identity_resource_id` - (Optional) Resource ID of the delegated managed identity.
+  - `principal_type` - (Optional) Type of the principal (User, Group, ServicePrincipal).
 - `tags` - (Optional) Map of tags to assign to the Azure Firewall.
 - `resource_group_name` - (Optional) The name of the resource group to deploy the Azure Firewall into. If not provided, the module's resource group will be used.
 DESCRIPTION
@@ -533,6 +662,7 @@ DESCRIPTION
 
 variable "private_dns_zones" {
   type = object({
+    azure_policy_pe_zone_linking_enabled      = optional(bool, true)
     existing_zones_resource_group_resource_id = optional(string)
     allow_internet_resolution_fallback        = optional(bool, false)
     network_links = optional(map(object({
@@ -545,6 +675,7 @@ variable "private_dns_zones" {
   description = <<DESCRIPTION
 Configuration object for Private DNS Zones and their network links.
 
+- `azure_policy_pe_zone_linking_enabled` - (Optional) Whether Azure Policy is used to enable private endpoint dns zone linking when using a platform landing zone (platform landing zone flag = true). Default is true.
 - `existing_zones_resource_group_resource_id` - (Optional) Resource group resource id where existing Private DNS Zones are located.
 - `allow_internet_resolution_fallback` - (Optional) Whether to allow fallback to internet resolution for Private DNS Zone network links. Default is false.
 - `network_links` - (Optional) Map of network links to create for Private DNS Zones. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.

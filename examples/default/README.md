@@ -94,7 +94,7 @@ module "test" {
   resource_group_name = "ai-lz-rg-default-${substr(module.naming.unique-seed, 0, 5)}"
   vnet_definition = {
     name          = "ai-lz-vnet-default"
-    address_space = "192.168.0.0/23"                                                                 # has to be out of 192.168.0.0/16 currently. Other RFC1918 not supported for foundry capabilityHost injection.
+    address_space = ["192.168.0.0/23"]                                                               # has to be out of 192.168.0.0/16 currently. Other RFC1918 not supported for foundry capabilityHost injection.
     dns_servers   = [for key, value in module.example_hub.dns_resolver_inbound_ip_addresses : value] # Use the DNS resolver IPs from the example hub
     hub_vnet_peering_definition = {
       peer_vnet_resource_id = module.example_hub.virtual_network_resource_id
@@ -104,7 +104,8 @@ module "test" {
   ai_foundry_definition = {
     purge_on_destroy = true
     ai_foundry = {
-      create_ai_agent_service = true
+      create_ai_agent_service    = true
+      enable_diagnostic_settings = false
     }
     ai_model_deployments = {
       "gpt-4o" = {
@@ -139,25 +140,21 @@ module "test" {
     }
     ai_search_definition = {
       this = {
-        enable_diagnostic_settings = false
       }
     }
     cosmosdb_definition = {
       this = {
-        enable_diagnostic_settings = false
-        consistency_level          = "Session"
+        consistency_level = "Session"
       }
     }
     key_vault_definition = {
       this = {
-        enable_diagnostic_settings = false
       }
     }
 
     storage_account_definition = {
       this = {
-        enable_diagnostic_settings = false
-        shared_access_key_enabled  = true #configured for testing
+        shared_access_key_enabled = true #configured for testing
         endpoints = {
           blob = {
             type = "blob"
@@ -207,21 +204,22 @@ module "test" {
     }
   }
   bastion_definition = {
+
   }
   container_app_environment_definition = {
     enable_diagnostic_settings = false
   }
   enable_telemetry           = var.enable_telemetry
   flag_platform_landing_zone = false
-  # Note: When flag_platform_landing_zone = true, you can enable direct internet routing
-  # for Azure Application Gateway v2 compatibility by setting:
-  # use_internet_routing = true
+  genai_app_configuration_definition = {
+    enable_diagnostic_settings = false
+  }
   genai_container_registry_definition = {
     enable_diagnostic_settings = false
   }
   genai_cosmosdb_definition = {
-    enable_diagnostic_settings = false
-    consistency_level          = "Session"
+
+    consistency_level = "Session"
   }
   genai_key_vault_definition = {
     public_network_access_enabled = true # configured for testing
@@ -231,16 +229,15 @@ module "test" {
     }
   }
   genai_storage_account_definition = {
-    enable_diagnostic_settings = false
   }
   ks_ai_search_definition = {
     enable_diagnostic_settings = false
   }
   private_dns_zones = {
+    azure_policy_pe_zone_linking_enabled      = true
     existing_zones_resource_group_resource_id = module.example_hub.resource_group_resource_id
   }
 }
-
 ```
 
 <!-- markdownlint-disable MD033 -->

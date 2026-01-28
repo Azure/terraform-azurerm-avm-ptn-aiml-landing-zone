@@ -27,6 +27,7 @@ The following resources are used by this module:
 
 - [azapi_resource.bing_grounding](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource_action.purge_ai_foundry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action) (resource)
+- [azurerm_network_security_rule.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_security_rule) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [azurerm_role_assignment.deployment_user_kv_admin](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [azurerm_virtual_hub_connection.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_hub_connection) (resource)
@@ -70,12 +71,40 @@ Description: Configuration object for the Virtual Network (VNet) to be deployed.
   - `vnet_resource_id` - Resource ID of the existing Virtual Network to use.
   - `firewall_ip_address` - (Optional) IP address of the firewall if a firewall is deployed for use by the BYO vnet. This IP address wlll be used to configure the route table for the subnets when provided. If using a BYO Vnet, the firewall is assumed to be deployed and configured outside of this module.
 - `address_space` - (Optional) The address space for the Virtual Network in CIDR notation. Defaults to 192.168.0.0/20 if none provided. Not used when `existing_byo_vnet` is configured.
+- `ipam_pools` - (Optional) List of IPAM pools to associate with the VNet. If present, the address\_space will be ignored and IPAM pools will be used for address allocation.
+  - `id` - The ID of the IPAM pool.
+  - `prefix_length` - The prefix length to request from the IPAM pool.
 - `ddos_protection_plan_resource_id` - (Optional) Resource ID of the DDoS Protection Plan to associate with the VNet. This is not used for BYO VNet configurations as that is assumed to be handled outside the module.
+- `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
+- `diagnostic_settings` - (Optional) Map of diagnostic settings configurations for the VNet. If you set a configuration then all diagnostic preset configuration included in the module will be ignored. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `name` - (Optional) The name of the diagnostic setting.
+  - `log_categories` - (Optional) Set of log categories to enable. Default is an empty set.
+  - `log_groups` - (Optional) Set of log groups to enable. Default is ["allLogs"].
+  - `metric_categories` - (Optional) Set of metric categories to enable. Default is ["AllMetrics"].
+  - `log_analytics_destination_type` - (Optional) The destination type for Log Analytics. Default is "Dedicated".
+  - `workspace_resource_id` - (Optional) Resource ID of the Log Analytics workspace.
+  - `storage_account_resource_id` - (Optional) Resource ID of the storage account for diagnostics.
+  - `event_hub_authorization_rule_resource_id` - (Optional) Resource ID of the Event Hub authorization rule.
+  - `event_hub_name` - (Optional) Name of the Event Hub.
+  - `marketplace_partner_resource_id` - (Optional) Resource ID of the marketplace partner resource.
 - `dns_servers` - (Optional) Set of custom DNS server IP addresses for the VNet.
+- `role_assignments` - (Optional) Map of role assignments to create on the VNet. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `role_definition_id_or_name` - The role definition ID or name to assign.
+  - `principal_id` - The principal ID to assign the role to.
+  - `description` - (Optional) Description of the role assignment.
+  - `skip_service_principal_aad_check` - (Optional) Whether to skip AAD check for service principal.
+  - `condition` - (Optional) Condition for the role assignment.
+  - `condition_version` - (Optional) Version of the condition.
+  - `delegated_managed_identity_resource_id` - (Optional) Resource ID of the delegated managed identity.
+  - `principal_type` - (Optional) Type of the principal (User, Group, ServicePrincipal).
 - `subnets` - (Optional) Map of subnet configurations that can be used to override the default subnet configurations. The map key must match the desired subnet usage to override the default configuration.
   - `enabled` - (Optional) Whether the subnet is enabled. Default is true.
   - `name` - (Optional) The name of the subnet. If not provided, a name will be generated.
   - `address_prefix` - (Optional) The address prefix for the subnet in CIDR notation.
+  - `ipam_pools` - (Optional) List of IPAM pools to associate with the subnet. If present, the address\_prefix will be ignored and IPAM pools will be used for address allocation.
+    - `pool_id` - The ID of the IPAM pool.
+    - `prefix_length` - The prefix length to request from the IPAM pool.
+- `tags` - (Optional) Map of tags to assign to the VNet.
 - `vnet_peering_configuration` - (Optional) Configuration for VNet peering. This is not used for BYO VNet configurations as that is assumed to be handled outside the module.
   - `peer_vnet_resource_id` - (Optional) Resource ID of the peer VNet.
   - `name` - (Optional) Name of the peering connection.
@@ -102,15 +131,47 @@ object({
       firewall_ip_address = optional(string)
       }
     )), {})
-    address_space                    = optional(string, "192.168.0.0/20")
+    address_space = optional(list(string), ["192.168.0.0/20"])
+    ipam_pools = optional(list(object({
+      id            = string
+      prefix_length = string
+    })))
     ddos_protection_plan_resource_id = optional(string)
-    dns_servers                      = optional(set(string), [])
+    enable_diagnostic_settings       = optional(bool, true)
+    diagnostic_settings = optional(map(object({
+      name                                     = optional(string, null)
+      log_categories                           = optional(set(string), [])
+      log_groups                               = optional(set(string), ["allLogs"])
+      metric_categories                        = optional(set(string), ["AllMetrics"])
+      log_analytics_destination_type           = optional(string, "Dedicated")
+      workspace_resource_id                    = optional(string, null)
+      storage_account_resource_id              = optional(string, null)
+      event_hub_authorization_rule_resource_id = optional(string, null)
+      event_hub_name                           = optional(string, null)
+      marketplace_partner_resource_id          = optional(string, null)
+    })), {})
+    dns_servers = optional(set(string), [])
+    role_assignments = optional(map(object({
+      role_definition_id_or_name             = string
+      principal_id                           = string
+      description                            = optional(string, null)
+      skip_service_principal_aad_check       = optional(bool, false)
+      condition                              = optional(string, null)
+      condition_version                      = optional(string, null)
+      delegated_managed_identity_resource_id = optional(string, null)
+      principal_type                         = optional(string, null)
+    })), {})
     subnets = optional(map(object({
       enabled        = optional(bool, true)
       name           = optional(string)
       address_prefix = optional(string)
+      ipam_pools = optional(list(object({
+        pool_id       = string
+        prefix_length = string
+      })))
       }
     )), {})
+    tags = optional(map(string), {})
     vnet_peering_configuration = optional(object({
       peer_vnet_resource_id                = optional(string)
       name                                 = optional(string)
@@ -142,10 +203,21 @@ Description: Configuration object for the Azure AI Foundry deployment (hub, proj
 
 - `create_byor` - (Optional) Whether to create BYOR resources managed by this module. Default is true.
 - `purge_on_destroy` - (Optional) Whether to purge soft-delete–capable resources on destroy. Default is false.
-
 - `ai_foundry` - (Optional) Azure AI Foundry hub settings.
   - `name` - (Optional) Name of the hub. If not provided, a name will be generated.
   - `disable_local_auth` - (Optional) Whether to disable local authentication. Default is false.
+  - `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
+  - `diagnostic_settings` - (Optional) - map of diagnostic settings for the main foundry module and resource
+    - `name` - (Optional) The name of the diagnostic setting. One will be generated if not set, however this will not be unique if you want to create multiple diagnostic setting resources.
+    - `log_categories` - (Optional) A set of log categories to send to the log analytics workspace. Defaults to `[]`.
+    - `log_groups` - (Optional) A set of log groups to send to the log analytics workspace. Defaults to `["allLogs"]`.
+    - `metric_categories` - (Optional) A set of metric categories to send to the log analytics workspace. Defaults to `["AllMetrics"]`.
+    - `log_analytics_destination_type` - (Optional) The destination type for the diagnostic setting. Possible values are `Dedicated` and `AzureDiagnostics`. Defaults to `Dedicated`.
+    - `workspace_resource_id` - (Optional) The resource ID of the log analytics workspace to send logs and metrics to.
+    - `storage_account_resource_id` - (Optional) The resource ID of the storage account to send logs and metrics to.
+    - `event_hub_authorization_rule_resource_id` - (Optional) The resource ID of the event hub authorization rule to send logs and metrics to.
+    - `event_hub_name` - (Optional) The name of the event hub. If none is specified, the default event hub will be selected.
+    - `marketplace_partner_resource_id` - (Optional) The full ARM resource ID of the Marketplace resource to which you would like to send Diagnostic Logs.
   - `allow_project_management` - (Optional) Whether project management is allowed from the hub. Default is true.
   - `create_ai_agent_service` - (Optional) Whether to create the AI Agent service in the hub. Default is false.
   - `private_dns_zone_resource_ids` - (Optional) List of private DNS zone resource IDs for hub endpoints. Default is [].
@@ -199,7 +271,18 @@ Description: Configuration object for the Azure AI Foundry deployment (hub, proj
     - `existing_resource_id` - (Optional) Resource ID of an existing service to reuse.
     - `name` - (Optional) Name of the service if creating new.
     - `private_dns_zone_resource_id` - (Optional) Private DNS zone resource ID for the service.
-    - `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
+    - `private_endpoints_manage_dns_zone_group` - (Optional) Whether to manage private DNS zone groups with this module. If set to false, you must manage private DNS zone groups externally, e.g. using Azure Policy. Default is true.
+    - `diagnostic_settings` - (Optional) - map of diagnostic settings for the main foundry module's byor ai\_search resource
+        - `name` - (Optional) The name of the diagnostic setting. One will be generated if not set, however this will not be unique if you want to create multiple diagnostic setting resources.
+        - `log_categories` - (Optional) A set of log categories to send to the log analytics workspace. Defaults to `[]`.
+        - `log_groups` - (Optional) A set of log groups to send to the log analytics workspace. Defaults to `["allLogs"]`.
+        - `metric_categories` - (Optional) A set of metric categories to send to the log analytics workspace. Defaults to `["AllMetrics"]`.
+        - `log_analytics_destination_type` - (Optional) The destination type for the diagnostic setting. Possible values are `Dedicated` and `AzureDiagnostics`. Defaults to `Dedicated`.
+        - `workspace_resource_id` - (Optional) The resource ID of the log analytics workspace to send logs and metrics to.
+        - `storage_account_resource_id` - (Optional) The resource ID of the storage account to send logs and metrics to.
+        - `event_hub_authorization_rule_resource_id` - (Optional) The resource ID of the event hub authorization rule to send logs and metrics to.
+        - `event_hub_name` - (Optional) The name of the event hub. If none is specified, the default event hub will be selected.
+        - `marketplace_partner_resource_id` - (Optional) The full ARM resource ID of the Marketplace resource to which you would like to send Diagnostic Logs.
     - `sku` - (Optional) Service SKU. Default is "standard".
     - `local_authentication_enabled` - (Optional) Whether local auth is enabled. Default is true.
     - `partition_count` - (Optional) Number of partitions. Default is 1.
@@ -222,7 +305,18 @@ Description: Configuration object for the Azure AI Foundry deployment (hub, proj
   - `cosmosdb_definition` - (Optional) Map defining one or more Azure Cosmos DB accounts.
     - `existing_resource_id` - (Optional) Resource ID of an existing account to reuse.
     - `private_dns_zone_resource_id` - (Optional) Private DNS zone resource ID.
-    - `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
+    - `private_endpoints_manage_dns_zone_group` - (Optional) Whether to manage private DNS zone groups with this module. If set to false, you must manage private DNS zone groups externally, e.g. using Azure Policy. Default is true.
+    - `diagnostic_settings` - (Optional) - map of diagnostic settings for the foundry module's byor cosmos resource
+        - `name` - (Optional) The name of the diagnostic setting. One will be generated if not set, however this will not be unique if you want to create multiple diagnostic setting resources.
+        - `log_categories` - (Optional) A set of log categories to send to the log analytics workspace. Defaults to `[]`.
+        - `log_groups` - (Optional) A set of log groups to send to the log analytics workspace. Defaults to `["allLogs"]`.
+        - `metric_categories` - (Optional) A set of metric categories to send to the log analytics workspace. Defaults to `["AllMetrics"]`.
+        - `log_analytics_destination_type` - (Optional) The destination type for the diagnostic setting. Possible values are `Dedicated` and `AzureDiagnostics`. Defaults to `Dedicated`.
+        - `workspace_resource_id` - (Optional) The resource ID of the log analytics workspace to send logs and metrics to.
+        - `storage_account_resource_id` - (Optional) The resource ID of the storage account to send logs and metrics to.
+        - `event_hub_authorization_rule_resource_id` - (Optional) The resource ID of the event hub authorization rule to send logs and metrics to.
+        - `event_hub_name` - (Optional) The name of the event hub. If none is specified, the default event hub will be selected.
+        - `marketplace_partner_resource_id` - (Optional) The full ARM resource ID of the Marketplace resource to which you would like to send Diagnostic Logs.
     - `name` - (Optional) Name of the account if creating new.
     - `secondary_regions` - (Optional) List of secondary regions for geo-replication. Default is [].
       - `location` - Azure region name for the secondary location.
@@ -271,7 +365,18 @@ Description: Configuration object for the Azure AI Foundry deployment (hub, proj
     - `existing_resource_id` - (Optional) Resource ID of an existing vault to reuse.
     - `name` - (Optional) Name of the vault if creating new.
     - `private_dns_zone_resource_id` - (Optional) Private DNS zone resource ID.
-    - `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
+    - `private_endpoints_manage_dns_zone_group` - (Optional) Whether to manage private DNS zone groups with this module. If set to false, you must manage private DNS zone groups externally, e.g. using Azure Policy. Default is true.
+    - `diagnostic_settings` - (Optional) - map of diagnostic settings for the foundry module's byor key vault resource
+        - `name` - (Optional) The name of the diagnostic setting. One will be generated if not set, however this will not be unique if you want to create multiple diagnostic setting resources.
+        - `log_categories` - (Optional) A set of log categories to send to the log analytics workspace. Defaults to `[]`.
+        - `log_groups` - (Optional) A set of log groups to send to the log analytics workspace. Defaults to `["allLogs"]`.
+        - `metric_categories` - (Optional) A set of metric categories to send to the log analytics workspace. Defaults to `["AllMetrics"]`.
+        - `log_analytics_destination_type` - (Optional) The destination type for the diagnostic setting. Possible values are `Dedicated` and `AzureDiagnostics`. Defaults to `Dedicated`.
+        - `workspace_resource_id` - (Optional) The resource ID of the log analytics workspace to send logs and metrics to.
+        - `storage_account_resource_id` - (Optional) The resource ID of the storage account to send logs and metrics to.
+        - `event_hub_authorization_rule_resource_id` - (Optional) The resource ID of the event hub authorization rule to send logs and metrics to.
+        - `event_hub_name` - (Optional) The name of the event hub. If none is specified, the default event hub will be selected.
+        - `marketplace_partner_resource_id` - (Optional) The full ARM resource ID of the Marketplace resource to which you would like to send Diagnostic Logs.
     - `sku` - (Optional) Vault SKU. Default is "standard".
     - `tenant_id` - (Optional) Tenant ID for the Key Vault.
     - `role_assignments` - (Optional) Map of role assignments on the vault.
@@ -285,16 +390,19 @@ Description: Configuration object for the Azure AI Foundry deployment (hub, proj
       - `principal_type` - (Optional) Type of the principal (User, Group, ServicePrincipal).
     - `tags` - (Optional) Map of tags for the vault.
 
-  - `law_definition` - (Optional) Map defining one or more Log Analytics Workspaces.
-    - `existing_resource_id` - (Optional) Resource ID of an existing workspace to reuse.
-    - `name` - (Optional) Name of the workspace if creating new.
-    - `retention` - (Optional) Data retention in days. Default is 30.
-    - `sku` - (Optional) Workspace SKU. Default is "PerGB2018".
-    - `tags` - (Optional) Map of tags for the workspace.
-
   - `storage_account_definition` - (Optional) Map defining one or more Storage Accounts.
     - `existing_resource_id` - (Optional) Resource ID of an existing account to reuse.
-    - `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
+    - `diagnostic_settings` - (Optional) - map of diagnostic settings for the foundry module's byor storage account resource
+      - `name` - (Optional) The name of the diagnostic setting. One will be generated if not set, however this will not be unique if you want to create multiple diagnostic setting resources.
+      - `log_categories` - (Optional) A set of log categories to send to the log analytics workspace. Defaults to `[]`.
+      - `log_groups` - (Optional) A set of log groups to send to the log analytics workspace. Defaults to `["allLogs"]`.
+      - `metric_categories` - (Optional) A set of metric categories to send to the log analytics workspace. Defaults to `["AllMetrics"]`.
+      - `log_analytics_destination_type` - (Optional) The destination type for the diagnostic setting. Possible values are `Dedicated` and `AzureDiagnostics`. Defaults to `Dedicated`.
+      - `workspace_resource_id` - (Optional) The resource ID of the log analytics workspace to send logs and metrics to.
+      - `storage_account_resource_id` - (Optional) The resource ID of the storage account to send logs and metrics to.
+      - `event_hub_authorization_rule_resource_id` - (Optional) The resource ID of the event hub authorization rule to send logs and metrics to.
+      - `event_hub_name` - (Optional) The name of the event hub. If none is specified, the default event hub will be selected.
+      - `marketplace_partner_resource_id` - (Optional) The full ARM resource ID of the Marketplace resource to which you would like to send Diagnostic Logs.
     - `name` - (Optional) Name of the account if creating new.
     - `account_kind` - (Optional) Storage account kind. Default is "StorageV2".
     - `account_tier` - (Optional) Storage account tier. Default is "Standard".
@@ -303,6 +411,7 @@ Description: Configuration object for the Azure AI Foundry deployment (hub, proj
       - map key - Endpoint name (e.g., `blob`).
       - `type` - Endpoint type (e.g., "blob").
       - `private_dns_zone_resource_id` - (Optional) Private DNS zone resource ID for the endpoint.
+      - `private_endpoints_manage_dns_zone_group` - (Optional) Whether to manage private DNS zone groups with this module. If set to false, you must manage private DNS zone groups externally, e.g. using Azure Policy. Default is true.
     - `access_tier` - (Optional) Access tier for the account. Default is "Hot".
     - `shared_access_key_enabled` - (Optional) Whether shared access keys are enabled. Default is false.
     - `role_assignments` - (Optional) Map of role assignments on the storage account.
@@ -326,8 +435,21 @@ object({
     create_byor      = optional(bool, true)
     purge_on_destroy = optional(bool, false)
     ai_foundry = optional(object({
-      name                     = optional(string, null)
-      disable_local_auth       = optional(bool, false)
+      name                       = optional(string, null)
+      disable_local_auth         = optional(bool, false)
+      enable_diagnostic_settings = optional(bool, true)
+      diagnostic_settings = optional(map(object({
+        name                                     = optional(string, null)
+        log_categories                           = optional(set(string), [])
+        log_groups                               = optional(set(string), ["allLogs"])
+        metric_categories                        = optional(set(string), ["AllMetrics"])
+        log_analytics_destination_type           = optional(string, "Dedicated")
+        workspace_resource_id                    = optional(string, null)
+        storage_account_resource_id              = optional(string, null)
+        event_hub_authorization_rule_resource_id = optional(string, null)
+        event_hub_name                           = optional(string, null)
+        marketplace_partner_resource_id          = optional(string, null)
+      })), {})
       allow_project_management = optional(bool, true)
       create_ai_agent_service  = optional(bool, false)
       #network_injections is statically set to vnet/subnet created in the module.
@@ -389,10 +511,22 @@ object({
     # Bring Your Own Resources (BYOR) Configuration
     # One or more AI search installations.
     ai_search_definition = optional(map(object({
-      existing_resource_id         = optional(string, null)
-      name                         = optional(string)
-      private_dns_zone_resource_id = optional(string, null)
-      enable_diagnostic_settings   = optional(bool, true)
+      existing_resource_id                    = optional(string, null)
+      name                                    = optional(string)
+      private_dns_zone_resource_id            = optional(string, null)
+      private_endpoints_manage_dns_zone_group = optional(bool, true)
+      diagnostic_settings = optional(map(object({
+        name                                     = optional(string, null)
+        log_categories                           = optional(set(string), [])
+        log_groups                               = optional(set(string), ["allLogs"])
+        metric_categories                        = optional(set(string), ["AllMetrics"])
+        log_analytics_destination_type           = optional(string, "Dedicated")
+        workspace_resource_id                    = optional(string, null)
+        storage_account_resource_id              = optional(string, null)
+        event_hub_authorization_rule_resource_id = optional(string, null)
+        event_hub_name                           = optional(string, null)
+        marketplace_partner_resource_id          = optional(string, null)
+      })), {})
       sku                          = optional(string, "standard")
       local_authentication_enabled = optional(bool, true)
       partition_count              = optional(number, 1)
@@ -415,10 +549,22 @@ object({
     })), {})
 
     cosmosdb_definition = optional(map(object({
-      existing_resource_id         = optional(string, null)
-      private_dns_zone_resource_id = optional(string, null)
-      enable_diagnostic_settings   = optional(bool, true)
-      name                         = optional(string)
+      existing_resource_id                    = optional(string, null)
+      private_dns_zone_resource_id            = optional(string, null)
+      private_endpoints_manage_dns_zone_group = optional(bool, true)
+      diagnostic_settings = optional(map(object({
+        name                                     = optional(string, null)
+        log_categories                           = optional(set(string), [])
+        log_groups                               = optional(set(string), ["allLogs"])
+        metric_categories                        = optional(set(string), ["AllMetrics"])
+        log_analytics_destination_type           = optional(string, "Dedicated")
+        workspace_resource_id                    = optional(string, null)
+        storage_account_resource_id              = optional(string, null)
+        event_hub_authorization_rule_resource_id = optional(string, null)
+        event_hub_name                           = optional(string, null)
+        marketplace_partner_resource_id          = optional(string, null)
+      })), {})
+      name = optional(string)
       secondary_regions = optional(list(object({
         location          = string
         zone_redundant    = optional(bool, true)
@@ -472,12 +618,24 @@ object({
     })), {})
 
     key_vault_definition = optional(map(object({
-      existing_resource_id         = optional(string, null)
-      name                         = optional(string)
-      private_dns_zone_resource_id = optional(string, null)
-      enable_diagnostic_settings   = optional(bool, true)
-      sku                          = optional(string, "standard")
-      tenant_id                    = optional(string)
+      existing_resource_id                    = optional(string, null)
+      name                                    = optional(string)
+      private_dns_zone_resource_id            = optional(string, null)
+      private_endpoints_manage_dns_zone_group = optional(bool, true)
+      diagnostic_settings = optional(map(object({
+        name                                     = optional(string, null)
+        log_categories                           = optional(set(string), [])
+        log_groups                               = optional(set(string), ["allLogs"])
+        metric_categories                        = optional(set(string), ["AllMetrics"])
+        log_analytics_destination_type           = optional(string, "Dedicated")
+        workspace_resource_id                    = optional(string, null)
+        storage_account_resource_id              = optional(string, null)
+        event_hub_authorization_rule_resource_id = optional(string, null)
+        event_hub_name                           = optional(string, null)
+        marketplace_partner_resource_id          = optional(string, null)
+      })), {})
+      sku       = optional(string, "standard")
+      tenant_id = optional(string)
       role_assignments = optional(map(object({
         role_definition_id_or_name             = string
         principal_id                           = string
@@ -491,24 +649,28 @@ object({
       tags = optional(map(string), {})
     })), {})
 
-    law_definition = optional(map(object({
-      existing_resource_id = optional(string)
-      name                 = optional(string)
-      retention            = optional(number, 30)
-      sku                  = optional(string, "PerGB2018")
-      tags                 = optional(map(string), {})
-    })), {})
-
     storage_account_definition = optional(map(object({
-      existing_resource_id       = optional(string, null)
-      enable_diagnostic_settings = optional(bool, true)
-      name                       = optional(string, null)
-      account_kind               = optional(string, "StorageV2")
-      account_tier               = optional(string, "Standard")
-      account_replication_type   = optional(string, "ZRS")
+      existing_resource_id = optional(string, null)
+      diagnostic_settings = optional(map(object({
+        name                                     = optional(string, null)
+        log_categories                           = optional(set(string), [])
+        log_groups                               = optional(set(string), ["allLogs"])
+        metric_categories                        = optional(set(string), ["AllMetrics"])
+        log_analytics_destination_type           = optional(string, "Dedicated")
+        workspace_resource_id                    = optional(string, null)
+        storage_account_resource_id              = optional(string, null)
+        event_hub_authorization_rule_resource_id = optional(string, null)
+        event_hub_name                           = optional(string, null)
+        marketplace_partner_resource_id          = optional(string, null)
+      })), {})
+      name                     = optional(string, null)
+      account_kind             = optional(string, "StorageV2")
+      account_tier             = optional(string, "Standard")
+      account_replication_type = optional(string, "ZRS")
       endpoints = optional(map(object({
-        type                         = string
-        private_dns_zone_resource_id = optional(string, null)
+        type                                    = string
+        private_dns_zone_resource_id            = optional(string, null)
+        private_endpoints_manage_dns_zone_group = optional(bool, true)
         })), {
         blob = {
           type = "blob"
@@ -554,6 +716,18 @@ Description: Configuration object for the Azure API Management service to be dep
   - `store_name` - The certificate store name (e.g., "CertificateAuthority", "Root").
   - `certificate_password` - (Optional) The password for the certificate.
 - `client_certificate_enabled` - (Optional) Whether client certificate authentication is enabled. Default is false.
+- `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
+- `diagnostic_settings` - (Optional) Map of diagnostic settings configurations for the API Management service. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `name` - (Optional) The name of the diagnostic setting.
+  - `log_categories` - (Optional) Set of log categories to enable. Default is an empty set.
+  - `log_groups` - (Optional) Set of log groups to enable. Default is ["allLogs"].
+  - `metric_categories` - (Optional) Set of metric categories to enable. Default is ["AllMetrics"].
+  - `log_analytics_destination_type` - (Optional) The destination type for Log Analytics. Default is "Dedicated".
+  - `workspace_resource_id` - (Optional) Resource ID of the Log Analytics workspace.
+  - `storage_account_resource_id` - (Optional) Resource ID of the storage account for diagnostics.
+  - `event_hub_authorization_rule_resource_id` - (Optional) Resource ID of the Event Hub authorization rule.
+  - `event_hub_name` - (Optional) Name of the Event Hub.
+  - `marketplace_partner_resource_id` - (Optional) Resource ID of the marketplace partner resource.
 - `hostname_configuration` - (Optional) Hostname configuration for different endpoints.
   - `management` - (Optional) List of custom hostnames for the management endpoint.
   - `portal` - (Optional) List of custom hostnames for the developer portal endpoint.
@@ -568,6 +742,9 @@ Description: Configuration object for the Azure API Management service to be dep
     - `negotiate_client_certificate` - (Optional) Whether to negotiate client certificates.
     - `ssl_keyvault_identity_client_id` - (Optional) Client ID of the user-assigned managed identity for Key Vault access.
     - `default_ssl_binding` - (Optional, proxy only) Whether this is the default SSL binding.
+- `managed_identities` - (Optional) Managed identities configuration.
+  - `system_assigned` - (Optional) Whether to enable system-assigned managed identity. Default is false.
+  - `user_assigned_resource_ids` - (Optional) Set of user-assigned managed identity resource IDs.
 - `min_api_version` - (Optional) The minimum API version that the API Management service will accept.
 - `notification_sender_email` - (Optional) Email address from which notifications will be sent.
 - `protocols` - (Optional) Protocol configuration.
@@ -619,6 +796,19 @@ object({
       certificate_password = optional(string, null)
     })), [])
     client_certificate_enabled = optional(bool, false)
+    enable_diagnostic_settings = optional(bool, true)
+    diagnostic_settings = optional(map(object({
+      name                                     = optional(string, null)
+      log_categories                           = optional(set(string), [])
+      log_groups                               = optional(set(string), ["allLogs"])
+      metric_categories                        = optional(set(string), ["AllMetrics"])
+      log_analytics_destination_type           = optional(string, "Dedicated")
+      workspace_resource_id                    = optional(string, null)
+      storage_account_resource_id              = optional(string, null)
+      event_hub_authorization_rule_resource_id = optional(string, null)
+      event_hub_name                           = optional(string, null)
+      marketplace_partner_resource_id          = optional(string, null)
+    })), {})
     hostname_configuration = optional(object({
       management = optional(list(object({
         host_name                       = string
@@ -662,6 +852,10 @@ object({
         ssl_keyvault_identity_client_id = optional(string, null)
       })), [])
     }), null)
+    managed_identities = optional(object({
+      system_assigned            = optional(bool, false)
+      user_assigned_resource_ids = optional(set(string), [])
+    }))
     min_api_version           = optional(string)
     notification_sender_email = optional(string, null)
     protocols = optional(object({
@@ -819,6 +1013,18 @@ Description: Configuration object for the Azure Application Gateway to be deploy
   - `default_backend_address_pool_name` - (Optional) Default backend address pool name.
   - `path_rules` - Map of path-based routing rules.
 - `tags` - (Optional) Map of tags to assign to the Application Gateway.
+- `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
+- `diagnostic_settings` - (Optional) Map of diagnostic settings configurations for the Application Gateway. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `name` - (Optional) The name of the diagnostic setting.
+  - `log_categories` - (Optional) Set of log categories to enable. Default is an empty set.
+  - `log_groups` - (Optional) Set of log groups to enable. Default is ["allLogs"].
+  - `metric_categories` - (Optional) Set of metric categories to enable. Default is ["AllMetrics"].
+  - `log_analytics_destination_type` - (Optional) The destination type for Log Analytics. Default is "Dedicated".
+  - `workspace_resource_id` - (Optional) Resource ID of the Log Analytics workspace.
+  - `storage_account_resource_id` - (Optional) Resource ID of the storage account for diagnostics.
+  - `event_hub_authorization_rule_resource_id` - (Optional) Resource ID of the Event Hub authorization rule.
+  - `event_hub_name` - (Optional) Name of the Event Hub.
+  - `marketplace_partner_resource_id` - (Optional) Resource ID of the marketplace partner resource.
 - `role_assignments` - (Optional) Map of role assignments to create on the Application Gateway. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
   - `role_definition_id_or_name` - The role definition ID or name to assign.
   - `principal_id` - The principal ID to assign the role to.
@@ -1020,7 +1226,20 @@ object({
       }))
     })), null)
 
-    tags = optional(map(string), {})
+    tags                       = optional(map(string), {})
+    enable_diagnostic_settings = optional(bool, true)
+    diagnostic_settings = optional(map(object({
+      name                                     = optional(string, null)
+      log_categories                           = optional(set(string), [])
+      log_groups                               = optional(set(string), ["allLogs"])
+      metric_categories                        = optional(set(string), ["AllMetrics"])
+      log_analytics_destination_type           = optional(string, "Dedicated")
+      workspace_resource_id                    = optional(string, null)
+      storage_account_resource_id              = optional(string, null)
+      event_hub_authorization_rule_resource_id = optional(string, null)
+      event_hub_name                           = optional(string, null)
+      marketplace_partner_resource_id          = optional(string, null)
+    })), {})
     role_assignments = optional(map(object({
       role_definition_id_or_name             = string
       principal_id                           = string
@@ -1093,6 +1312,17 @@ Description: Configuration object for the Container App Environment to be create
 - `deploy` - (Optional) Whether to deploy the Container App Environment. Default is true.
 - `name` - (Optional) The name of the Container App Environment. If not provided, a name will be generated.
 - `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
+- `diagnostic_settings` - (Optional) Map of diagnostic settings configurations for the Container App Environment. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `name` - (Optional) The name of the diagnostic setting.
+  - `log_categories` - (Optional) Set of log categories to enable. Default is an empty set.
+  - `log_groups` - (Optional) Set of log groups to enable. Default is ["allLogs"].
+  - `metric_categories` - (Optional) Set of metric categories to enable. Default is ["AllMetrics"].
+  - `log_analytics_destination_type` - (Optional) The destination type for Log Analytics. Default is "Dedicated".
+  - `workspace_resource_id` - (Optional) Resource ID of the Log Analytics workspace.
+  - `storage_account_resource_id` - (Optional) Resource ID of the storage account for diagnostics.
+  - `event_hub_authorization_rule_resource_id` - (Optional) Resource ID of the Event Hub authorization rule.
+  - `event_hub_name` - (Optional) Name of the Event Hub.
+  - `marketplace_partner_resource_id` - (Optional) Resource ID of the marketplace partner resource.
 - `tags` - (Optional) Map of tags to assign to the Container App Environment.
 - `internal_load_balancer_enabled` - (Optional) Whether the load balancer is internal. Default is true.
 - `log_analytics_workspace_resource_id` - (Optional) Resource ID of the Log Analytics workspace for logging.
@@ -1120,9 +1350,21 @@ Type:
 
 ```hcl
 object({
-    deploy                              = optional(bool, true)
-    name                                = optional(string)
-    enable_diagnostic_settings          = optional(bool, true)
+    deploy                     = optional(bool, true)
+    name                       = optional(string)
+    enable_diagnostic_settings = optional(bool, true)
+    diagnostic_settings = optional(map(object({
+      name                                     = optional(string, null)
+      log_categories                           = optional(set(string), [])
+      log_groups                               = optional(set(string), ["allLogs"])
+      metric_categories                        = optional(set(string), ["AllMetrics"])
+      log_analytics_destination_type           = optional(string, "Dedicated")
+      workspace_resource_id                    = optional(string, null)
+      storage_account_resource_id              = optional(string, null)
+      event_hub_authorization_rule_resource_id = optional(string, null)
+      event_hub_name                           = optional(string, null)
+      marketplace_partner_resource_id          = optional(string, null)
+    })), {})
     tags                                = optional(map(string), {})
     internal_load_balancer_enabled      = optional(bool, true)
     log_analytics_workspace_resource_id = optional(string)
@@ -1177,6 +1419,27 @@ Description: Configuration object for the Azure Firewall to be deployed.
 - `sku` - (Optional) The SKU of the Azure Firewall. Default is "AZFW\_VNet".
 - `tier` - (Optional) The tier of the Azure Firewall. Default is "Standard".
 - `zones` - (Optional) List of availability zones for the Azure Firewall. Default is ["1", "2", "3"].
+- `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
+- `diagnostic_settings` - (Optional) Map of diagnostic settings configurations for the Azure Firewall. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `name` - (Optional) The name of the diagnostic setting.
+  - `log_categories` - (Optional) Set of log categories to enable. Default is an empty set.
+  - `log_groups` - (Optional) Set of log groups to enable. Default is ["allLogs"].
+  - `metric_categories` - (Optional) Set of metric categories to enable. Default is ["AllMetrics"].
+  - `log_analytics_destination_type` - (Optional) The destination type for Log Analytics. Default is "Dedicated".
+  - `workspace_resource_id` - (Optional) Resource ID of the Log Analytics workspace.
+  - `storage_account_resource_id` - (Optional) Resource ID of the storage account for diagnostics.
+  - `event_hub_authorization_rule_resource_id` - (Optional) Resource ID of the Event Hub authorization rule.
+  - `event_hub_name` - (Optional) Name of the Event Hub.
+  - `marketplace_partner_resource_id` - (Optional) Resource ID of the marketplace partner resource.
+- `role_assignments` - (Optional) Map of role assignments to create on the Azure Firewall. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `role_definition_id_or_name` - The role definition ID or name to assign.
+  - `principal_id` - The principal ID to assign the role to.
+  - `description` - (Optional) Description of the role assignment.
+  - `skip_service_principal_aad_check` - (Optional) Whether to skip AAD check for service principal.
+  - `condition` - (Optional) Condition for the role assignment.
+  - `condition_version` - (Optional) Version of the condition.
+  - `delegated_managed_identity_resource_id` - (Optional) Resource ID of the delegated managed identity.
+  - `principal_type` - (Optional) Type of the principal (User, Group, ServicePrincipal).
 - `tags` - (Optional) Map of tags to assign to the Azure Firewall.
 - `resource_group_name` - (Optional) The name of the resource group to deploy the Azure Firewall into. If not provided, the module's resource group will be used.
 
@@ -1184,11 +1447,34 @@ Type:
 
 ```hcl
 object({
-    deploy              = optional(bool, true)
-    name                = optional(string)
-    sku                 = optional(string, "AZFW_VNet")
-    tier                = optional(string, "Standard")
-    zones               = optional(list(string), ["1", "2", "3"])
+    deploy                     = optional(bool, true)
+    name                       = optional(string)
+    sku                        = optional(string, "AZFW_VNet")
+    tier                       = optional(string, "Standard")
+    zones                      = optional(list(string), ["1", "2", "3"])
+    enable_diagnostic_settings = optional(bool, true)
+    diagnostic_settings = optional(map(object({
+      name                                     = optional(string, null)
+      log_categories                           = optional(set(string), [])
+      log_groups                               = optional(set(string), ["allLogs"])
+      metric_categories                        = optional(set(string), ["AllMetrics"])
+      log_analytics_destination_type           = optional(string, "Dedicated")
+      workspace_resource_id                    = optional(string, null)
+      storage_account_resource_id              = optional(string, null)
+      event_hub_authorization_rule_resource_id = optional(string, null)
+      event_hub_name                           = optional(string, null)
+      marketplace_partner_resource_id          = optional(string, null)
+    })), {})
+    role_assignments = optional(map(object({
+      role_definition_id_or_name             = string
+      principal_id                           = string
+      description                            = optional(string, null)
+      skip_service_principal_aad_check       = optional(bool, false)
+      condition                              = optional(string, null)
+      condition_version                      = optional(string, null)
+      delegated_managed_identity_resource_id = optional(string, null)
+      principal_type                         = optional(string, null)
+    })), {})
     tags                = optional(map(string), {})
     resource_group_name = optional(string)
   })
@@ -1264,6 +1550,18 @@ Description: Configuration object for the Azure App Configuration service to be 
   - `condition_version` - (Optional) Version of the condition.
   - `delegated_managed_identity_resource_id` - (Optional) Resource ID of the delegated managed identity.
   - `principal_type` - (Optional) Type of the principal (User, Group, ServicePrincipal).
+- `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
+- `diagnostic_settings` - (Optional) Map of diagnostic settings configurations for the App Configuration store. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `name` - (Optional) The name of the diagnostic setting.
+  - `log_categories` - (Optional) Set of log categories to enable. Default is an empty set.
+  - `log_groups` - (Optional) Set of log groups to enable. Default is ["allLogs"].
+  - `metric_categories` - (Optional) Set of metric categories to enable. Default is ["AllMetrics"].
+  - `log_analytics_destination_type` - (Optional) The destination type for Log Analytics. Default is "Dedicated".
+  - `workspace_resource_id` - (Optional) Resource ID of the Log Analytics workspace.
+  - `storage_account_resource_id` - (Optional) Resource ID of the storage account for diagnostics.
+  - `event_hub_authorization_rule_resource_id` - (Optional) Resource ID of the Event Hub authorization rule.
+  - `event_hub_name` - (Optional) Name of the Event Hub.
+  - `marketplace_partner_resource_id` - (Optional) Resource ID of the marketplace partner resource.
 
 Type:
 
@@ -1290,6 +1588,19 @@ object({
       delegated_managed_identity_resource_id = optional(string, null)
       principal_type                         = optional(string, null)
     })), {})
+    enable_diagnostic_settings = optional(bool, true)
+    diagnostic_settings = optional(map(object({
+      name                                     = optional(string, null)
+      log_categories                           = optional(set(string), [])
+      log_groups                               = optional(set(string), ["allLogs"])
+      metric_categories                        = optional(set(string), ["AllMetrics"])
+      log_analytics_destination_type           = optional(string, "Dedicated")
+      workspace_resource_id                    = optional(string, null)
+      storage_account_resource_id              = optional(string, null)
+      event_hub_authorization_rule_resource_id = optional(string, null)
+      event_hub_name                           = optional(string, null)
+      marketplace_partner_resource_id          = optional(string, null)
+    })), {})
   })
 ```
 
@@ -1304,6 +1615,18 @@ Description: Configuration object for the Azure Container Registry to be created
 - `sku` - (Optional) The SKU of the Container Registry. Default is "Premium".
 - `zone_redundancy_enabled` - (Optional) Whether zone redundancy is enabled. Default is true.
 - `public_network_access_enabled` - (Optional) Whether public network access is enabled. Default is false.
+- `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
+- `diagnostic_settings` - (Optional) Map of diagnostic settings configurations for the Container Registry. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `name` - (Optional) The name of the diagnostic setting.
+  - `log_categories` - (Optional) Set of log categories to enable. Default is an empty set.
+  - `log_groups` - (Optional) Set of log groups to enable. Default is ["allLogs"].
+  - `metric_categories` - (Optional) Set of metric categories to enable. Default is ["AllMetrics"].
+  - `log_analytics_destination_type` - (Optional) The destination type for Log Analytics. Default is "Dedicated".
+  - `workspace_resource_id` - (Optional) Resource ID of the Log Analytics workspace.
+  - `storage_account_resource_id` - (Optional) Resource ID of the storage account for diagnostics.
+  - `event_hub_authorization_rule_resource_id` - (Optional) Resource ID of the Event Hub authorization rule.
+  - `event_hub_name` - (Optional) Name of the Event Hub.
+  - `marketplace_partner_resource_id` - (Optional) Resource ID of the marketplace partner resource.
 - `tags` - (Optional) Map of tags to assign to the Container Registry.
 - `role_assignments` - (Optional) Map of role assignments to create on the Container Registry. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
   - `role_definition_id_or_name` - The role definition ID or name to assign.
@@ -1325,7 +1648,19 @@ object({
     zone_redundancy_enabled       = optional(bool, true)
     public_network_access_enabled = optional(bool, false)
     enable_diagnostic_settings    = optional(bool, true)
-    tags                          = optional(map(string), {})
+    diagnostic_settings = optional(map(object({
+      name                                     = optional(string, null)
+      log_categories                           = optional(set(string), [])
+      log_groups                               = optional(set(string), ["allLogs"])
+      metric_categories                        = optional(set(string), ["AllMetrics"])
+      log_analytics_destination_type           = optional(string, "Dedicated")
+      workspace_resource_id                    = optional(string, null)
+      storage_account_resource_id              = optional(string, null)
+      event_hub_authorization_rule_resource_id = optional(string, null)
+      event_hub_name                           = optional(string, null)
+      marketplace_partner_resource_id          = optional(string, null)
+    })), {})
+    tags = optional(map(string), {})
     role_assignments = optional(map(object({
       role_definition_id_or_name             = string
       principal_id                           = string
@@ -1347,13 +1682,25 @@ Description: Configuration object for the Azure Cosmos DB account to be created 
 
 - `deploy` - (Optional) Whether to deploy the Cosmos DB account. Default is true.
 - `name` - (Optional) The name of the Cosmos DB account. If not provided, a name will be generated.
+- `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
+- `diagnostic_settings` - (Optional) Map of diagnostic settings configurations for the Cosmos DB account. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `name` - (Optional) The name of the diagnostic setting.
+  - `log_categories` - (Optional) Set of log categories to enable. Default is an empty set.
+  - `log_groups` - (Optional) Set of log groups to enable. Default is ["allLogs"].
+  - `metric_categories` - (Optional) Set of metric categories to enable. Default is ["AllMetrics"].
+  - `log_analytics_destination_type` - (Optional) The destination type for Log Analytics. Default is "Dedicated".
+  - `workspace_resource_id` - (Optional) Resource ID of the Log Analytics workspace.
+  - `storage_account_resource_id` - (Optional) Resource ID of the storage account for diagnostics.
+  - `event_hub_authorization_rule_resource_id` - (Optional) Resource ID of the Event Hub authorization rule.
+  - `event_hub_name` - (Optional) Name of the Event Hub.
+  - `marketplace_partner_resource_id` - (Optional) Resource ID of the marketplace partner resource.
 - `secondary_regions` - (Optional) List of secondary regions for geo-replication.
   - `location` - The Azure region for the secondary location.
   - `zone_redundant` - (Optional) Whether zone redundancy is enabled for the secondary region. Default is true.
   - `failover_priority` - (Optional) The failover priority for the secondary region. Default is 0.
 - `public_network_access_enabled` - (Optional) Whether public network access is enabled. Default is false.
 - `analytical_storage_enabled` - (Optional) Whether analytical storage is enabled. Default is true.
-- `automatic_failover_enabled` - (Optional) Whether automatic failover is enabled. Default is false.
+- `automatic_failover_enabled` - (Optional) Whether automatic failover is enabled. Default is true.
 - `local_authentication_disabled` - (Optional) Whether local authentication is disabled. Default is true.
 - `partition_merge_enabled` - (Optional) Whether partition merge is enabled. Default is false.
 - `multiple_write_locations_enabled` - (Optional) Whether multiple write locations are enabled. Default is false.
@@ -1387,6 +1734,18 @@ object({
     deploy                     = optional(bool, true)
     name                       = optional(string)
     enable_diagnostic_settings = optional(bool, true)
+    diagnostic_settings = optional(map(object({
+      name                                     = optional(string, null)
+      log_categories                           = optional(set(string), [])
+      log_groups                               = optional(set(string), ["allLogs"])
+      metric_categories                        = optional(set(string), ["AllMetrics"])
+      log_analytics_destination_type           = optional(string, "Dedicated")
+      workspace_resource_id                    = optional(string, null)
+      storage_account_resource_id              = optional(string, null)
+      event_hub_authorization_rule_resource_id = optional(string, null)
+      event_hub_name                           = optional(string, null)
+      marketplace_partner_resource_id          = optional(string, null)
+    })), {})
     secondary_regions = optional(list(object({
       location          = string
       zone_redundant    = optional(bool, true)
@@ -1444,6 +1803,18 @@ Description: Configuration object for the Azure Key Vault to be created for GenA
 - `public_network_access_enabled` - (Optional) Whether public network access is enabled. Default is false.
 - `sku` - (Optional) The SKU of the Key Vault. Default is "standard".
 - `tenant_id` - (Optional) The tenant ID for the Key Vault. If not provided, the current tenant will be used.
+- `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
+- `diagnostic_settings` - (Optional) Map of diagnostic settings configurations for the Key Vault. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `name` - (Optional) The name of the diagnostic setting.
+  - `log_categories` - (Optional) Set of log categories to enable. Default is an empty set.
+  - `log_groups` - (Optional) Set of log groups to enable. Default is ["allLogs"].
+  - `metric_categories` - (Optional) Set of metric categories to enable. Default is ["AllMetrics"].
+  - `log_analytics_destination_type` - (Optional) The destination type for Log Analytics. Default is "Dedicated".
+  - `workspace_resource_id` - (Optional) Resource ID of the Log Analytics workspace.
+  - `storage_account_resource_id` - (Optional) Resource ID of the storage account for diagnostics.
+  - `event_hub_authorization_rule_resource_id` - (Optional) Resource ID of the Event Hub authorization rule.
+  - `event_hub_name` - (Optional) Name of the Event Hub.
+  - `marketplace_partner_resource_id` - (Optional) Resource ID of the marketplace partner resource.
 - `role_assignments` - (Optional) Map of role assignments to create on the Key Vault. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
   - `role_definition_id_or_name` - The role definition ID or name to assign.
   - `principal_id` - The principal ID to assign the role to.
@@ -1469,6 +1840,19 @@ object({
     public_network_access_enabled = optional(bool, false)
     sku                           = optional(string, "standard")
     tenant_id                     = optional(string)
+    enable_diagnostic_settings    = optional(bool, true)
+    diagnostic_settings = optional(map(object({
+      name                                     = optional(string, null)
+      log_categories                           = optional(set(string), [])
+      log_groups                               = optional(set(string), ["allLogs"])
+      metric_categories                        = optional(set(string), ["AllMetrics"])
+      log_analytics_destination_type           = optional(string, "Dedicated")
+      workspace_resource_id                    = optional(string, null)
+      storage_account_resource_id              = optional(string, null)
+      event_hub_authorization_rule_resource_id = optional(string, null)
+      event_hub_name                           = optional(string, null)
+      marketplace_partner_resource_id          = optional(string, null)
+    })), {})
     role_assignments = optional(map(object({
       role_definition_id_or_name             = string
       principal_id                           = string
@@ -1491,6 +1875,18 @@ Description: Configuration object for the Azure Storage Account to be created fo
 
 - `deploy` - (Optional) Whether to deploy the Storage Account. Default is true.
 - `name` - (Optional) The name of the Storage Account. If not provided, a name will be generated.
+- `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
+- `diagnostic_settings` - (Optional) Map of diagnostic settings configurations for the Storage Account. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `name` - (Optional) The name of the diagnostic setting.
+  - `log_categories` - (Optional) Set of log categories to enable. Default is an empty set.
+  - `log_groups` - (Optional) Set of log groups to enable. Default is ["allLogs"].
+  - `metric_categories` - (Optional) Set of metric categories to enable. Default is ["AllMetrics"].
+  - `log_analytics_destination_type` - (Optional) The destination type for Log Analytics. Default is "Dedicated".
+  - `workspace_resource_id` - (Optional) Resource ID of the Log Analytics workspace.
+  - `storage_account_resource_id` - (Optional) Resource ID of the storage account for diagnostics.
+  - `event_hub_authorization_rule_resource_id` - (Optional) Resource ID of the Event Hub authorization rule.
+  - `event_hub_name` - (Optional) Name of the Event Hub.
+  - `marketplace_partner_resource_id` - (Optional) Resource ID of the marketplace partner resource.
 - `account_kind` - (Optional) The kind of storage account. Default is "StorageV2".
 - `account_tier` - (Optional) The performance tier of the storage account. Default is "Standard".
 - `account_replication_type` - (Optional) The replication type for the storage account. Default is "GRS".
@@ -1513,9 +1909,21 @@ Type:
 
 ```hcl
 object({
-    deploy                        = optional(bool, true)
-    name                          = optional(string)
-    enable_diagnostic_settings    = optional(bool, true)
+    deploy                     = optional(bool, true)
+    name                       = optional(string)
+    enable_diagnostic_settings = optional(bool, true)
+    diagnostic_settings = optional(map(object({
+      name                                     = optional(string, null)
+      log_categories                           = optional(set(string), [])
+      log_groups                               = optional(set(string), ["allLogs"])
+      metric_categories                        = optional(set(string), ["AllMetrics"])
+      log_analytics_destination_type           = optional(string, "Dedicated")
+      workspace_resource_id                    = optional(string, null)
+      storage_account_resource_id              = optional(string, null)
+      event_hub_authorization_rule_resource_id = optional(string, null)
+      event_hub_name                           = optional(string, null)
+      marketplace_partner_resource_id          = optional(string, null)
+    })), {})
     account_kind                  = optional(string, "StorageV2")
     account_tier                  = optional(string, "Standard")
     account_replication_type      = optional(string, "GRS")
@@ -1546,6 +1954,7 @@ Default: `{}`
 
 Description: Configuration object for the Jump VM to be created for managing the implementation services.
 
+- `deploy` - (Optional) Whether to deploy the Jump VM. Default is true.
 - `name` - (Optional) The name of the Jump VM. If not provided, a name will be generated.
 - `sku` - (Optional) The VM size/SKU for the Jump VM. Default is "Standard\_B2s".
 - `tags` - (Optional) Map of tags to assign to the Jump VM.
@@ -1571,6 +1980,18 @@ Description: Configuration object for the Azure AI Search service to be created 
 
 - `deploy` - (Optional) Deploy the AI Search service. Default is true.
 - `name` - (Optional) The name of the AI Search service. If not provided, a name will be generated.
+- `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
+- `diagnostic_settings` - (Optional) Map of diagnostic settings configurations for the AI Search service. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `name` - (Optional) The name of the diagnostic setting.
+  - `log_categories` - (Optional) Set of log categories to enable. Default is an empty set.
+  - `log_groups` - (Optional) Set of log groups to enable. Default is ["allLogs"].
+  - `metric_categories` - (Optional) Set of metric categories to enable. Default is ["AllMetrics"].
+  - `log_analytics_destination_type` - (Optional) The destination type for Log Analytics. Default is "Dedicated".
+  - `workspace_resource_id` - (Optional) Resource ID of the Log Analytics workspace.
+  - `storage_account_resource_id` - (Optional) Resource ID of the storage account for diagnostics.
+  - `event_hub_authorization_rule_resource_id` - (Optional) Resource ID of the Event Hub authorization rule.
+  - `event_hub_name` - (Optional) Name of the Event Hub.
+  - `marketplace_partner_resource_id` - (Optional) Resource ID of the marketplace partner resource.
 - `sku` - (Optional) The SKU of the AI Search service. Default is "standard".
 - `local_authentication_enabled` - (Optional) Whether local authentication is enabled. Default is true.
 - `partition_count` - (Optional) The number of partitions for the search service. Default is 1.
@@ -1593,9 +2014,21 @@ Type:
 
 ```hcl
 object({
-    deploy                        = optional(bool, true)
-    name                          = optional(string)
-    enable_diagnostic_settings    = optional(bool, true)
+    deploy                     = optional(bool, true)
+    name                       = optional(string)
+    enable_diagnostic_settings = optional(bool, true)
+    diagnostic_settings = optional(map(object({
+      name                                     = optional(string, null)
+      log_categories                           = optional(set(string), [])
+      log_groups                               = optional(set(string), ["allLogs"])
+      metric_categories                        = optional(set(string), ["AllMetrics"])
+      log_analytics_destination_type           = optional(string, "Dedicated")
+      workspace_resource_id                    = optional(string, null)
+      storage_account_resource_id              = optional(string, null)
+      event_hub_authorization_rule_resource_id = optional(string, null)
+      event_hub_name                           = optional(string, null)
+      marketplace_partner_resource_id          = optional(string, null)
+    })), {})
     sku                           = optional(string, "standard")
     local_authentication_enabled  = optional(bool, true)
     partition_count               = optional(number, 1)
@@ -1643,8 +2076,8 @@ Default: `{}`
 
 ### <a name="input_law_definition"></a> [law\_definition](#input\_law\_definition)
 
-Description: Configuration object for the Log Analytics Workspace to be created for monitoring and logging.
-
+Description: Configuration object for the Log Analytics Workspace to be created for monitoring and logging. If no resource\_id is provided, and deploy is set to false, then each resource will default to not including diagnostic settings unless an explicit diagnostic\_setting value is provided for that resource. Explicitly set resource diagnostic\_settings values will always be preferred.
+- `deploy` - (Optional) Boolean to indicate whether to deploy a new Log Analytics Workspace if no resource\_id is provided. Default is true.
 - `resource_id` - (Optional) The resource ID of an existing Log Analytics Workspace to use. If provided, the workspace will not be created and the other inputs will be ignored.
 - `name` - (Optional) The name of the Log Analytics Workspace. If not provided, a name will be generated.
 - `retention` - (Optional) The data retention period in days for the workspace. Default is 30.
@@ -1655,6 +2088,7 @@ Type:
 
 ```hcl
 object({
+    deploy      = optional(bool, true)
     resource_id = optional(string)
     name        = optional(string)
     retention   = optional(number, 30)
@@ -1743,6 +2177,7 @@ Default: `{}`
 
 Description: Configuration object for Private DNS Zones and their network links.
 
+- `azure_policy_pe_zone_linking_enabled` - (Optional) Whether Azure Policy is used to enable private endpoint dns zone linking when using a platform landing zone (platform landing zone flag = true). Default is true.
 - `existing_zones_resource_group_resource_id` - (Optional) Resource group resource id where existing Private DNS Zones are located.
 - `allow_internet_resolution_fallback` - (Optional) Whether to allow fallback to internet resolution for Private DNS Zone network links. Default is false.
 - `network_links` - (Optional) Map of network links to create for Private DNS Zones. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
@@ -1754,6 +2189,7 @@ Type:
 
 ```hcl
 object({
+    azure_policy_pe_zone_linking_enabled      = optional(bool, true)
     existing_zones_resource_group_resource_id = optional(string)
     allow_internet_resolution_fallback        = optional(bool, false)
     network_links = optional(map(object({
@@ -1885,6 +2321,10 @@ Default: `{}`
 
 The following outputs are exported:
 
+### <a name="output_log_analytics_workspace_id"></a> [log\_analytics\_workspace\_id](#output\_log\_analytics\_workspace\_id)
+
+Description: The ID of the Log Analytics Workspace used for monitoring.
+
 ### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
 
 Description: Future resource ID output for the LZA.
@@ -1892,6 +2332,10 @@ Description: Future resource ID output for the LZA.
 ### <a name="output_subnets"></a> [subnets](#output\_subnets)
 
 Description: A map of the deployed subnets in the AI PTN LZA.
+
+### <a name="output_virtual_network"></a> [virtual\_network](#output\_virtual\_network)
+
+Description: The deployed virtual network in the AI PTN LZA.
 
 ## Modules
 
@@ -1901,7 +2345,7 @@ The following Modules are called:
 
 Source: Azure/avm-res-network-virtualnetwork/azurerm
 
-Version: =0.16.0
+Version: 0.16.0
 
 ### <a name="module_apim"></a> [apim](#module\_apim)
 
@@ -2003,7 +2447,7 @@ Version: 0.4.1
 
 Source: Azure/avm-ptn-aiml-ai-foundry/azurerm
 
-Version: 0.8.0
+Version: 0.10.0
 
 ### <a name="module_fw_pip"></a> [fw\_pip](#module\_fw\_pip)
 

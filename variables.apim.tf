@@ -20,6 +20,19 @@ variable "apim_definition" {
       certificate_password = optional(string, null)
     })), [])
     client_certificate_enabled = optional(bool, false)
+    enable_diagnostic_settings = optional(bool, true)
+    diagnostic_settings = optional(map(object({
+      name                                     = optional(string, null)
+      log_categories                           = optional(set(string), [])
+      log_groups                               = optional(set(string), ["allLogs"])
+      metric_categories                        = optional(set(string), ["AllMetrics"])
+      log_analytics_destination_type           = optional(string, "Dedicated")
+      workspace_resource_id                    = optional(string, null)
+      storage_account_resource_id              = optional(string, null)
+      event_hub_authorization_rule_resource_id = optional(string, null)
+      event_hub_name                           = optional(string, null)
+      marketplace_partner_resource_id          = optional(string, null)
+    })), {})
     hostname_configuration = optional(object({
       management = optional(list(object({
         host_name                       = string
@@ -63,6 +76,10 @@ variable "apim_definition" {
         ssl_keyvault_identity_client_id = optional(string, null)
       })), [])
     }), null)
+    managed_identities = optional(object({
+      system_assigned            = optional(bool, false)
+      user_assigned_resource_ids = optional(set(string), [])
+    }))
     min_api_version           = optional(string)
     notification_sender_email = optional(string, null)
     protocols = optional(object({
@@ -120,6 +137,18 @@ Configuration object for the Azure API Management service to be deployed.
   - `store_name` - The certificate store name (e.g., "CertificateAuthority", "Root").
   - `certificate_password` - (Optional) The password for the certificate.
 - `client_certificate_enabled` - (Optional) Whether client certificate authentication is enabled. Default is false.
+- `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
+- `diagnostic_settings` - (Optional) Map of diagnostic settings configurations for the API Management service. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `name` - (Optional) The name of the diagnostic setting.
+  - `log_categories` - (Optional) Set of log categories to enable. Default is an empty set.
+  - `log_groups` - (Optional) Set of log groups to enable. Default is ["allLogs"].
+  - `metric_categories` - (Optional) Set of metric categories to enable. Default is ["AllMetrics"].
+  - `log_analytics_destination_type` - (Optional) The destination type for Log Analytics. Default is "Dedicated".
+  - `workspace_resource_id` - (Optional) Resource ID of the Log Analytics workspace.
+  - `storage_account_resource_id` - (Optional) Resource ID of the storage account for diagnostics.
+  - `event_hub_authorization_rule_resource_id` - (Optional) Resource ID of the Event Hub authorization rule.
+  - `event_hub_name` - (Optional) Name of the Event Hub.
+  - `marketplace_partner_resource_id` - (Optional) Resource ID of the marketplace partner resource.
 - `hostname_configuration` - (Optional) Hostname configuration for different endpoints.
   - `management` - (Optional) List of custom hostnames for the management endpoint.
   - `portal` - (Optional) List of custom hostnames for the developer portal endpoint.
@@ -134,6 +163,9 @@ Configuration object for the Azure API Management service to be deployed.
     - `negotiate_client_certificate` - (Optional) Whether to negotiate client certificates.
     - `ssl_keyvault_identity_client_id` - (Optional) Client ID of the user-assigned managed identity for Key Vault access.
     - `default_ssl_binding` - (Optional, proxy only) Whether this is the default SSL binding.
+- `managed_identities` - (Optional) Managed identities configuration.
+  - `system_assigned` - (Optional) Whether to enable system-assigned managed identity. Default is false.
+  - `user_assigned_resource_ids` - (Optional) Set of user-assigned managed identity resource IDs.
 - `min_api_version` - (Optional) The minimum API version that the API Management service will accept.
 - `notification_sender_email` - (Optional) Email address from which notifications will be sent.
 - `protocols` - (Optional) Protocol configuration.

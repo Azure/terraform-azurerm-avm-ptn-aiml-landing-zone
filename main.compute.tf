@@ -3,16 +3,10 @@ module "container_apps_managed_environment" {
   version = "0.3.0"
   count   = var.container_app_environment_definition.deploy ? 1 : 0
 
-  location            = azurerm_resource_group.this.location
-  name                = local.container_app_environment_name
-  resource_group_name = azurerm_resource_group.this.name
-  diagnostic_settings = var.container_app_environment_definition.enable_diagnostic_settings ? {
-    to_law = {
-      name                           = "sendToLogAnalytics-cae-${random_string.name_suffix.result}"
-      workspace_resource_id          = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
-      log_analytics_destination_type = "AzureDiagnostics"
-    }
-  } : {}
+  location                           = azurerm_resource_group.this.location
+  name                               = local.container_app_environment_name
+  resource_group_name                = azurerm_resource_group.this.name
+  diagnostic_settings                = local.cae_diagnostic_settings
   enable_telemetry                   = var.enable_telemetry
   infrastructure_resource_group_name = "rg-managed-${azurerm_resource_group.this.name}"
   infrastructure_subnet_id           = local.subnet_ids["ContainerAppEnvironmentSubnet"]

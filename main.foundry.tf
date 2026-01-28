@@ -1,6 +1,6 @@
 module "foundry_ptn" {
   source  = "Azure/avm-ptn-aiml-ai-foundry/azurerm"
-  version = "0.8.0"
+  version = "0.10.0"
 
   #configure the base resource
   base_name                  = coalesce(var.name_prefix, "foundry")
@@ -14,9 +14,9 @@ module "foundry_ptn" {
   cosmosdb_definition                 = local.foundry_cosmosdb_definition
   create_byor                         = var.ai_foundry_definition.create_byor
   create_private_endpoints            = true
+  diagnostic_settings                 = local.foundry_diagnostic_settings
   enable_telemetry                    = var.enable_telemetry
   key_vault_definition                = local.foundry_key_vault_definition
-  law_definition                      = var.ai_foundry_definition.law_definition
   private_endpoint_subnet_resource_id = local.subnet_ids["PrivateEndpointSubnet"]
   storage_account_definition          = local.foundry_storage_account_definition
 
