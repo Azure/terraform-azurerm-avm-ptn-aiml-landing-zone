@@ -618,6 +618,7 @@ DESCRIPTION
 
 variable "private_dns_zones" {
   type = object({
+    azure_policy_pe_zone_linking_enabled      = optional(bool, true)
     existing_zones_resource_group_resource_id = optional(string)
     allow_internet_resolution_fallback        = optional(bool, false)
     network_links = optional(map(object({
@@ -630,6 +631,7 @@ variable "private_dns_zones" {
   description = <<DESCRIPTION
 Configuration object for Private DNS Zones and their network links.
 
+- `azure_policy_pe_zone_linking_enabled` - (Optional) Whether Azure Policy is used to enable private endpoint dns zone linking when using a platform landing zone (platform landing zone flag = true). Default is true.
 - `existing_zones_resource_group_resource_id` - (Optional) Resource group resource id where existing Private DNS Zones are located.
 - `allow_internet_resolution_fallback` - (Optional) Whether to allow fallback to internet resolution for Private DNS Zone network links. Default is false.
 - `network_links` - (Optional) Map of network links to create for Private DNS Zones. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.

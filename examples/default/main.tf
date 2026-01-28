@@ -227,6 +227,7 @@ module "test" {
     enable_diagnostic_settings = false
   }
   private_dns_zones = {
+    azure_policy_pe_zone_linking_enabled      = true
     existing_zones_resource_group_resource_id = module.example_hub.resource_group_resource_id
   }
 }
