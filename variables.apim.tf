@@ -137,6 +137,18 @@ Configuration object for the Azure API Management service to be deployed.
   - `store_name` - The certificate store name (e.g., "CertificateAuthority", "Root").
   - `certificate_password` - (Optional) The password for the certificate.
 - `client_certificate_enabled` - (Optional) Whether client certificate authentication is enabled. Default is false.
+- `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
+- `diagnostic_settings` - (Optional) Map of diagnostic settings configurations for the API Management service. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `name` - (Optional) The name of the diagnostic setting.
+  - `log_categories` - (Optional) Set of log categories to enable. Default is an empty set.
+  - `log_groups` - (Optional) Set of log groups to enable. Default is ["allLogs"].
+  - `metric_categories` - (Optional) Set of metric categories to enable. Default is ["AllMetrics"].
+  - `log_analytics_destination_type` - (Optional) The destination type for Log Analytics. Default is "Dedicated".
+  - `workspace_resource_id` - (Optional) Resource ID of the Log Analytics workspace.
+  - `storage_account_resource_id` - (Optional) Resource ID of the storage account for diagnostics.
+  - `event_hub_authorization_rule_resource_id` - (Optional) Resource ID of the Event Hub authorization rule.
+  - `event_hub_name` - (Optional) Name of the Event Hub.
+  - `marketplace_partner_resource_id` - (Optional) Resource ID of the marketplace partner resource.
 - `hostname_configuration` - (Optional) Hostname configuration for different endpoints.
   - `management` - (Optional) List of custom hostnames for the management endpoint.
   - `portal` - (Optional) List of custom hostnames for the developer portal endpoint.

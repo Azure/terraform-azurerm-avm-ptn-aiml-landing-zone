@@ -59,6 +59,18 @@ Configuration object for the Azure App Configuration service to be created for G
   - `condition_version` - (Optional) Version of the condition.
   - `delegated_managed_identity_resource_id` - (Optional) Resource ID of the delegated managed identity.
   - `principal_type` - (Optional) Type of the principal (User, Group, ServicePrincipal).
+- `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
+- `diagnostic_settings` - (Optional) Map of diagnostic settings configurations for the App Configuration store. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `name` - (Optional) The name of the diagnostic setting.
+  - `log_categories` - (Optional) Set of log categories to enable. Default is an empty set.
+  - `log_groups` - (Optional) Set of log groups to enable. Default is ["allLogs"].
+  - `metric_categories` - (Optional) Set of metric categories to enable. Default is ["AllMetrics"].
+  - `log_analytics_destination_type` - (Optional) The destination type for Log Analytics. Default is "Dedicated".
+  - `workspace_resource_id` - (Optional) Resource ID of the Log Analytics workspace.
+  - `storage_account_resource_id` - (Optional) Resource ID of the storage account for diagnostics.
+  - `event_hub_authorization_rule_resource_id` - (Optional) Resource ID of the Event Hub authorization rule.
+  - `event_hub_name` - (Optional) Name of the Event Hub.
+  - `marketplace_partner_resource_id` - (Optional) Resource ID of the marketplace partner resource.
 DESCRIPTION
 }
 
@@ -105,6 +117,18 @@ Configuration object for the Azure Container Registry to be created for GenAI se
 - `sku` - (Optional) The SKU of the Container Registry. Default is "Premium".
 - `zone_redundancy_enabled` - (Optional) Whether zone redundancy is enabled. Default is true.
 - `public_network_access_enabled` - (Optional) Whether public network access is enabled. Default is false.
+- `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
+- `diagnostic_settings` - (Optional) Map of diagnostic settings configurations for the Container Registry. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `name` - (Optional) The name of the diagnostic setting.
+  - `log_categories` - (Optional) Set of log categories to enable. Default is an empty set.
+  - `log_groups` - (Optional) Set of log groups to enable. Default is ["allLogs"].
+  - `metric_categories` - (Optional) Set of metric categories to enable. Default is ["AllMetrics"].
+  - `log_analytics_destination_type` - (Optional) The destination type for Log Analytics. Default is "Dedicated".
+  - `workspace_resource_id` - (Optional) Resource ID of the Log Analytics workspace.
+  - `storage_account_resource_id` - (Optional) Resource ID of the storage account for diagnostics.
+  - `event_hub_authorization_rule_resource_id` - (Optional) Resource ID of the Event Hub authorization rule.
+  - `event_hub_name` - (Optional) Name of the Event Hub.
+  - `marketplace_partner_resource_id` - (Optional) Resource ID of the marketplace partner resource.
 - `tags` - (Optional) Map of tags to assign to the Container Registry.
 - `role_assignments` - (Optional) Map of role assignments to create on the Container Registry. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
   - `role_definition_id_or_name` - The role definition ID or name to assign.
@@ -181,13 +205,25 @@ Configuration object for the Azure Cosmos DB account to be created for GenAI ser
 
 - `deploy` - (Optional) Whether to deploy the Cosmos DB account. Default is true.
 - `name` - (Optional) The name of the Cosmos DB account. If not provided, a name will be generated.
+- `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
+- `diagnostic_settings` - (Optional) Map of diagnostic settings configurations for the Cosmos DB account. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `name` - (Optional) The name of the diagnostic setting.
+  - `log_categories` - (Optional) Set of log categories to enable. Default is an empty set.
+  - `log_groups` - (Optional) Set of log groups to enable. Default is ["allLogs"].
+  - `metric_categories` - (Optional) Set of metric categories to enable. Default is ["AllMetrics"].
+  - `log_analytics_destination_type` - (Optional) The destination type for Log Analytics. Default is "Dedicated".
+  - `workspace_resource_id` - (Optional) Resource ID of the Log Analytics workspace.
+  - `storage_account_resource_id` - (Optional) Resource ID of the storage account for diagnostics.
+  - `event_hub_authorization_rule_resource_id` - (Optional) Resource ID of the Event Hub authorization rule.
+  - `event_hub_name` - (Optional) Name of the Event Hub.
+  - `marketplace_partner_resource_id` - (Optional) Resource ID of the marketplace partner resource.
 - `secondary_regions` - (Optional) List of secondary regions for geo-replication.
   - `location` - The Azure region for the secondary location.
   - `zone_redundant` - (Optional) Whether zone redundancy is enabled for the secondary region. Default is true.
   - `failover_priority` - (Optional) The failover priority for the secondary region. Default is 0.
 - `public_network_access_enabled` - (Optional) Whether public network access is enabled. Default is false.
 - `analytical_storage_enabled` - (Optional) Whether analytical storage is enabled. Default is true.
-- `automatic_failover_enabled` - (Optional) Whether automatic failover is enabled. Default is false.
+- `automatic_failover_enabled` - (Optional) Whether automatic failover is enabled. Default is true.
 - `local_authentication_disabled` - (Optional) Whether local authentication is disabled. Default is true.
 - `partition_merge_enabled` - (Optional) Whether partition merge is enabled. Default is false.
 - `multiple_write_locations_enabled` - (Optional) Whether multiple write locations are enabled. Default is false.
@@ -266,6 +302,18 @@ Configuration object for the Azure Key Vault to be created for GenAI services.
 - `public_network_access_enabled` - (Optional) Whether public network access is enabled. Default is false.
 - `sku` - (Optional) The SKU of the Key Vault. Default is "standard".
 - `tenant_id` - (Optional) The tenant ID for the Key Vault. If not provided, the current tenant will be used.
+- `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
+- `diagnostic_settings` - (Optional) Map of diagnostic settings configurations for the Key Vault. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `name` - (Optional) The name of the diagnostic setting.
+  - `log_categories` - (Optional) Set of log categories to enable. Default is an empty set.
+  - `log_groups` - (Optional) Set of log groups to enable. Default is ["allLogs"].
+  - `metric_categories` - (Optional) Set of metric categories to enable. Default is ["AllMetrics"].
+  - `log_analytics_destination_type` - (Optional) The destination type for Log Analytics. Default is "Dedicated".
+  - `workspace_resource_id` - (Optional) Resource ID of the Log Analytics workspace.
+  - `storage_account_resource_id` - (Optional) Resource ID of the storage account for diagnostics.
+  - `event_hub_authorization_rule_resource_id` - (Optional) Resource ID of the Event Hub authorization rule.
+  - `event_hub_name` - (Optional) Name of the Event Hub.
+  - `marketplace_partner_resource_id` - (Optional) Resource ID of the marketplace partner resource.
 - `role_assignments` - (Optional) Map of role assignments to create on the Key Vault. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
   - `role_definition_id_or_name` - The role definition ID or name to assign.
   - `principal_id` - The principal ID to assign the role to.
@@ -324,6 +372,18 @@ Configuration object for the Azure Storage Account to be created for GenAI servi
 
 - `deploy` - (Optional) Whether to deploy the Storage Account. Default is true.
 - `name` - (Optional) The name of the Storage Account. If not provided, a name will be generated.
+- `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
+- `diagnostic_settings` - (Optional) Map of diagnostic settings configurations for the Storage Account. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `name` - (Optional) The name of the diagnostic setting.
+  - `log_categories` - (Optional) Set of log categories to enable. Default is an empty set.
+  - `log_groups` - (Optional) Set of log groups to enable. Default is ["allLogs"].
+  - `metric_categories` - (Optional) Set of metric categories to enable. Default is ["AllMetrics"].
+  - `log_analytics_destination_type` - (Optional) The destination type for Log Analytics. Default is "Dedicated".
+  - `workspace_resource_id` - (Optional) Resource ID of the Log Analytics workspace.
+  - `storage_account_resource_id` - (Optional) Resource ID of the storage account for diagnostics.
+  - `event_hub_authorization_rule_resource_id` - (Optional) Resource ID of the Event Hub authorization rule.
+  - `event_hub_name` - (Optional) Name of the Event Hub.
+  - `marketplace_partner_resource_id` - (Optional) Resource ID of the marketplace partner resource.
 - `account_kind` - (Optional) The kind of storage account. Default is "StorageV2".
 - `account_tier` - (Optional) The performance tier of the storage account. Default is "Standard".
 - `account_replication_type` - (Optional) The replication type for the storage account. Default is "GRS".

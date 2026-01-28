@@ -271,6 +271,7 @@ Configuration object for the Azure AI Foundry deployment (hub, projects, and Bri
 - `ai_foundry` - (Optional) Azure AI Foundry hub settings.
   - `name` - (Optional) Name of the hub. If not provided, a name will be generated.
   - `disable_local_auth` - (Optional) Whether to disable local authentication. Default is false.
+  - `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
   - `diagnostic_settings` - (Optional) - map of diagnostic settings for the main foundry module and resource
     - `name` - (Optional) The name of the diagnostic setting. One will be generated if not set, however this will not be unique if you want to create multiple diagnostic setting resources.
     - `log_categories` - (Optional) A set of log categories to send to the log analytics workspace. Defaults to `[]`.

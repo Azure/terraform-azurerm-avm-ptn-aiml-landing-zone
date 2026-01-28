@@ -78,6 +78,7 @@ Configuration object for the Virtual Network (VNet) to be deployed.
   - `id` - The ID of the IPAM pool.
   - `prefix_length` - The prefix length to request from the IPAM pool.
 - `ddos_protection_plan_resource_id` - (Optional) Resource ID of the DDoS Protection Plan to associate with the VNet. This is not used for BYO VNet configurations as that is assumed to be handled outside the module.
+- `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
 - `diagnostic_settings` - (Optional) Map of diagnostic settings configurations for the VNet. If you set a configuration then all diagnostic preset configuration included in the module will be ignored. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
   - `name` - (Optional) The name of the diagnostic setting.
   - `log_categories` - (Optional) Set of log categories to enable. Default is an empty set.
@@ -90,6 +91,15 @@ Configuration object for the Virtual Network (VNet) to be deployed.
   - `event_hub_name` - (Optional) Name of the Event Hub.
   - `marketplace_partner_resource_id` - (Optional) Resource ID of the marketplace partner resource.
 - `dns_servers` - (Optional) Set of custom DNS server IP addresses for the VNet.
+- `role_assignments` - (Optional) Map of role assignments to create on the VNet. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `role_definition_id_or_name` - The role definition ID or name to assign.
+  - `principal_id` - The principal ID to assign the role to.
+  - `description` - (Optional) Description of the role assignment.
+  - `skip_service_principal_aad_check` - (Optional) Whether to skip AAD check for service principal.
+  - `condition` - (Optional) Condition for the role assignment.
+  - `condition_version` - (Optional) Version of the condition.
+  - `delegated_managed_identity_resource_id` - (Optional) Resource ID of the delegated managed identity.
+  - `principal_type` - (Optional) Type of the principal (User, Group, ServicePrincipal).
 - `subnets` - (Optional) Map of subnet configurations that can be used to override the default subnet configurations. The map key must match the desired subnet usage to override the default configuration.
   - `enabled` - (Optional) Whether the subnet is enabled. Default is true.
   - `name` - (Optional) The name of the subnet. If not provided, a name will be generated.
@@ -97,6 +107,7 @@ Configuration object for the Virtual Network (VNet) to be deployed.
   - `ipam_pools` - (Optional) List of IPAM pools to associate with the subnet. If present, the address_prefix will be ignored and IPAM pools will be used for address allocation.
     - `pool_id` - The ID of the IPAM pool.
     - `prefix_length` - The prefix length to request from the IPAM pool.
+- `tags` - (Optional) Map of tags to assign to the VNet.
 - `vnet_peering_configuration` - (Optional) Configuration for VNet peering. This is not used for BYO VNet configurations as that is assumed to be handled outside the module.
   - `peer_vnet_resource_id` - (Optional) Resource ID of the peer VNet.
   - `name` - (Optional) Name of the peering connection.
@@ -443,6 +454,18 @@ Configuration object for the Azure Application Gateway to be deployed.
   - `default_backend_address_pool_name` - (Optional) Default backend address pool name.
   - `path_rules` - Map of path-based routing rules.
 - `tags` - (Optional) Map of tags to assign to the Application Gateway.
+- `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
+- `diagnostic_settings` - (Optional) Map of diagnostic settings configurations for the Application Gateway. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `name` - (Optional) The name of the diagnostic setting.
+  - `log_categories` - (Optional) Set of log categories to enable. Default is an empty set.
+  - `log_groups` - (Optional) Set of log groups to enable. Default is ["allLogs"].
+  - `metric_categories` - (Optional) Set of metric categories to enable. Default is ["AllMetrics"].
+  - `log_analytics_destination_type` - (Optional) The destination type for Log Analytics. Default is "Dedicated".
+  - `workspace_resource_id` - (Optional) Resource ID of the Log Analytics workspace.
+  - `storage_account_resource_id` - (Optional) Resource ID of the storage account for diagnostics.
+  - `event_hub_authorization_rule_resource_id` - (Optional) Resource ID of the Event Hub authorization rule.
+  - `event_hub_name` - (Optional) Name of the Event Hub.
+  - `marketplace_partner_resource_id` - (Optional) Resource ID of the marketplace partner resource.
 - `role_assignments` - (Optional) Map of role assignments to create on the Application Gateway. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
   - `role_definition_id_or_name` - The role definition ID or name to assign.
   - `principal_id` - The principal ID to assign the role to.
@@ -519,6 +542,27 @@ Configuration object for the Azure Firewall to be deployed.
 - `sku` - (Optional) The SKU of the Azure Firewall. Default is "AZFW_VNet".
 - `tier` - (Optional) The tier of the Azure Firewall. Default is "Standard".
 - `zones` - (Optional) List of availability zones for the Azure Firewall. Default is ["1", "2", "3"].
+- `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
+- `diagnostic_settings` - (Optional) Map of diagnostic settings configurations for the Azure Firewall. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `name` - (Optional) The name of the diagnostic setting.
+  - `log_categories` - (Optional) Set of log categories to enable. Default is an empty set.
+  - `log_groups` - (Optional) Set of log groups to enable. Default is ["allLogs"].
+  - `metric_categories` - (Optional) Set of metric categories to enable. Default is ["AllMetrics"].
+  - `log_analytics_destination_type` - (Optional) The destination type for Log Analytics. Default is "Dedicated".
+  - `workspace_resource_id` - (Optional) Resource ID of the Log Analytics workspace.
+  - `storage_account_resource_id` - (Optional) Resource ID of the storage account for diagnostics.
+  - `event_hub_authorization_rule_resource_id` - (Optional) Resource ID of the Event Hub authorization rule.
+  - `event_hub_name` - (Optional) Name of the Event Hub.
+  - `marketplace_partner_resource_id` - (Optional) Resource ID of the marketplace partner resource.
+- `role_assignments` - (Optional) Map of role assignments to create on the Azure Firewall. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `role_definition_id_or_name` - The role definition ID or name to assign.
+  - `principal_id` - The principal ID to assign the role to.
+  - `description` - (Optional) Description of the role assignment.
+  - `skip_service_principal_aad_check` - (Optional) Whether to skip AAD check for service principal.
+  - `condition` - (Optional) Condition for the role assignment.
+  - `condition_version` - (Optional) Version of the condition.
+  - `delegated_managed_identity_resource_id` - (Optional) Resource ID of the delegated managed identity.
+  - `principal_type` - (Optional) Type of the principal (User, Group, ServicePrincipal).
 - `tags` - (Optional) Map of tags to assign to the Azure Firewall.
 - `resource_group_name` - (Optional) The name of the resource group to deploy the Azure Firewall into. If not provided, the module's resource group will be used.
 DESCRIPTION
