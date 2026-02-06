@@ -131,16 +131,52 @@ graph TB
     VNET -.->|Peers with| PEERING
     VNET -.->|Connects to| VWAN
 
-    style External fill:#D3D3D3,stroke:#999,color:#000
-    style Edge fill:#D3D3D3,stroke:#999,color:#000
-    style APILayer fill:#A68BB8,stroke:#6B5A7B,color:#fff
-    style Compute fill:#C9A4A4,stroke:#8B6666,color:#fff
-    style AIFoundry fill:#8BA5C7,stroke:#5A7A99,color:#fff
-    style DataServices fill:#D9B0B3,stroke:#8B6666,color:#fff
-    style DataStorage fill:#A68BB8,stroke:#6B5A7B,color:#fff
-    style Network fill:#D3D3D3,stroke:#999,color:#000
-    style Management fill:#C9A678,stroke:#8B6F47,color:#fff
-    style Integration fill:#DDD4C4,stroke:#888,color:#000
+    style External fill:none,stroke:#999,color:#000
+    style Edge fill:none,stroke:#999,color:#000
+    style APILayer fill:none,stroke:#999,color:#000
+    style Compute fill:none,stroke:#999,color:#000
+    style AIFoundry fill:none,stroke:#999,color:#000
+    style DataServices fill:none,stroke:#999,color:#000
+    style DataStorage fill:none,stroke:#999,color:#000
+    style Network fill:none,stroke:#999,color:#000
+    style Management fill:none,stroke:#999,color:#000
+    style Integration fill:none,stroke:#999,color:#000
+    style Subnets fill:none,stroke:#999,color:#000
+    style Security fill:none,stroke:#999,color:#000
+
+    style USERS fill:#E6E6FA,stroke:#999,color:#000
+    style ADMINS fill:#E6E6FA,stroke:#999,color:#000
+    style APPGW fill:#E6E6FA,stroke:#999,color:#000
+    style BASTION fill:#E6E6FA,stroke:#999,color:#000
+    style APIM fill:#E6E6FA,stroke:#999,color:#000
+    style ACR fill:#E6E6FA,stroke:#999,color:#000
+    style CAE fill:#E6E6FA,stroke:#999,color:#000
+    style JUMPVM fill:#E6E6FA,stroke:#999,color:#000
+    style BUILDVM fill:#E6E6FA,stroke:#999,color:#000
+    style HUB fill:#E6E6FA,stroke:#999,color:#000
+    style PROJ1 fill:#E6E6FA,stroke:#999,color:#000
+    style PROJ2 fill:#E6E6FA,stroke:#999,color:#000
+    style AGENT fill:#E6E6FA,stroke:#999,color:#000
+    style AISEARCH fill:#E6E6FA,stroke:#999,color:#000
+    style COSMOS fill:#E6E6FA,stroke:#999,color:#000
+    style BING fill:#E6E6FA,stroke:#999,color:#000
+    style SA fill:#E6E6FA,stroke:#999,color:#000
+    style KV fill:#E6E6FA,stroke:#999,color:#000
+    style LAW fill:#E6E6FA,stroke:#999,color:#000
+    style VNET fill:#E6E6FA,stroke:#999,color:#000
+    style GWESUBNET fill:#E6E6FA,stroke:#999,color:#000
+    style CASUBNET fill:#E6E6FA,stroke:#999,color:#000
+    style BASTIONSUBNET fill:#E6E6FA,stroke:#999,color:#000
+    style VMSUBNET fill:#E6E6FA,stroke:#999,color:#000
+    style PESUBNET fill:#E6E6FA,stroke:#999,color:#000
+    style NSG fill:#E6E6FA,stroke:#999,color:#000
+    style FW fill:#E6E6FA,stroke:#999,color:#000
+    style PDNS fill:#E6E6FA,stroke:#999,color:#000
+    style CONFIG fill:#E6E6FA,stroke:#999,color:#000
+    style DIAG fill:#E6E6FA,stroke:#999,color:#000
+    style POLICY fill:#E6E6FA,stroke:#999,color:#000
+    style VWAN fill:#E6E6FA,stroke:#999,color:#000
+    style PEERING fill:#E6E6FA,stroke:#999,color:#000
 ```
 
 ## Deployment ComponentBreakdown
@@ -195,13 +231,38 @@ graph TB
         end
     end
 
-    style NetComp fill:#D3D3D3,color:#000
-    style EdgeComp fill:#C9A4A4,color:#fff
-    style APIComp fill:#A68BB8,color:#fff
-    style AIComp fill:#8BA5C7,color:#fff
-    style StorageComp fill:#A68BB8,color:#fff
-    style ComputeComp fill:#D4B896,color:#fff
-    style ObsComp fill:#C9A678,color:#000
+    style NetComp fill:none,stroke:#999,color:#000
+    style EdgeComp fill:none,stroke:#999,color:#000
+    style APIComp fill:none,stroke:#999,color:#000
+    style AIComp fill:none,stroke:#999,color:#000
+    style StorageComp fill:none,stroke:#999,color:#000
+    style ComputeComp fill:none,stroke:#999,color:#000
+    style ObsComp fill:none,stroke:#999,color:#000
+
+    style VN fill:#E6E6FA,stroke:#999,color:#000
+    style RF fill:#E6E6FA,stroke:#999,color:#000
+    style NSG1 fill:#E6E6FA,stroke:#999,color:#000
+    style NSG2 fill:#E6E6FA,stroke:#999,color:#000
+    style NSG3 fill:#E6E6FA,stroke:#999,color:#000
+    style WF fill:#E6E6FA,stroke:#999,color:#000
+    style WAF fill:#E6E6FA,stroke:#999,color:#000
+    style AG fill:#E6E6FA,stroke:#999,color:#000
+    style APIM fill:#E6E6FA,stroke:#999,color:#000
+    style ACR fill:#E6E6FA,stroke:#999,color:#000
+    style CAE fill:#E6E6FA,stroke:#999,color:#000
+    style AIH fill:#E6E6FA,stroke:#999,color:#000
+    style AIP fill:#E6E6FA,stroke:#999,color:#000
+    style AIS fill:#E6E6FA,stroke:#999,color:#000
+    style COSMOSDB fill:#E6E6FA,stroke:#999,color:#000
+    style BING fill:#E6E6FA,stroke:#999,color:#000
+    style ST fill:#E6E6FA,stroke:#999,color:#000
+    style KVT fill:#E6E6FA,stroke:#999,color:#000
+    style CONF fill:#E6E6FA,stroke:#999,color:#000
+    style BVVM fill:#E6E6FA,stroke:#999,color:#000
+    style JVVM fill:#E6E6FA,stroke:#999,color:#000
+    style BASTNHOST fill:#E6E6FA,stroke:#999,color:#000
+    style LAWSP fill:#E6E6FA,stroke:#999,color:#000
+    style DIAGSET fill:#E6E6FA,stroke:#999,color:#000
 ```
 
 ## Networking Architecture
@@ -293,16 +354,42 @@ graph TB
 
     PLZFW -.->|Optional| VNET
 
-    style Internet fill:#D3D3D3,stroke:#999,color:#000
-    style AILZ fill:#F5F5F5,stroke:#888,color:#000
-    style HubSpoke fill:#CCC,stroke:#999,color:#000
-    style GW fill:#D3D3D3,color:#000
-    style CASubnet fill:#C9A4A4,color:#fff
-    style BasSubnet fill:#D4B896,color:#000
-    style VMSubnet fill:#D4B896,color:#000
-    style PESubnet fill:#A68BB8,color:#fff
-    style PrivateLinkServices fill:#8BA5C7,color:#fff
-    style PDNS fill:#D9B0B3,color:#000
+    style Internet fill:none,stroke:#999,color:#000
+    style AILZ fill:none,stroke:#999,color:#000
+    style HubSpoke fill:none,stroke:#999,color:#000
+    style GW fill:none,stroke:#999,color:#000
+    style CASubnet fill:none,stroke:#999,color:#000
+    style BasSubnet fill:none,stroke:#999,color:#000
+    style VMSubnet fill:none,stroke:#999,color:#000
+    style PESubnet fill:none,stroke:#999,color:#000
+    style PrivateLinkServices fill:none,stroke:#999,color:#000
+    style PDNS fill:none,stroke:#999,color:#000
+
+    style EXTERNAL fill:#E6E6FA,stroke:#999,color:#000
+    style PLZHUB fill:#E6E6FA,stroke:#999,color:#000
+    style PLZFW fill:#E6E6FA,stroke:#999,color:#000
+    style VNET fill:#E6E6FA,stroke:#999,color:#000
+    style APPGW fill:#E6E6FA,stroke:#999,color:#000
+    style WAF fill:#E6E6FA,stroke:#999,color:#000
+    style CAE fill:#E6E6FA,stroke:#999,color:#000
+    style BASTION fill:#E6E6FA,stroke:#999,color:#000
+    style JUMPVM fill:#E6E6FA,stroke:#999,color:#000
+    style BUILDVM fill:#E6E6FA,stroke:#999,color:#000
+    style PE1 fill:#E6E6FA,stroke:#999,color:#000
+    style PE2 fill:#E6E6FA,stroke:#999,color:#000
+    style PE3 fill:#E6E6FA,stroke:#999,color:#000
+    style PE4 fill:#E6E6FA,stroke:#999,color:#000
+    style PE5 fill:#E6E6FA,stroke:#999,color:#000
+    style AIH fill:#E6E6FA,stroke:#999,color:#000
+    style KVH fill:#E6E6FA,stroke:#999,color:#000
+    style SAH fill:#E6E6FA,stroke:#999,color:#000
+    style AISH fill:#E6E6FA,stroke:#999,color:#000
+    style COSMOSH fill:#E6E6FA,stroke:#999,color:#000
+    style PDNSAI fill:#E6E6FA,stroke:#999,color:#000
+    style PDNSKV fill:#E6E6FA,stroke:#999,color:#000
+    style PDNSSA fill:#E6E6FA,stroke:#999,color:#000
+    style PDNSAIS fill:#E6E6FA,stroke:#999,color:#000
+    style PDNSCOSMOS fill:#E6E6FA,stroke:#999,color:#000
 ```
 
 ## AI Services Architecture
@@ -371,11 +458,30 @@ graph TB
     ENDPOINTS --> AISEARCH
     ENDPOINTS --> COSMOS
 
-    style AICore fill:#8BA5C7,color:#fff
-    style AICapabilities fill:#A68BB8,color:#fff
-    style KnowledgeServices fill:#D9B0B3,color:#000
-    style DataSources fill:#A68BB8,color:#fff
-    style Inference fill:#D4B896,color:#000
+    style AICore fill:none,stroke:#999,color:#000
+    style AICapabilities fill:none,stroke:#999,color:#000
+    style KnowledgeServices fill:none,stroke:#999,color:#000
+    style DataSources fill:none,stroke:#999,color:#000
+    style Inference fill:none,stroke:#999,color:#000
+
+    style HUB fill:#E6E6FA,stroke:#999,color:#000
+    style P1 fill:#E6E6FA,stroke:#999,color:#000
+    style P2 fill:#E6E6FA,stroke:#999,color:#000
+    style P3 fill:#E6E6FA,stroke:#999,color:#000
+    style AGENTS fill:#E6E6FA,stroke:#999,color:#000
+    style PROMPT fill:#E6E6FA,stroke:#999,color:#000
+    style EVAL fill:#E6E6FA,stroke:#999,color:#000
+    style DEPLOY fill:#E6E6FA,stroke:#999,color:#000
+    style CON fill:#E6E6FA,stroke:#999,color:#000
+    style KB fill:#E6E6FA,stroke:#999,color:#000
+    style VS fill:#E6E6FA,stroke:#999,color:#000
+    style AISEARCH fill:#E6E6FA,stroke:#999,color:#000
+    style BING fill:#E6E6FA,stroke:#999,color:#000
+    style SA fill:#E6E6FA,stroke:#999,color:#000
+    style COSMOS fill:#E6E6FA,stroke:#999,color:#000
+    style KV fill:#E6E6FA,stroke:#999,color:#000
+    style DEPLOY_MODELS fill:#E6E6FA,stroke:#999,color:#000
+    style ENDPOINTS fill:#E6E6FA,stroke:#999,color:#000
 ```
 
 ## Deployment Phases
@@ -409,13 +515,16 @@ graph LR
     P6 --> P7
     P7 --> End
 
-    style P1 fill:#D3D3D3,color:#000
-    style P2 fill:#C9A4A4,color:#fff
-    style P3 fill:#8BA5C7,color:#fff
-    style P4 fill:#D9B0B3,color:#000
-    style P5 fill:#D4B896,color:#000
-    style P6 fill:#A68BB8,color:#fff
-    style P7 fill:#C9A678,color:#000
+    style P1 fill:none,stroke:#999,color:#000
+    style P2 fill:none,stroke:#999,color:#000
+    style P3 fill:none,stroke:#999,color:#000
+    style P4 fill:none,stroke:#999,color:#000
+    style P5 fill:none,stroke:#999,color:#000
+    style P6 fill:none,stroke:#999,color:#000
+    style P7 fill:none,stroke:#999,color:#000
+
+    style Start fill:#E6E6FA,stroke:#999,color:#000
+    style End fill:#E6E6FA,stroke:#999,color:#000
 ```
 
 ##Configuration Scenarios
@@ -432,6 +541,11 @@ graph TB
     VN --> AF
     AF --> PROJ
     PROJ --> LAW
+
+    style VN fill:#E6E6FA,stroke:#999,color:#000
+    style AF fill:#E6E6FA,stroke:#999,color:#000
+    style PROJ fill:#E6E6FA,stroke:#999,color:#000
+    style LAW fill:#E6E6FA,stroke:#999,color:#000
 ```
 
 ### Scenario 2: Enterprise Full Stack
@@ -453,13 +567,13 @@ graph TB
     CAE --> KB
     APIM --> ACR
 
-    style FW fill:#C9A4A4,color:#fff
-    style AG fill:#8BA882,color:#fff
-    style APIM fill:#A68BB8,color:#fff
-    style CAE fill:#D4B896,color:#000
-    style AIH fill:#8BA5C7,color:#fff
-    style KB fill:#D9B0B3,color:#000
-    style ACR fill:#A68BB8,color:#fff
+    style FW fill:#E6E6FA,stroke:#999,color:#000
+    style AG fill:#E6E6FA,stroke:#999,color:#000
+    style APIM fill:#E6E6FA,stroke:#999,color:#000
+    style CAE fill:#E6E6FA,stroke:#999,color:#000
+    style AIH fill:#E6E6FA,stroke:#999,color:#000
+    style KB fill:#E6E6FA,stroke:#999,color:#000
+    style ACR fill:#E6E6FA,stroke:#999,color:#000
 ```
 
 ## Key Design Decisions
