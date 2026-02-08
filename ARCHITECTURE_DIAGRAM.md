@@ -1,4 +1,4 @@
-# Azure AI/ML Landing Zone Pattern Module - Architecture Diagram
+# Azure AI Landing Zone Pattern Module - Architecture Diagram
 
 ## Overall Landing Zone Architecture
 
@@ -32,13 +32,9 @@ graph TB
         AGENT["AI Agent Service"]
     end
 
-    subgraph DataServices["Data & Knowledge Services"]
+    subgraph DataServices["Data & Knowledge Services & Storage"]
         AISEARCH["AI Search<br/>(Full-text & Vector)"]
         COSMOS["Cosmos DB<br/>(NoSQL)"]
-        BING["Bing Grounding<br/>(Grounded Answers)"]
-    end
-
-    subgraph DataStorage["Storage & Secrets"]
         SA["Storage Account<br/>(Blob/File/Queue)"]
         KV["Key Vault<br/>(Secrets & Encryption)"]
         LAW["Log Analytics Workspace<br/>(Monitoring)"]
@@ -60,12 +56,6 @@ graph TB
             FW["Azure Firewall<br/>(Optional)"]
             PDNS["Private DNS Zones"]
         end
-    end
-
-    subgraph Management["Management & Monitoring"]
-        CONFIG["App Configuration<br/>Settings & Feature Flags"]
-        DIAG["Diagnostic Settings"]
-        POLICY["WAF Policy<br/>Security Rules"]
     end
 
     subgraph Integration["Integration & Connectivity"]
@@ -97,10 +87,6 @@ graph TB
     PROJ2 --> AISEARCH
     PROJ2 --> COSMOS
 
-    %% Knowledge services
-    AISEARCH --> BING
-    COSMOS --> BING
-
     %% Networking
     APPGW -.->|Deployed in| GWESUBNET
     CAE -.->|Deployed in| CASUBNET
@@ -118,15 +104,6 @@ graph TB
     PDNS -.->|DNS| SA
     PDNS -.->|DNS| KV
 
-    %% Management
-    APPGW --> POLICY
-    AISEARCH --> DIAG
-    COSMOS --> DIAG
-    SA --> DIAG
-    KV --> DIAG
-    CAE --> CONFIG
-    CAE --> LAW
-
     %% Integration
     VNET -.->|Peers with| PEERING
     VNET -.->|Connects to| VWAN
@@ -137,9 +114,7 @@ graph TB
     style Compute fill:none,stroke:#999,color:#000
     style AIFoundry fill:none,stroke:#999,color:#000
     style DataServices fill:none,stroke:#999,color:#000
-    style DataStorage fill:none,stroke:#999,color:#000
     style Network fill:none,stroke:#999,color:#000
-    style Management fill:none,stroke:#999,color:#000
     style Integration fill:none,stroke:#999,color:#000
     style Subnets fill:none,stroke:#999,color:#000
     style Security fill:none,stroke:#999,color:#000
@@ -159,7 +134,6 @@ graph TB
     style AGENT fill:#E6E6FA,stroke:#999,color:#000
     style AISEARCH fill:#E6E6FA,stroke:#999,color:#000
     style COSMOS fill:#E6E6FA,stroke:#999,color:#000
-    style BING fill:#E6E6FA,stroke:#999,color:#000
     style SA fill:#E6E6FA,stroke:#999,color:#000
     style KV fill:#E6E6FA,stroke:#999,color:#000
     style LAW fill:#E6E6FA,stroke:#999,color:#000
@@ -172,9 +146,6 @@ graph TB
     style NSG fill:#E6E6FA,stroke:#999,color:#000
     style FW fill:#E6E6FA,stroke:#999,color:#000
     style PDNS fill:#E6E6FA,stroke:#999,color:#000
-    style CONFIG fill:#E6E6FA,stroke:#999,color:#000
-    style DIAG fill:#E6E6FA,stroke:#999,color:#000
-    style POLICY fill:#E6E6FA,stroke:#999,color:#000
     style VWAN fill:#E6E6FA,stroke:#999,color:#000
     style PEERING fill:#E6E6FA,stroke:#999,color:#000
 ```
@@ -268,7 +239,7 @@ graph TB
 ## Networking Architecture
 
 ```mermaid
-graph TB
+graph LR
     subgraph Internet["Internet"]
         EXTERNAL["External Traffic"]
     end
@@ -278,7 +249,7 @@ graph TB
         PLZFW["Firewall"]
     end
 
-    subgraph AILZ["AI/ML Landing Zone"]
+    subgraph AILZ["AI Landing Zone"]
         VNET["AI LZ VNet"]
 
         subgraph GW["Gateway Subnet"]
@@ -601,5 +572,5 @@ graph TB
 ## Documentation References
 
 - [Azure AI Foundry Documentation](https://learn.microsoft.com/azure/ai-studio/)
-- [AI/ML Landing Zone Accelerator](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/)
+- [AI Landing Zone Accelerator](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/)
 - [Azure Well-Architected Framework](https://learn.microsoft.com/azure/well-architected/)
