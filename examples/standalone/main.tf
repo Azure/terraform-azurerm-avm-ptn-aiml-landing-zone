@@ -22,6 +22,7 @@ terraform {
 }
 
 provider "azurerm" {
+  storage_use_azuread = true
   features {
     resource_group {
       prevent_deletion_if_contains_resources = false
@@ -158,7 +159,7 @@ module "test" {
 
     storage_account_definition = {
       this = {
-        shared_access_key_enabled = true #configured for testing
+        shared_access_key_enabled = false
         endpoints = {
           blob = {
             type = "blob"
@@ -232,6 +233,7 @@ module "test" {
     }
   }
   genai_storage_account_definition = {
+    shared_access_key_enabled = false
   }
   ks_ai_search_definition = {
     enable_diagnostic_settings = false
