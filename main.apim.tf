@@ -25,7 +25,7 @@ module "apim" {
     }
   }
   protocols                     = var.apim_definition.protocols
-  public_network_access_enabled = true
+  public_network_access_enabled = var.apim_definition.public_network_access_enabled
   publisher_name                = var.apim_definition.publisher_name
   role_assignments              = local.apim_role_assignments
   sign_in                       = var.apim_definition.sign_in
@@ -33,8 +33,8 @@ module "apim" {
   sku_name                      = "${var.apim_definition.sku_root}_${var.apim_definition.sku_capacity}"
   tags                          = var.apim_definition.tags
   tenant_access                 = var.apim_definition.tenant_access
-  virtual_network_subnet_id     = null
-  virtual_network_type          = "None"
+  virtual_network_subnet_id     = var.apim_definition.virtual_network_type != "None" ? local.subnet_ids["APIMSubnet"] : null
+  virtual_network_type          = var.apim_definition.virtual_network_type
   zones                         = local.region_zones
 }
 
