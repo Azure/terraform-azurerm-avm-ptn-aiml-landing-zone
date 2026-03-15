@@ -18,12 +18,12 @@ module "apim" {
   managed_identities         = var.apim_definition.managed_identities
   min_api_version            = var.apim_definition.min_api_version
   notification_sender_email  = var.apim_definition.notification_sender_email
-  private_endpoints = {
+  private_endpoints = var.apim_definition.virtual_network_type == "None" ? {
     endpoint1 = {
       private_dns_zone_resource_ids = var.private_dns_zones.azure_policy_pe_zone_linking_enabled ? null : (var.flag_platform_landing_zone ? [module.private_dns_zones.apim_zone.resource_id] : [local.private_dns_zones_existing.apim_zone.resource_id])
       subnet_resource_id            = local.subnet_ids["PrivateEndpointSubnet"]
     }
-  }
+  } : {}
   protocols                     = var.apim_definition.protocols
   public_network_access_enabled = var.apim_definition.public_network_access_enabled
   publisher_name                = var.apim_definition.publisher_name

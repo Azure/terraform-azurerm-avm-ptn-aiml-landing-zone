@@ -771,6 +771,8 @@ Description: Configuration object for the Azure API Management service to be dep
 - `tags` - (Optional) Map of tags to assign to the API Management service.
 - `tenant_access` - (Optional) Tenant access configuration.
   - `enabled` - Whether tenant access is enabled.
+- `virtual_network_type` - (Optional) The type of virtual network integration for the API Management service. Valid values are "None", "External", and "Internal". Default is "Internal". When set to "Internal" or "External", APIM is deployed inside the VNet and can access backend services via private endpoints.
+- `public_network_access_enabled` - (Optional) Whether public network access is enabled for the API Management service. Default is false.
 
 Type:
 
@@ -888,6 +890,8 @@ object({
     tenant_access = optional(object({
       enabled = bool
     }), null)
+    virtual_network_type          = optional(string, "Internal")
+    public_network_access_enabled = optional(bool, false)
   })
 ```
 
