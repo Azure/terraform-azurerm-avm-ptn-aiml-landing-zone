@@ -113,7 +113,7 @@ variable "apim_definition" {
       enabled = bool
     }), null)
     virtual_network_type          = optional(string, "Internal")
-    public_network_access_enabled = optional(bool, false)
+    public_network_access_enabled = optional(bool, true)
   })
   default = {
     publisher_email = "DoNotReply@exampleEmail.com"
@@ -195,7 +195,7 @@ Configuration object for the Azure API Management service to be deployed.
 - `tenant_access` - (Optional) Tenant access configuration.
   - `enabled` - Whether tenant access is enabled.
 - `virtual_network_type` - (Optional) The type of virtual network integration for the API Management service. Valid values are "None", "External", and "Internal". Default is "Internal". When set to "Internal" or "External", APIM is deployed inside the VNet and can directly access backend services within the VNet.
-- `public_network_access_enabled` - (Optional) Whether public network access is enabled for the API Management service. Default is false.
+- `public_network_access_enabled` - (Optional) Whether public network access is enabled for the API Management service. Default is true. Note: Azure does not allow disabling public network access during initial APIM creation.
 DESCRIPTION
 
   validation {
