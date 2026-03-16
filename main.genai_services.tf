@@ -43,7 +43,6 @@ resource "azurerm_role_assignment" "deployment_user_kv_admin" {
 
 resource "time_sleep" "wait_for_kv_rbac" {
   create_duration = "60s"
-
   triggers = {
     role_assignment = azurerm_role_assignment.deployment_user_kv_admin.id
   }
