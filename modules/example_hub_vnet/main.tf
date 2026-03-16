@@ -248,7 +248,8 @@ resource "time_sleep" "wait_for_kv_rbac" {
   create_duration = "60s"
 
   triggers = {
-    keyvault = module.avm_res_keyvault_vault.resource_id
+    role_assignments = jsonencode(module.avm_res_keyvault_vault.resource_id)
+    principal_id     = data.azurerm_client_config.current.object_id
   }
 
   depends_on = [module.avm_res_keyvault_vault]
