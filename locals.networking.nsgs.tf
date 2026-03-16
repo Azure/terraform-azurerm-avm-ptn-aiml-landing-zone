@@ -45,6 +45,17 @@ locals {
       source_address_prefix        = "AzureLoadBalancer"
       source_port_range            = "*"
     }
+    "apim_rule01" = {
+      name                       = "Allow-APIM-Management"
+      access                     = "Allow"
+      destination_address_prefix = "VirtualNetwork"
+      destination_port_range     = "3443"
+      direction                  = "Inbound"
+      priority                   = 130
+      protocol                   = "Tcp"
+      source_address_prefix      = "ApiManagement"
+      source_port_range          = "*"
+    }
 
   }
   nsg_name = try(var.nsgs_definition.name, null) != null ? var.nsgs_definition.name : (var.name_prefix != null ? "${var.name_prefix}-ai-alz-nsg" : "ai-alz-nsg")
