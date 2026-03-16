@@ -56,6 +56,28 @@ locals {
       source_address_prefix      = "ApiManagement"
       source_port_range          = "*"
     }
+    "apim_rule02" = {
+      name                       = "Allow-APIM-Storage-Outbound"
+      access                     = "Allow"
+      destination_address_prefix = "Storage"
+      destination_port_range     = "443"
+      direction                  = "Outbound"
+      priority                   = 110
+      protocol                   = "Tcp"
+      source_address_prefix      = "VirtualNetwork"
+      source_port_range          = "*"
+    }
+    "apim_rule03" = {
+      name                       = "Allow-APIM-LoadBalancer"
+      access                     = "Allow"
+      destination_address_prefix = "VirtualNetwork"
+      destination_port_range     = "6390"
+      direction                  = "Inbound"
+      priority                   = 140
+      protocol                   = "Tcp"
+      source_address_prefix      = "AzureLoadBalancer"
+      source_port_range          = "*"
+    }
 
   }
   nsg_name = try(var.nsgs_definition.name, null) != null ? var.nsgs_definition.name : (var.name_prefix != null ? "${var.name_prefix}-ai-alz-nsg" : "ai-alz-nsg")

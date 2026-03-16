@@ -36,5 +36,9 @@ module "apim" {
   virtual_network_subnet_id     = var.apim_definition.virtual_network_type != "None" ? local.subnet_ids["APIMSubnet"] : null
   virtual_network_type          = var.apim_definition.virtual_network_type
   zones                         = local.region_zones
+
+  depends_on = [
+    azurerm_network_security_rule.this
+  ]
 }
 
