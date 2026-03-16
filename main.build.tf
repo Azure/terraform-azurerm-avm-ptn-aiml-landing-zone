@@ -47,5 +47,7 @@ module "buildvm" {
     version   = "latest"
   }
   tags = var.buildvm_definition.tags
+
+  depends_on = [module.avm_res_keyvault_vault, time_sleep.wait_for_kv_rbac]
 }
 

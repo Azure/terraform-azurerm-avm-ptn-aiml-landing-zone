@@ -210,7 +210,7 @@ module "jumpvm" {
   sku_size         = var.jump_vm_definition.sku
   tags             = var.jump_vm_definition.tags
 
-  depends_on = [module.avm_res_keyvault_vault]
+  depends_on = [module.avm_res_keyvault_vault, time_sleep.wait_for_kv_rbac]
 }
 
 module "avm_res_keyvault_vault" {
@@ -242,4 +242,14 @@ module "avm_res_keyvault_vault" {
   wait_for_rbac_before_secret_operations = {
     create = "60s"
   }
+}
+
+resource "time_sleep" "wait_for_kv_rbac" {
+  create_duration = "60s"
+
+  triggers = {
+    keyvault = module.avm_res_keyvault_vault.resource_id
+  }
+
+  depends_on = [module.avm_res_keyvault_vault]
 }

@@ -41,6 +41,16 @@ resource "azurerm_role_assignment" "deployment_user_kv_admin" {
   role_definition_name = "Key Vault Administrator"
 }
 
+resource "time_sleep" "wait_for_kv_rbac" {
+  create_duration = "60s"
+
+  triggers = {
+    role_assignment = azurerm_role_assignment.deployment_user_kv_admin.id
+  }
+
+  depends_on = [azurerm_role_assignment.deployment_user_kv_admin]
+}
+
 #TODO:
 # validate the defaults for the cosmosdb module
 # create private endpoint config
