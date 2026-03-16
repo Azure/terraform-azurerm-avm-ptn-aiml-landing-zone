@@ -20,6 +20,9 @@ module "avm_res_keyvault_vault" {
   public_network_access_enabled = var.genai_key_vault_definition.public_network_access_enabled
   role_assignments              = local.genai_key_vault_role_assignments
   tags                          = var.genai_key_vault_definition.tags
+  wait_for_rbac_before_certificate_operations = {
+    create = "60s"
+  }
   wait_for_rbac_before_key_operations = {
     create = "60s"
   }

@@ -233,6 +233,9 @@ module "avm_res_keyvault_vault" {
       principal_id               = data.azurerm_client_config.current.object_id
     }
   }
+  wait_for_rbac_before_certificate_operations = {
+    create = "60s"
+  }
   wait_for_rbac_before_key_operations = {
     create = "60s"
   }
