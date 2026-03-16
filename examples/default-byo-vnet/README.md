@@ -202,8 +202,6 @@ module "test" {
   apim_definition = {
     publisher_email = "DoNotReply@exampleEmail.com"
     publisher_name  = "Azure API Management"
-    sku_root        = "Developer"
-    sku_capacity    = 1
   }
   app_gateway_definition = {
     backend_address_pools = {
