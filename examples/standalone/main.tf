@@ -92,7 +92,7 @@ module "vm_sku" {
 module "test" {
   source = "../../"
 
-  location            = local.location
+  location = local.location
   #resource_group_name = "ai-lz-rg-standalone-${substr(module.naming.unique-seed, 0, 5)}"
   resource_group_name = "ai-lz-rg-default-ivrhi-3"
   vnet_definition = {

@@ -83,7 +83,8 @@ data "http" "ip" {
 # Add a vnet in a separate resource group
 resource "azurerm_resource_group" "vnet_rg" {
   location = local.location
-  name     = module.naming.resource_group.name_unique
+  #name     = module.naming.resource_group.name_unique
+  name = "ai-lz-rg-default-ivrhi-2"
 }
 
 #create a sample hub to mimic an existing network landing zone configuration
@@ -92,12 +93,14 @@ module "example_hub" {
 
   deployer_ip_address = "${data.http.ip.response_body}/32"
   location            = local.location
-  resource_group_name = "default-example-${module.naming.resource_group.name_unique}"
+  #resource_group_name = "default-example-${module.naming.resource_group.name_unique}"
+  resource_group_name = "default-example-rg-ivrh-2"
   vnet_definition = {
     address_space = "10.10.0.0/24"
   }
   enable_telemetry = var.enable_telemetry
-  name_prefix      = "${module.naming.resource_group.name_unique}-hub"
+  #name_prefix      = "${module.naming.resource_group.name_unique}-hub"
+  name_prefix = "rg-ivrh-hub-2"
 }
 
 #create a BYO vnet and peer to the hub
@@ -111,16 +114,17 @@ module "vnet" {
   dns_servers = {
     dns_servers = [for key, value in module.example_hub.dns_resolver_inbound_ip_addresses : value]
   }
-  name = module.naming.virtual_network.name_unique
+  #name = module.naming.virtual_network.name_unique
+  name = "ai-lz-vnet-default-2"
   peerings = {
     peertovnet1 = {
-      name                                 = "${module.naming.virtual_network_peering.name_unique}-vnet2-to-vnet1"
+      name                                 = "peering-vnet2-to-vnet1"
       remote_virtual_network_resource_id   = module.example_hub.virtual_network_resource_id
       allow_forwarded_traffic              = true
       allow_gateway_transit                = true
       allow_virtual_network_access         = true
       create_reverse_peering               = true
-      reverse_name                         = "${module.naming.virtual_network_peering.name_unique}-vnet1-to-vnet2"
+      reverse_name                         = "peering-vnet1-to-vnet2"
       reverse_allow_virtual_network_access = true
     }
   }
@@ -129,8 +133,9 @@ module "vnet" {
 module "test" {
   source = "../../"
 
-  location            = local.location
-  resource_group_name = "ai-lz-rg-standalone-byo-vnet-${substr(module.naming.unique-seed, 0, 5)}"
+  location = local.location
+  #resource_group_name = "ai-lz-rg-standalone-byo-vnet-${substr(module.naming.unique-seed, 0, 5)}"
+  resource_group_name = "ai-lz-rg-default-ivrhi-2"
   vnet_definition = {
     existing_byo_vnet = {
       this_vnet = {
@@ -145,7 +150,7 @@ module "test" {
       enable_diagnostic_settings = false
     }
     ai_model_deployments = {
-      "gpt-4o" = {
+      "gpt-4.1" = {
         name = "gpt-4.1"
         model = {
           format  = "OpenAI"

@@ -77,7 +77,7 @@ data "http" "ip" {
 resource "azurerm_resource_group" "vnet_rg" {
   location = local.location
   #name     = module.naming.resource_group.name_unique
-  name      = "ai-lz-rg-default-ivrhi-2"
+  name = "ai-lz-rg-default-ivrhi-2"
 }
 
 #create a sample hub to mimic an existing network landing zone configuration
@@ -108,7 +108,7 @@ module "vnet" {
     dns_servers = [for key, value in module.example_hub.dns_resolver_inbound_ip_addresses : value]
   }
   #name = module.naming.virtual_network.name_unique
-  name          = "ai-lz-vnet-default-2"
+  name = "ai-lz-vnet-default-2"
   peerings = {
     peertovnet1 = {
       name                                 = "peering-vnet2-to-vnet1"
@@ -126,7 +126,7 @@ module "vnet" {
 module "test" {
   source = "../../"
 
-  location            = local.location
+  location = local.location
   #resource_group_name = "ai-lz-rg-standalone-byo-vnet-${substr(module.naming.unique-seed, 0, 5)}"
   resource_group_name = "ai-lz-rg-default-ivrhi-2"
   vnet_definition = {
