@@ -22,7 +22,6 @@ terraform {
 }
 
 provider "azurerm" {
-  storage_use_azuread = true
   features {
     resource_group {
       prevent_deletion_if_contains_resources = false
@@ -77,8 +76,7 @@ data "http" "ip" {
 
 resource "azurerm_resource_group" "vnet_rg" {
   location = local.location
-  #name     = module.naming.resource_group.name_unique
-  name = "ai-lz-rg-default-ivrhi-4"
+  name     = module.naming.resource_group.name_unique
 }
 
 module "vnet" {
@@ -88,17 +86,15 @@ module "vnet" {
   location      = azurerm_resource_group.vnet_rg.location
   parent_id     = azurerm_resource_group.vnet_rg.id
   address_space = ["192.168.0.0/20"] # has to be out of 192.168.0.0/16 currently. Other RFC1918 not supported for foundry capabilityHost injection.
-  #name          = module.naming.virtual_network.name_unique
-  name = "ai-lz-vnet-default-4"
+  name          = module.naming.virtual_network.name_unique
 }
 
 
 module "test" {
   source = "../../"
 
-  location = local.location
-  #resource_group_name = "ai-lz-rg-standalone-byo-vnet-${substr(module.naming.unique-seed, 0, 5)}"
-  resource_group_name = "ai-lz-rg-default-ivrhi-4"
+  location            = local.location
+  resource_group_name = "ai-lz-rg-standalone-byo-vnet-${substr(module.naming.unique-seed, 0, 5)}"
   vnet_definition = {
     existing_byo_vnet = {
       this_vnet = {
@@ -113,7 +109,7 @@ module "test" {
       enable_diagnostic_settings = false
     }
     ai_model_deployments = {
-      "gpt-4.1" = {
+      "gpt-4o" = {
         name = "gpt-4.1"
         model = {
           format  = "OpenAI"
