@@ -99,9 +99,9 @@ module "vm_sku" {
 module "test" {
   source = "../../"
 
-  location = local.location
-  #resource_group_name = "ai-lz-rg-standalone-${substr(module.naming.unique-seed, 0, 5)}"
-  resource_group_name = "ai-lz-rg-default-ivrhi-3"
+  location            = local.location
+  resource_group_name = "ai-lz-rg-standalone-${substr(module.naming.unique-seed, 0, 5)}"
+  #resource_group_name = "ai-lz-rg-default-ivrhi-3"
   vnet_definition = {
     name          = "ai-lz-vnet-standalone"
     address_space = ["192.168.0.0/20"] # has to be out of 192.168.0.0/16 currently. Other RFC1918 not supported for foundry capabilityHost injection.

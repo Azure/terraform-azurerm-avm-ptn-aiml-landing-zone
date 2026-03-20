@@ -73,22 +73,21 @@ module "example_hub" {
 
   deployer_ip_address = "${data.http.ip.response_body}/32"
   location            = "australiaeast"
-  #resource_group_name = "default-example-${module.naming.resource_group.name_unique}"
-  resource_group_name = "default-example-rg-ivrh-1"
+  resource_group_name = "default-example-${module.naming.resource_group.name_unique}"
+  #resource_group_name = "default-example-rg-ivrh-1"
   vnet_definition = {
     address_space = "10.10.0.0/24"
   }
   enable_telemetry = var.enable_telemetry
-  #name_prefix      = "${module.naming.resource_group.name_unique}-hub"
-  name_prefix = "rg-ivrh-hub-1"
+  name_prefix      = "${module.naming.resource_group.name_unique}-hub"
 }
 
 module "test" {
   source = "../../"
 
-  location = "australiaeast"
-  #resource_group_name = "ai-lz-rg-default-${substr(module.naming.unique-seed, 0, 5)}"
-  resource_group_name = "ai-lz-rg-default-ivrhi-1"
+  location            = "australiaeast"
+  resource_group_name = "ai-lz-rg-default-${substr(module.naming.unique-seed, 0, 5)}"
+  #resource_group_name = "ai-lz-rg-default-ivrhi-1"
   vnet_definition = {
     name          = "ai-lz-vnet-default-1"
     address_space = ["192.168.0.0/23"]                                                               # has to be out of 192.168.0.0/16 currently. Other RFC1918 not supported for foundry capabilityHost injection.
