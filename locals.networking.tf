@@ -233,7 +233,8 @@ locals {
       network_security_group = {
         id = module.nsgs.resource_id
       }
-      delegations = var.apim_definition.virtual_network_type != "None" ? [{
+      delegations = (var.apim_definition.virtual_network_type != "None" &&
+        contains(["BasicV2", "StandardV2", "PremiumV2"], var.apim_definition.sku_root)) ? [{
         name = "APIMSubnetDelegation"
         service_delegation = {
           name = "Microsoft.Web/hostingEnvironments"
