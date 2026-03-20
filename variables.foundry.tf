@@ -40,7 +40,7 @@ variable "ai_foundry_definition" {
     #AI model configurations
     ai_model_deployments = optional(map(object({
       name                   = string
-      rai_policy_name        = optional(string)
+      rai_policy_name        = optional(string, "Microsoft.DefaultV2")
       version_upgrade_option = optional(string, "OnceNewDefaultVersionAvailable")
       model = object({
         format  = string
@@ -299,7 +299,7 @@ Configuration object for the Azure AI Foundry deployment (hub, projects, and Bri
 
 - `ai_model_deployments` - (Optional) Map of model deployment configurations to create. The map key is arbitrary.
   - `name` - The name of the deployment.
-  - `rai_policy_name` - (Optional) Responsible AI policy name applied to the deployment.
+  - `rai_policy_name` - (Optional) Responsible AI policy name applied to the deployment. Default is "Microsoft.DefaultV2".
   - `version_upgrade_option` - (Optional) Version upgrade option for the model. Default is "OnceNewDefaultVersionAvailable".
   - `model` - Model specification.
     - `format` - Model format (e.g., OpenAI, OSS foundation model format).
