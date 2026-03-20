@@ -75,7 +75,7 @@ data "http" "ip" {
 }
 
 locals {
-  location = "swedencentral" #temporarily pinning on australiaeast for capacity limits in test subscription.
+  location = "australiaeast"
 }
 
 data "azurerm_client_config" "current" {}

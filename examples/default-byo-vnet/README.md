@@ -44,7 +44,7 @@ provider "azurerm" {
 }
 
 locals {
-  location = "swedencentral"
+  location = "australiaeast"
 }
 
 data "azurerm_client_config" "current" {}
