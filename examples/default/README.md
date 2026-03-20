@@ -29,6 +29,7 @@ terraform {
 }
 
 provider "azurerm" {
+  storage_use_azuread = true
   features {
     resource_group {
       prevent_deletion_if_contains_resources = false
@@ -79,21 +80,24 @@ module "example_hub" {
 
   deployer_ip_address = "${data.http.ip.response_body}/32"
   location            = "swedencentral"
-  resource_group_name = "default-example-${module.naming.resource_group.name_unique}"
+  #resource_group_name = "default-example-${module.naming.resource_group.name_unique}"
+  resource_group_name = "default-example-rg-ivrh-1"
   vnet_definition = {
     address_space = "10.10.0.0/24"
   }
   enable_telemetry = var.enable_telemetry
-  name_prefix      = "${module.naming.resource_group.name_unique}-hub"
+  #name_prefix      = "${module.naming.resource_group.name_unique}-hub"
+  name_prefix = "rg-ivrh-hub-1"
 }
 
 module "test" {
   source = "../../"
 
-  location            = "swedencentral" #temporarily pinning on swedencentral for capacity limits in test subscription.
-  resource_group_name = "ai-lz-rg-default-${substr(module.naming.unique-seed, 0, 5)}"
+  location = "swedencentral" #temporarily pinning on swedencentral for capacity limits in test subscription.
+  #resource_group_name = "ai-lz-rg-default-${substr(module.naming.unique-seed, 0, 5)}"
+  resource_group_name = "ai-lz-rg-default-ivrhi-1"
   vnet_definition = {
-    name          = "ai-lz-vnet-default"
+    name          = "ai-lz-vnet-default-1"
     address_space = ["192.168.0.0/23"]                                                               # has to be out of 192.168.0.0/16 currently. Other RFC1918 not supported for foundry capabilityHost injection.
     dns_servers   = [for key, value in module.example_hub.dns_resolver_inbound_ip_addresses : value] # Use the DNS resolver IPs from the example hub
     hub_vnet_peering_definition = {
@@ -108,7 +112,7 @@ module "test" {
       enable_diagnostic_settings = false
     }
     ai_model_deployments = {
-      "gpt-4o" = {
+      "gpt-4.1" = {
         name = "gpt-4.1"
         model = {
           format  = "OpenAI"
@@ -222,7 +226,6 @@ module "test" {
     enable_diagnostic_settings = false
   }
   genai_cosmosdb_definition = {
-
     consistency_level = "Session"
   }
   genai_key_vault_definition = {
