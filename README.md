@@ -1524,9 +1524,9 @@ Default: `{}`
 
 ### <a name="input_flag_platform_landing_zone"></a> [flag\_platform\_landing\_zone](#input\_flag\_platform\_landing\_zone)
 
-Description: Flag to indicate if the platform landing zone is enabled.
+Description: Flag to indicate whether the module should operate in standalone mode, deploying all supporting hub infrastructure locally.
 
-If set to true, the module will deploy resources and connect to a platform landing zone hub. This enables integration with existing hub-and-spoke network architectures and centralized management services.
+If set to `true` (default), the module operates as a standalone deployment and will provision all hub-level infrastructure locally, including Azure Bastion, Azure Firewall, Private DNS zones, Jumpbox VM, and route tables. If set to `false`, the module assumes an existing platform landing zone hub is present (hub-and-spoke topology) and will reference existing hub services such as DNS zones from an external resource group, without deploying Bastion, Firewall, or related hub infrastructure. See the `standalone` example for `true` usage and the `default` example for `false` usage.
 
 Type: `bool`
 
@@ -2182,7 +2182,7 @@ Default: `{}`
 
 Description: Configuration object for Private DNS Zones and their network links.
 
-- `azure_policy_pe_zone_linking_enabled` - (Optional) Whether Azure Policy is used to enable private endpoint dns zone linking when using a platform landing zone (platform landing zone flag = true). Default is true.
+- `azure_policy_pe_zone_linking_enabled` - (Optional) Whether Azure Policy is used to enable private endpoint dns zone linking in standalone mode (`flag_platform_landing_zone = true`). Default is true.
 - `existing_zones_resource_group_resource_id` - (Optional) Resource group resource id where existing Private DNS Zones are located.
 - `allow_internet_resolution_fallback` - (Optional) Whether to allow fallback to internet resolution for Private DNS Zone network links. Default is false.
 - `network_links` - (Optional) Map of network links to create for Private DNS Zones. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
@@ -2219,20 +2219,20 @@ Default: `null`
 
 ### <a name="input_use_internet_routing"></a> [use\_internet\_routing](#input\_use\_internet\_routing)
 
-Description: Use direct internet routing instead of firewall routing for subnets when platform landing zone is enabled.
+Description: Use direct internet routing instead of firewall routing for subnets in standalone mode.
 
-When set to true and `flag_platform_landing_zone` is true, route tables will use NextHopType = "Internet"  
+When set to true and `flag_platform_landing_zone` is true (standalone mode), route tables will use NextHopType = "Internet"
 for 0.0.0.0/0 traffic instead of NextHopType = "VirtualAppliance" routing through the Azure Firewall.
 
-This setting is particularly useful for Azure Application Gateway v2 deployments that require direct  
+This setting is particularly useful for Azure Application Gateway v2 deployments that require direct
 internet connectivity and cannot use virtual appliance routing.
 
-**Security Considerations**: Enabling this setting bypasses the Azure Firewall for internet-bound traffic  
-from associated subnets, which may impact security posture. Ensure proper network security group rules  
+**Security Considerations**: Enabling this setting bypasses the Azure Firewall for internet-bound traffic
+from associated subnets, which may impact security posture. Ensure proper network security group rules
 are in place when using this option.
 
-**Compatibility**: This setting only applies when `flag_platform_landing_zone = true`. When
-`flag_platform_landing_zone = false`, no route tables are created regardless of this setting.
+**Compatibility**: This setting only applies when `flag_platform_landing_zone = true` (standalone mode). When
+`flag_platform_landing_zone = false` (hub-connected mode), no route tables are created regardless of this setting.
 
 Type: `bool`
 

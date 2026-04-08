@@ -33,9 +33,18 @@ variable "flag_platform_landing_zone" {
   type        = bool
   default     = true
   description = <<DESCRIPTION
-Flag to indicate if the platform landing zone is enabled.
+Flag to indicate whether the module should operate in standalone mode, deploying all supporting hub infrastructure locally.
 
-If set to true, the module will deploy resources and connect to a platform landing zone hub. This enables integration with existing hub-and-spoke network architectures and centralized management services.
+If set to `true` (default), the module operates as a standalone deployment and will provision all hub-level infrastructure locally, including:
+- Azure Bastion and Bastion subnet
+- Azure Firewall and Firewall subnet
+- Private DNS zones
+- Jumpbox VM and Jumpbox subnet
+- Route tables with virtual appliance next-hop
+
+If set to `false`, the module assumes an existing platform landing zone hub is present (hub-and-spoke topology). In this mode, the module will reference existing hub services such as DNS zones from an external resource group, and will not deploy Bastion, Firewall, or related hub infrastructure.
+
+See the `standalone` example for `true` usage and the `default` example for `false` usage.
 DESCRIPTION
 }
 
