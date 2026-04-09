@@ -48,7 +48,7 @@ variable "vnet_definition" {
     )), {})
     tags = optional(map(string), {})
     vnet_peering_configuration = optional(object({
-      peer_vnet_resource_id                = optional(string)
+      peer_vnet_resource_id                = string
       name                                 = optional(string)
       allow_forwarded_traffic              = optional(bool, true)
       allow_gateway_transit                = optional(bool, true)
@@ -60,11 +60,11 @@ variable "vnet_definition" {
       reverse_name                         = optional(string)
       reverse_use_remote_gateways          = optional(bool, false)
       use_remote_gateways                  = optional(bool, false)
-    }), {})
+    }))
     vwan_hub_peering_configuration = optional(object({
-      peer_vwan_hub_resource_id = optional(string)
+      peer_vwan_hub_resource_id = string
       #TODO: Add other connection properties here?
-    }), {})
+    }))
   })
   description = <<DESCRIPTION
 Configuration object for the Virtual Network (VNet) to be deployed.
@@ -108,8 +108,8 @@ Configuration object for the Virtual Network (VNet) to be deployed.
     - `pool_id` - The ID of the IPAM pool.
     - `prefix_length` - The prefix length to request from the IPAM pool.
 - `tags` - (Optional) Map of tags to assign to the VNet.
-- `vnet_peering_configuration` - (Optional) Configuration for VNet peering. This is not used for BYO VNet configurations as that is assumed to be handled outside the module.
-  - `peer_vnet_resource_id` - (Optional) Resource ID of the peer VNet.
+- `vnet_peering_configuration` - (Optional) Configuration for VNet peering. Provide this block to enable peering. This is not used for BYO VNet configurations as that is assumed to be handled outside the module.
+  - `peer_vnet_resource_id` - (Required) Resource ID of the peer VNet.
   - `name` - (Optional) Name of the peering connection.
   - `allow_forwarded_traffic` - (Optional) Whether forwarded traffic is allowed. Default is true.
   - `allow_gateway_transit` - (Optional) Whether gateway transit is allowed. Default is true.
@@ -121,8 +121,8 @@ Configuration object for the Virtual Network (VNet) to be deployed.
   - `reverse_name` - (Optional) Name of the reverse peering connection.
   - `reverse_use_remote_gateways` - (Optional) Whether to use remote gateways in reverse direction. Default is false.
   - `use_remote_gateways` - (Optional) Whether to use remote gateways. Default is false.
-- `vwan_hub_peering_configuration` - (Optional) Configuration for Virtual WAN hub peering. This is not used for BYO VNet configurations as that is assumed to be handled outside the module.
-  - `peer_vwan_hub_resource_id` - (Optional) Resource ID of the Virtual WAN hub to peer with.
+- `vwan_hub_peering_configuration` - (Optional) Configuration for Virtual WAN hub peering. Provide this block to enable peering. This is not used for BYO VNet configurations as that is assumed to be handled outside the module.
+  - `peer_vwan_hub_resource_id` - (Required) Resource ID of the Virtual WAN hub to peer with.
 
 DESCRIPTION
 }
@@ -744,9 +744,13 @@ variable "waf_policy_definition" {
       }))
       }), {
       managed_rule_set = {
-        owasp = {
-          version = "3.2"
-          type    = "OWASP"
+        drs = {
+          version = "2.1"
+          type    = "Microsoft_DefaultRuleSet"
+        }
+        bot_manager = {
+          version = "1.1"
+          type    = "Microsoft_BotManagerRuleSet"
         }
       }
     })

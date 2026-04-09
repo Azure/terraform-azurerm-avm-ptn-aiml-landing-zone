@@ -195,10 +195,9 @@ locals {
           prefix_length = var.vnet_definition.ipam_pools[0].prefix_length + 4
         }]
       : null)
-      route_table = ((var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
-        (var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? {
-        id = module.firewall_route_table[0].resource_id
-      } : null
+      # Application Gateway v2 does not support forced-tunneling UDRs (0.0.0.0/0 → VirtualAppliance).
+      # Do not associate the firewall route table with the AppGateway subnet.
+      route_table = null
       network_security_group = {
         id = module.nsgs.resource_id
       }

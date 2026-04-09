@@ -108,6 +108,7 @@ variable "apim_definition" {
     }), null)
     sku_root     = optional(string, "Premium")
     sku_capacity = optional(number, 3)
+    zones        = optional(list(string))
     tags         = optional(map(string), {})
     tenant_access = optional(object({
       enabled = bool
@@ -191,6 +192,7 @@ Configuration object for the Azure API Management service to be deployed.
     - `text` - (Optional) The terms of service text.
 - `sku_root` - (Optional) The SKU of the API Management service. Default is "Premium".
 - `sku_capacity` - (Optional) The capacity/scale units of the API Management service. Default is 3.
+- `zones` - (Optional) List of availability zones for the API Management service (e.g., ["1", "2", "3"]). If not specified, automatically assigns region zones for the Premium SKU and null for all other SKUs.
 - `tags` - (Optional) Map of tags to assign to the API Management service.
 - `tenant_access` - (Optional) Tenant access configuration.
   - `enabled` - Whether tenant access is enabled.

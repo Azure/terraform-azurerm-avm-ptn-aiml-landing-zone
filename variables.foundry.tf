@@ -24,8 +24,9 @@ variable "ai_foundry_definition" {
       allow_project_management = optional(bool, true)
       create_ai_agent_service  = optional(bool, false)
       #network_injections is statically set to vnet/subnet created in the module.
-      private_dns_zone_resource_ids = optional(list(string), [])
-      sku                           = optional(string, "S0")
+      private_endpoints_manage_dns_zone_group = optional(bool, true)
+      private_dns_zone_resource_ids           = optional(list(string), [])
+      sku                                     = optional(string, "S0")
       role_assignments = optional(map(object({
         role_definition_id_or_name             = string
         principal_id                           = string
