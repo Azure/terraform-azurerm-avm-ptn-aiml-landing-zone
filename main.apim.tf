@@ -35,7 +35,7 @@ module "apim" {
   tenant_access                 = var.apim_definition.tenant_access
   virtual_network_subnet_id     = var.apim_definition.virtual_network_type != "None" ? local.subnet_ids["APIMSubnet"] : null
   virtual_network_type          = var.apim_definition.virtual_network_type
-  zones                         = var.apim_definition.sku_root == "Premium" ? local.region_zones : null
+  zones                         = var.apim_definition.zones != null ? var.apim_definition.zones : (var.apim_definition.sku_root == "Premium" ? local.region_zones : null)
 
   depends_on = [
     azurerm_network_security_rule.this

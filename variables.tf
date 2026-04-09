@@ -14,7 +14,7 @@ variable "resource_group_name" {
   description = <<DESCRIPTION
 The name of the resource group where all resources will be deployed.
 
-This resource group will contain all the AI/ML landing zone infrastructure components. The resource group should already exist or will be created as part of the deployment process.
+This resource group will be created by the module and will contain all the AI/ML landing zone infrastructure components. Provide a unique name that does not already exist in the subscription.
 DESCRIPTION
 }
 
