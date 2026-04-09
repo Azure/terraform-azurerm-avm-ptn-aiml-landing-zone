@@ -1,4 +1,6 @@
 locals {
+  apim_ai_foundry_endpoint = "https://${module.foundry_ptn.ai_foundry_name}.openai.azure.com"
+  apim_deploy_sample_apis  = var.apim_definition.deploy && var.apim_definition.deploy_sample_apis
   apim_diagnostic_settings = var.apim_definition.enable_diagnostic_settings ? (length(var.apim_definition.diagnostic_settings) > 0 ? var.apim_definition.diagnostic_settings : local.apim_diagnostic_settings_inner) : {}
   apim_diagnostic_settings_inner = ((try(var.law_definition.deploy, false) == true) ? {
     sendToLogAnalytics = {

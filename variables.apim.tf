@@ -1,9 +1,10 @@
 variable "apim_definition" {
   type = object({
-    deploy          = optional(bool, true)
-    name            = optional(string)
-    publisher_email = string
-    publisher_name  = string
+    deploy             = optional(bool, true)
+    deploy_sample_apis = optional(bool, false)
+    name               = optional(string)
+    publisher_email    = string
+    publisher_name     = string
     additional_locations = optional(list(object({
       location             = string
       capacity             = optional(number, null)
@@ -123,6 +124,7 @@ variable "apim_definition" {
 Configuration object for the Azure API Management service to be deployed.
 
 - `deploy` - (Optional) Whether to deploy the API Management service. Default is true.
+- `deploy_sample_apis` - (Optional) Whether to deploy sample APIs in APIM that route to Azure AI Foundry. This creates a backend, API, operations, and policy to validate end-to-end connectivity between APIM and AI Foundry. Default is false.
 - `name` - (Optional) The name of the API Management service. If not provided, a name will be generated.
 - `publisher_email` - (Required) The email address of the publisher of the API Management service.
 - `publisher_name` - (Required) The name of the publisher of the API Management service.
