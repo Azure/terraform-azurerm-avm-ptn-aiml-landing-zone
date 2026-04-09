@@ -1,0 +1,62 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "OAI-Realtime-API",
+    "version": "1.0",
+    "description": "Azure OpenAI Realtime WebSocket API via APIM"
+  },
+  "host": "apim-d6vjlv67krcvy.azure-api.net",
+  "basePath": "/openai/realtime",
+  "schemes": [
+    "wss"
+  ],
+  "paths": {
+    "/connect": {
+      "get": {
+        "summary": "WebSocket handshake for OpenAI Realtime",
+        "operationId": "openRealtimeConnection",
+        "parameters": [
+          {
+            "name": "deployment-id",
+            "in": "query",
+            "required": true,
+            "type": "string",
+            "description": "OpenAI deployment name (e.g., gpt-4o-realtime)"
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "required": true,
+            "type": "string",
+            "default": "2024-02-15-preview",
+            "description": "API version"
+          }
+        ],
+        "responses": {
+          "101": {
+            "description": "Switching Protocols (WebSocket established)"
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    }
+  },
+  "securityDefinitions": {
+    "aadToken": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header",
+      "description": "Bearer token via Managed Identity"
+    }
+  },
+  "security": [
+    {
+      "aadToken": []
+    }
+  ]
+}

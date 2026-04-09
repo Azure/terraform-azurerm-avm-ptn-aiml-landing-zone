@@ -3,8 +3,8 @@ terraform {
 
   required_providers {
     azapi = {
-      source  = "azure/azapi"
-      version = "~> 2.0"
+      source  = "Azure/azapi" 
+      version = ">= 1.10.0"
     }
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -34,20 +34,20 @@ provider "azurerm" {
       purge_soft_delete_on_destroy = true
     }
   }
+  subscription_id = var.subscription_id
+
 }
 
-## Section to provide a random Azure region for the resource group
-# This allows us to randomize the region for the resource group.
-module "regions" {
-  source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.9.2"
+variable "regions" {
+  type    = list(string)
+  default = ["eastus", "westus", "centralindia"]
 }
-
 # This allows us to randomize the region for the resource group.
 resource "random_integer" "region_index" {
-  max = length(module.regions.regions) - 1
   min = 0
+  max = length(var.regions) - 1
 }
+
 ## End of section to provide a random Azure region for the resource group
 
 # This ensures we have unique CAF compliant names for our resources.
@@ -56,8 +56,6 @@ module "naming" {
   version = "0.4.2"
 }
 
-# Get the deployer IP address to allow for public write to the key vault. This is to make sure the tests run.
-# In practice your deployer machine will be on a private network and this will not be required.
 data "http" "ip" {
   url = "https://api.ipify.org/"
   retry {
@@ -71,7 +69,15 @@ locals {
   location = "australiaeast"
 }
 
-data "azurerm_client_config" "current" {}
+variable "resource_group_name" {
+  type        = string
+  default     = "ailz-rg-tf-standalone-vpds11"
+}
+
+variable "subscription_id" {
+  type = string
+  default = "9ad6f7f4-b0d6-4d88-a6d1-3fc2257d5583"
+}
 
 module "vm_sku" {
   source  = "Azure/avm-utl-sku-finder/azapi"
@@ -89,16 +95,86 @@ module "vm_sku" {
   }
 }
 
+resource "random_string" "suffix" {
+  length  = 5
+  upper   = false
+  special = false
+}
+
+
+# Create resource group before anything else
 module "test" {
   source = "../../"
 
+  openAiUris                 = {}
+
+  resource_group_name = var.resource_group_name
   location            = local.location
-  resource_group_name = "ai-lz-rg-standalone-${substr(module.naming.unique-seed, 0, 5)}"
-  #resource_group_name = "ai-lz-rg-default-ivrhi-3"
+  openai_resource_name = "aoai-${random_string.suffix.result}"
+
+  ############################################
+  # Core Naming (FIXED)
+  ############################################
+  name            = "apim-${random_string.suffix.result}"
+  publisherEmail  = "admin@example.com"
+  publisherName   = "apim-user"
+  sku             = "Developer_1"
+  skuCount        = 1
+
+  ############################################
+  # Application Insights
+  ############################################
+  applicationInsightsName = "appi-${random_string.suffix.result}"
+
+  ############################################
+  # Managed Identity
+  ############################################
+  managedIdentityName = "mi-${random_string.suffix.result}"
+
+
+  aiSearchInstances          = []
+
+  namespace_name   = "ehns-${random_string.suffix.result}"
+  eventHubName     = "eh-${random_string.suffix.result}"
+  eventHubEndpoint = ""
+  eventHubPIIName  = "ehpii-${random_string.suffix.result}"
+  eventHubPIIEndpoint = ""
+
+  clientAppId = "11111111-1111-1111-1111-111111111111"
+  tenantId    = "0e478cd4-3e52-496d-ac3a-419ca58ba7ac"
+  audience    = "api://default"
+
+  contentSafetyServiceUrl = "https://example.com/content-safety"
+  aiLanguageServiceUrl    = "https://example.com/language"
+
+  entraAuth                  = false
+  enableAzureAISearch        = true
+  enableAIModelInference     = true
+  enableOpenAIRealtime       = true
+  enableDocumentIntelligence = true
+  enablePIIAnonymization     = true
+
+  ############################################
+  # Named Values
+  ############################################
+  openAiApiUamiNamedValue     = "mi-${random_string.suffix.result}"
+  openAiApiClientNamedValue   = "11111111-1111-1111-1111-111111111111"
+  openAiApiEntraNamedValue    = "entra-auth"
+  entraAuthUrl                = "https://login.microsoftonline.com/"
+  openAiApiAudienceNamedValue = "audience"
+  openAiApiTenantNamedValue   = "0e478cd4-3e52-496d-ac3a-419ca58ba7ac"
+  openApiSpecification = "https://petstore3.swagger.io/api/v3/openapi.json"
+
+
+  privateEndpointSubnetId   = ""
+  apimSubnetId              = ""
+  apimV2PrivateEndpointName = ""
+
   vnet_definition = {
-    name          = "ai-lz-vnet-standalone"
-    address_space = ["192.168.0.0/20"] # has to be out of 192.168.0.0/16 currently. Other RFC1918 not supported for foundry capabilityHost injection.
+    name          = "vnet-${random_string.suffix.result}"
+    address_space = ["192.168.0.0/20"]
   }
+
   ai_foundry_definition = {
     purge_on_destroy = true
     ai_foundry = {
@@ -122,16 +198,20 @@ module "test" {
 
     ai_projects = {
       project_1 = {
-        name                       = "project-1"
-        description                = "Project 1 description"
-        display_name               = "Project 1 Display Name"
+        name         = "proj-${random_string.suffix.result}"
+        description  = "Test project"
+        display_name = "Test Project"
+
         create_project_connections = true
+
         cosmos_db_connection = {
           new_resource_map_key = "this"
         }
+
         ai_search_connection = {
           new_resource_map_key = "this"
         }
+
         storage_account_connection = {
           new_resource_map_key = "this"
         }
@@ -149,18 +229,25 @@ module "test" {
 
     cosmosdb_definition = {
       this = {
-        consistency_level = "Session"
+        name                = "cosmos-foundry-${random_string.suffix.result}"
+        consistency_level   = "Session"
+        kind                = "GlobalDocumentDB"
+        offer_type          = "Standard"
+        geo_location        = [{ location = local.location, failover_priority = 0 }]
       }
     }
 
     key_vault_definition = {
       this = {
+        network_acls = {
+          default_action = "Allow"
+        }
       }
     }
 
     storage_account_definition = {
       this = {
-        shared_access_key_enabled = true #configured for testing
+        shared_access_key_enabled = true
         endpoints = {
           blob = {
             type = "blob"
@@ -169,10 +256,12 @@ module "test" {
       }
     }
   }
+
   apim_definition = {
-    publisher_email = "DoNotReply@exampleEmail.com"
-    publisher_name  = "Azure API Management"
+    publisher_email = "admin@example.com"
+    publisher_name  = "apim-user"
   }
+
   app_gateway_definition = {
     backend_address_pools = {
       example_pool = {
@@ -218,8 +307,10 @@ module "test" {
   container_app_environment_definition = {
     enable_diagnostic_settings = false
   }
+
   enable_telemetry           = var.enable_telemetry
   flag_platform_landing_zone = true
+
   genai_app_configuration_definition = {
     enable_diagnostic_settings = false
   }
@@ -234,7 +325,7 @@ module "test" {
     public_network_access_enabled = true
     network_acls = {
       bypass   = "AzureServices"
-      ip_rules = ["${data.http.ip.response_body}/32"]
+      ip_rules = ["${trimspace(data.http.ip.response_body)}/32"]
     }
   }
   genai_storage_account_definition = {

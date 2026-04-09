@@ -1,0 +1,49 @@
+<policies>
+    <inbound>
+        <base />
+
+        <!-- AAD Auth -->
+        <include-fragment fragment-id="aad-auth" />
+
+        <!-- Remove API key -->
+        <set-header name="api-key" exists-action="delete" />
+
+        <!-- Restrict allowed deployments -->
+        <choose>
+            <when condition="@(!new [] { "gpt-4o-realtime" }.Contains(context.Request.MatchedParameters["deployment-id"] ?? String.Empty))">
+                <return-response>
+                    <set-status code="403" reason="Forbidden: Invalid realtime model" />
+                </return-response>
+            </when>
+        </choose>
+
+        <!-- Rate limiting -->
+        <rate-limit calls="20" renewal-period="60" />
+
+        <!-- Managed Identity -->
+        <authentication-managed-identity 
+            resource="https://cognitiveservices.azure.com"
+            output-token-variable-name="msi-access-token"
+            client-id="{{uami-client-id}}" />
+
+        <set-header name="Authorization" exists-action="override">
+            <value>@("Bearer " + (string)context.Variables["msi-access-token"])</value>
+        </set-header>
+
+        <!-- Clean routing -->
+        <set-backend-service base-url="wss://YOUR-OPENAI.openai.azure.com/openai/realtime" />
+
+    </inbound>
+
+    <backend>
+        <forward-request />
+    </backend>
+
+    <outbound>
+        <base />
+    </outbound>
+
+    <on-error>
+        <base />
+    </on-error>
+</policies>

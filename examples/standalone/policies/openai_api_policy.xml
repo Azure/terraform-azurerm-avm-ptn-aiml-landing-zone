@@ -1,0 +1,49 @@
+<policies>
+  <inbound>
+    <base />
+
+    <!-- AAD Auth -->
+    <include-fragment fragment-id="aad-auth" />
+
+    <!-- Remove API key -->
+    <set-header name="api-key" exists-action="delete" />
+
+    <!-- Restrict models -->
+    <set-variable name="deploymentId" value="@(context.Request.MatchedParameters["deployment-id"] ?? String.Empty)" />
+    <choose>
+        <when condition='@(!new [] { "chat", "embedding", "gpt-4o" }.Contains(context.Request.MatchedParameters["deployment-id"] ?? String.Empty))'>
+            <return-response>
+                <set-status code="403" reason="Forbidden: Model not allowed" />
+            </return-response>
+        </when>
+    </choose>
+
+    <!-- Token throttling -->
+    <azure-openai-token-limit 
+        counter-key="@(context.Subscription.Id)" 
+        tokens-per-minute="20000"
+        estimate-prompt-tokens="true" />
+
+    <!-- Managed Identity -->
+    <authentication-managed-identity 
+        resource="https://cognitiveservices.azure.com"
+        output-token-variable-name="msi-token" />
+
+    <set-header name="Authorization" exists-action="override">
+      <value>@("Bearer " + (string)context.Variables["msi-token"])</value>
+    </set-header>
+
+  </inbound>
+
+  <backend>
+    <forward-request />
+  </backend>
+
+  <outbound>
+    <base />
+  </outbound>
+
+  <on-error>
+    <base />
+  </on-error>
+</policies>

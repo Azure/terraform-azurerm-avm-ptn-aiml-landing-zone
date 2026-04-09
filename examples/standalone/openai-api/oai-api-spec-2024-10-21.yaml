@@ -1,0 +1,157 @@
+openapi: 3.0.0
+
+info:
+  title: Azure OpenAI Service API
+  description: Azure OpenAI APIs for chat, completions, and embeddings
+  version: "2024-10-21"
+
+servers:
+  - url: https://example.com
+
+paths:
+
+  /deployments/{deployment-id}/chat/completions:
+    post:
+      summary: Create chat completion
+      operationId: ChatCompletions_Create
+
+      parameters:
+        - in: path
+          name: deployment-id
+          required: true
+          schema:
+            type: string
+          description: Model deployment name
+
+        - in: query
+          name: api-version
+          required: true
+          schema:
+            type: string
+            example: "2024-10-21"
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - messages
+              properties:
+                messages:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - role
+                      - content
+                    properties:
+                      role:
+                        type: string
+                        enum: [system, user, assistant]
+                      content:
+                        type: string
+                temperature:
+                  type: number
+                  default: 1
+                max_tokens:
+                  type: integer
+                  default: 100
+
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  choices:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        message:
+                          type: object
+                          properties:
+                            role:
+                              type: string
+                            content:
+                              type: string
+
+  /deployments/{deployment-id}/completions:
+    post:
+      summary: Create completion
+      operationId: Completions_Create
+
+      parameters:
+        - in: path
+          name: deployment-id
+          required: true
+          schema:
+            type: string
+
+        - in: query
+          name: api-version
+          required: true
+          schema:
+            type: string
+            example: "2024-10-21"
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                prompt:
+                  type: string
+                max_tokens:
+                  type: integer
+
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /deployments/{deployment-id}/embeddings:
+    post:
+      summary: Create embeddings
+      operationId: Embeddings_Create
+
+      parameters:
+        - in: path
+          name: deployment-id
+          required: true
+          schema:
+            type: string
+
+        - in: query
+          name: api-version
+          required: true
+          schema:
+            type: string
+            example: "2024-10-21"
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - input
+              properties:
+                input:
+                  type: string
+
+      responses:
+        "200":
+          description: Successful response

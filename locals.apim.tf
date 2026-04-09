@@ -16,4 +16,5 @@ locals {
   } : {})
   apim_name             = try(var.apim_definition.name, null) != null ? var.apim_definition.name : (var.name_prefix != null ? "${var.name_prefix}-apim-${random_string.name_suffix.result}" : "ai-alz-apim-${random_string.name_suffix.result}")
   apim_role_assignments = try(var.apim_definition.role_assignments, {})
+  apim_sku_name = "${var.apim_definition.sku_root}_${var.apim_definition.sku_capacity}"
 }

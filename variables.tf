@@ -11,6 +11,7 @@ DESCRIPTION
 # This is required for most resource modules
 variable "resource_group_name" {
   type        = string
+  default = "ailz-rg-tf-standalone-vpds11"
   description = <<DESCRIPTION
 The name of the resource group where all resources will be deployed.
 
@@ -65,4 +66,215 @@ Map of tags to be assigned to all resources created by this module.
 
 Tags are key-value pairs that help organize and manage Azure resources. These tags will be applied to all resources created by the module, enabling consistent resource governance, cost tracking, and operational management across the AI/ML landing zone infrastructure.
 DESCRIPTION
+}
+
+variable "openAiApiUamiNamedValue" {
+  type    = string
+  default = "uami-client-id"
+}
+variable "openAiApiClientNamedValue" {
+  type    = string
+  default = "uami-client-id"
+}
+variable "openAiApiEntraNamedValue" {
+  type    = string
+  default = "uami-client-id"
+}
+
+variable "entraAuthUrl" {
+  type    = string
+  default = "https://login.microsoftonline.com/"
+}
+
+variable "openAiApiAudienceNamedValue" {
+  type    = string
+  default = "uami-client-id"
+}
+variable "openAiApiTenantNamedValue" {
+  type    = string
+  default = "uami-client-id"
+}
+
+############################################
+# VARIABLES
+############################################
+
+variable "name" {
+  type = string
+}
+
+variable "entraAuth" {
+  type    = bool
+  default = false
+}
+
+variable "publisherEmail" {
+  type    = string
+  default = "noreply@microsoft.com"
+}
+
+variable "publisherName" {
+  type    = string
+  default = ""
+}
+
+variable "sku" {
+  type    = string
+  default = "Developer"
+}
+
+variable "openai_resource_name" {
+  type    = string
+  default = "aoai-resource"
+}
+
+variable "skuCount" {
+  type    = number
+  default = 1
+}
+
+variable "applicationInsightsName" {
+  type = string
+}
+
+variable "managedIdentityName" {
+  type = string
+}
+
+variable "clientAppId" {
+  type    = string
+  default = " "
+}
+
+variable "openAiUris" {
+  type    = map(string)
+  default = {}
+}
+
+variable "tenantId" {
+  type    = string
+  default = null
+}
+
+variable "audience" {
+  type    = string
+  default = "https://cognitiveservices.azure.com/.default"
+}
+
+variable "namespace_name" {
+  type = string
+  default = "ehubns"
+  description = "Event Hub Namespace name"
+}
+
+variable "eventHubName" {
+  type = string
+  default = ""
+}
+
+variable "eventHubEndpoint" {
+  type = string
+  default = ""
+}
+
+variable "eventHubPIIName" {
+  type = string
+  default = ""
+}
+
+variable "eventHubPIIEndpoint" {
+  type = string
+  default = ""
+}
+
+variable "enableAzureAISearch" {
+  type    = bool
+  default = false
+}
+
+variable "aiSearchInstances" {
+  type = list(string)
+}
+
+variable "enableAIModelInference" {
+  type    = bool
+  default = true
+}
+
+variable "enableOpenAIRealtime" {
+  type    = bool
+  default = true
+}
+
+variable "enableDocumentIntelligence" {
+  type    = bool
+  default = true
+}
+
+variable "enablePIIAnonymization" {
+  type    = bool
+  default = true
+}
+
+variable "contentSafetyServiceUrl" {
+  type = string
+  default = ""
+}
+
+variable "aiLanguageServiceUrl" {
+  type = string
+  default = ""
+}
+
+############################################
+# NETWORKING
+############################################
+
+variable "apimNetworkType" {
+  type    = string
+  default = "External"
+}
+
+variable "apimSubnetId" {
+  type = string
+}
+
+variable "apimV2PrivateDnsZoneName" {
+  type    = string
+  default = "privatelink.azure-api.net"
+}
+
+variable "apimV2PrivateEndpointName" {
+  type = string
+  default = ""
+}
+
+variable "dnsZoneRG" {
+  type    = string
+  default = ""
+}
+
+variable "dnsSubscriptionId" {
+  type    = string
+  default = ""
+}
+
+variable "privateEndpointSubnetId" {
+  type = string
+  default = ""
+}
+
+variable "usePrivateEndpoint" {
+  type    = bool
+  default = false
+}
+
+variable "apimV2PublicNetworkAccess" {
+  type    = bool
+  default = true
+}
+
+variable "openApiSpecification" {
+  type        = string
+  description = "The OpenAPI specification content (JSON or YAML)"
 }
