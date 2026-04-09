@@ -167,8 +167,9 @@ module "test" {
     }
   }
   apim_definition = {
-    publisher_email = "DoNotReply@exampleEmail.com"
-    publisher_name  = "Azure API Management"
+    deploy_sample_apis = true
+    publisher_email    = "DoNotReply@exampleEmail.com"
+    publisher_name     = "Azure API Management"
   }
   app_gateway_definition = {
     backend_address_pools = {
