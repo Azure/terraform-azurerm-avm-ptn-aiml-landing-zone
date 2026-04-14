@@ -107,8 +107,8 @@ locals {
       name = "privatelink.cognitiveservices.azure.com"
     }
   }
-  private_dns_zones = var.flag_platform_landing_zone == true ? local.private_dns_zone_map : {}
-  private_dns_zones_existing = var.flag_platform_landing_zone == false ? { for key, value in local.private_dns_zone_map : key => {
+  private_dns_zones = var.flag_platform_landing_zone == false ? local.private_dns_zone_map : {}
+  private_dns_zones_existing = var.flag_platform_landing_zone == true ? { for key, value in local.private_dns_zone_map : key => {
     name        = value.name
     resource_id = "${coalesce(var.private_dns_zones.existing_zones_resource_group_resource_id, "notused")}/providers/Microsoft.Network/privateDnsZones/${value.name}" #TODO: determine if there is a more elegant way to do this while avoiding errors
     }
@@ -117,7 +117,7 @@ locals {
   subnet_ids       = length(var.vnet_definition.existing_byo_vnet) > 0 ? { for key, m in module.byo_subnets : key => try(m.resource_id, m.id) } : { for key, s in module.ai_lz_vnet[0].subnets : key => s.resource_id }
   subnets = {
     AzureBastionSubnet = {
-      enabled = var.flag_platform_landing_zone == true ? try(local.subnets_definition["AzureBastionSubnet"].enabled, true) : try(local.subnets_definition["AzureBastionSubnet"].enabled, false)
+      enabled = var.flag_platform_landing_zone == false ? try(local.subnets_definition["AzureBastionSubnet"].enabled, true) : try(local.subnets_definition["AzureBastionSubnet"].enabled, false)
       name    = "AzureBastionSubnet"
       address_prefixes = (var.vnet_definition.ipam_pools == null ?
         try(local.subnets_definition["AzureBastionSubnet"].address_prefix, null) != null ?
@@ -138,7 +138,7 @@ locals {
       #}
     }
     AzureFirewallSubnet = {
-      enabled = var.flag_platform_landing_zone == true ? try(local.subnets_definition["AzureFirewallSubnet"].enabled, true) : try(local.subnets_definition["AzureFirewallSubnet"].enabled, false)
+      enabled = var.flag_platform_landing_zone == false ? try(local.subnets_definition["AzureFirewallSubnet"].enabled, true) : try(local.subnets_definition["AzureFirewallSubnet"].enabled, false)
       name    = "AzureFirewallSubnet"
       address_prefixes = (var.vnet_definition.ipam_pools == null ?
         try(local.subnets_definition["AzureFirewallSubnet"].address_prefix, null) != null ?
@@ -156,7 +156,7 @@ locals {
       route_table = null
     }
     JumpboxSubnet = {
-      enabled = var.flag_platform_landing_zone == true ? try(local.subnets_definition["JumpboxSubnet"].enabled, true) : try(local.subnets_definition["JumpboxSubnet"].enabled, false)
+      enabled = var.flag_platform_landing_zone == false ? try(local.subnets_definition["JumpboxSubnet"].enabled, true) : try(local.subnets_definition["JumpboxSubnet"].enabled, false)
       name    = try(local.subnets_definition["JumpboxSubnet"].name, null) != null ? local.subnets_definition["JumpboxSubnet"].name : "JumpboxSubnet"
       address_prefixes = (var.vnet_definition.ipam_pools == null ?
         try(local.subnets_definition["JumpboxSubnet"].address_prefix, null) != null ?
@@ -171,8 +171,8 @@ locals {
           prefix_length = var.vnet_definition.ipam_pools[0].prefix_length + 4
         }]
       : null)
-      route_table = ((var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
-        (var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? {
+      route_table = ((!var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
+        (!var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? {
         id = module.firewall_route_table[0].resource_id
       } : null
       network_security_group = {
@@ -195,8 +195,8 @@ locals {
           prefix_length = var.vnet_definition.ipam_pools[0].prefix_length + 4
         }]
       : null)
-      route_table = ((var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
-        (var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? {
+      route_table = ((!var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
+        (!var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? {
         id = module.firewall_route_table[0].resource_id
       } : null
       network_security_group = {
@@ -226,8 +226,8 @@ locals {
         }]
       : null)
       route_table = (var.apim_definition.virtual_network_type == "None" &&
-        ((var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
-        (var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null))) ? {
+        ((!var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
+        (!var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null))) ? {
         id = module.firewall_route_table[0].resource_id
       } : null
       network_security_group = {
@@ -257,8 +257,8 @@ locals {
           prefix_length = var.vnet_definition.ipam_pools[0].prefix_length + 4
         }]
       : null)
-      route_table = ((var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
-        (var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? {
+      route_table = ((!var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
+        (!var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? {
         id = module.firewall_route_table[0].resource_id
       } : null
       network_security_group = {
@@ -288,8 +288,8 @@ locals {
           prefix_length = var.vnet_definition.ipam_pools[0].prefix_length + 4
         }]
       : null)
-      route_table = ((var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
-        (var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? {
+      route_table = ((!var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
+        (!var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? {
         id = module.firewall_route_table[0].resource_id
       } : null
       network_security_group = {
@@ -318,8 +318,8 @@ locals {
           prefix_length = var.vnet_definition.ipam_pools[0].prefix_length + 4
         }]
       : null)
-      route_table = ((var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
-        (var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? {
+      route_table = ((!var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
+        (!var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? {
         id = module.firewall_route_table[0].resource_id
       } : null
     }
@@ -339,8 +339,8 @@ locals {
           prefix_length = var.vnet_definition.ipam_pools[0].prefix_length + 4
         }]
       : null)
-      route_table = ((var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
-        (var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? {
+      route_table = ((!var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
+        (!var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? {
         id = module.firewall_route_table[0].resource_id
       } : null
       network_security_group = {

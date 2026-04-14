@@ -1,7 +1,7 @@
 module "buildvm" {
   source  = "Azure/avm-res-compute-virtualmachine/azurerm"
   version = "0.20.0"
-  count   = var.flag_platform_landing_zone && var.buildvm_definition.deploy ? 1 : 0
+  count   = !var.flag_platform_landing_zone && var.buildvm_definition.deploy ? 1 : 0
 
   location = azurerm_resource_group.this.location
   name     = local.build_vm_name

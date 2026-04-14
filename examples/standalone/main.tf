@@ -219,7 +219,7 @@ module "test" {
     enable_diagnostic_settings = false
   }
   enable_telemetry           = var.enable_telemetry
-  flag_platform_landing_zone = true
+  flag_platform_landing_zone = false
   genai_app_configuration_definition = {
     enable_diagnostic_settings = false
   }

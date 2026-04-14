@@ -125,8 +125,8 @@ resource "azurerm_virtual_hub_connection" "this" {
 module "firewall_route_table" {
   source  = "Azure/avm-res-network-routetable/azurerm"
   version = "0.4.1"
-  count = ((var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
-  (var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? 1 : 0
+  count = ((!var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
+  (!var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? 1 : 0
 
   location                      = azurerm_resource_group.this.location
   name                          = local.route_table_name
@@ -151,7 +151,7 @@ module "firewall_route_table" {
 module "fw_pip" {
   source  = "Azure/avm-res-network-publicipaddress/azurerm"
   version = "0.2.0"
-  count   = var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0 ? 1 : 0
+  count   = !var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0 ? 1 : 0
 
   location            = azurerm_resource_group.this.location
   name                = "${local.firewall_name}-pip"
@@ -163,7 +163,7 @@ module "fw_pip" {
 module "firewall" {
   source  = "Azure/avm-res-network-azurefirewall/azurerm"
   version = "0.4.0"
-  count   = var.flag_platform_landing_zone && var.firewall_definition.deploy && length(var.vnet_definition.existing_byo_vnet) == 0 ? 1 : 0
+  count   = !var.flag_platform_landing_zone && var.firewall_definition.deploy && length(var.vnet_definition.existing_byo_vnet) == 0 ? 1 : 0
 
   firewall_sku_name   = var.firewall_definition.sku
   firewall_sku_tier   = var.firewall_definition.tier
@@ -179,7 +179,7 @@ module "firewall" {
       public_ip_address_id = module.fw_pip[0].resource_id
     }
   ]
-  firewall_policy_id = var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0 ? module.firewall_policy[0].resource_id : null
+  firewall_policy_id = !var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0 ? module.firewall_policy[0].resource_id : null
   firewall_zones     = var.firewall_definition.zones
   role_assignments   = var.firewall_definition.role_assignments
   tags               = var.firewall_definition.tags
@@ -188,7 +188,7 @@ module "firewall" {
 module "firewall_policy" {
   source  = "Azure/avm-res-network-firewallpolicy/azurerm"
   version = "0.3.3"
-  count   = var.flag_platform_landing_zone && var.firewall_definition.deploy && length(var.vnet_definition.existing_byo_vnet) == 0 ? 1 : 0
+  count   = !var.flag_platform_landing_zone && var.firewall_definition.deploy && length(var.vnet_definition.existing_byo_vnet) == 0 ? 1 : 0
 
   location            = azurerm_resource_group.this.location
   name                = "${local.firewall_name}-policy"
@@ -200,7 +200,7 @@ module "firewall_policy" {
 module "firewall_network_rule_collection_group" {
   source  = "Azure/avm-res-network-firewallpolicy/azurerm//modules/rule_collection_groups"
   version = "0.3.3"
-  count   = var.flag_platform_landing_zone && var.firewall_definition.deploy && length(var.vnet_definition.existing_byo_vnet) == 0 ? 1 : 0
+  count   = !var.flag_platform_landing_zone && var.firewall_definition.deploy && length(var.vnet_definition.existing_byo_vnet) == 0 ? 1 : 0
 
   firewall_policy_rule_collection_group_firewall_policy_id      = module.firewall_policy[0].resource_id
   firewall_policy_rule_collection_group_name                    = local.firewall_policy_rule_collection_group_name
@@ -212,7 +212,7 @@ module "firewall_network_rule_collection_group" {
 module "azure_bastion" {
   source  = "Azure/avm-res-network-bastionhost/azurerm"
   version = "0.7.2"
-  count   = var.flag_platform_landing_zone && var.bastion_definition.deploy ? 1 : 0
+  count   = !var.flag_platform_landing_zone && var.bastion_definition.deploy ? 1 : 0
 
   location            = azurerm_resource_group.this.location
   name                = local.bastion_name
@@ -229,7 +229,7 @@ module "azure_bastion" {
 module "private_dns_zones" {
   source   = "Azure/avm-res-network-privatednszone/azurerm"
   version  = "0.4.2"
-  for_each = var.flag_platform_landing_zone ? local.private_dns_zones : {}
+  for_each = !var.flag_platform_landing_zone ? local.private_dns_zones : {}
 
   domain_name           = each.value.name
   parent_id             = azurerm_resource_group.this.id
