@@ -95,7 +95,7 @@ resource "azurerm_network_security_rule" "this" {
 module "hub_vnet_peering" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm//modules/peering"
   version = "0.16.0"
-  count   = length(var.vnet_definition.existing_byo_vnet) == 0 && try(var.vnet_definition.vnet_peering_configuration.peer_vnet_resource_id, null) != null ? 1 : 0
+  count   = length(var.vnet_definition.existing_byo_vnet) == 0 && var.vnet_definition.vnet_peering_configuration != null ? 1 : 0
 
   parent_id                            = local.vnet_resource_id
   allow_forwarded_traffic              = var.vnet_definition.vnet_peering_configuration.allow_forwarded_traffic

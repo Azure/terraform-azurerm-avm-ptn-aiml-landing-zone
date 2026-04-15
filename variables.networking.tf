@@ -60,7 +60,7 @@ variable "vnet_definition" {
       reverse_name                         = optional(string)
       reverse_use_remote_gateways          = optional(bool, false)
       use_remote_gateways                  = optional(bool, false)
-    }), {})
+    }))
     vwan_hub_peering_configuration = optional(object({
       peer_vwan_hub_resource_id = optional(string)
       #TODO: Add other connection properties here?
