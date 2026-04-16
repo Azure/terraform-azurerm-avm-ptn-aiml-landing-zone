@@ -1,3 +1,14 @@
+# APIM in Internal VNet mode undergoes an "Activating" phase after initial provisioning
+# during which management plane operations (backends, APIs, policies) fail with 409/503.
+# This wait ensures the service is fully ready before creating child resources.
+resource "time_sleep" "apim_ready" {
+  count = local.apim_deploy_sample_apis ? 1 : 0
+
+  create_duration = "10m"
+
+  depends_on = [module.apim]
+}
+
 resource "azapi_resource" "apim_backend_ai_foundry" {
   count = local.apim_deploy_sample_apis ? 1 : 0
 
@@ -20,6 +31,8 @@ resource "azapi_resource" "apim_backend_ai_foundry" {
   read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   response_export_values = []
   update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+
+  depends_on = [time_sleep.apim_ready]
 }
 
 resource "azapi_resource" "apim_api_ai_foundry" {
