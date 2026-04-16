@@ -92,9 +92,8 @@ module "test" {
     name          = "ai-lz-vnet-default-1"
     address_space = ["192.168.0.0/23"]                                                               # has to be out of 192.168.0.0/16 currently. Other RFC1918 not supported for foundry capabilityHost injection.
     dns_servers   = [for key, value in module.example_hub.dns_resolver_inbound_ip_addresses : value] # Use the DNS resolver IPs from the example hub
-    hub_vnet_peering_definition = {
+    vnet_peering_configuration = {
       peer_vnet_resource_id = module.example_hub.virtual_network_resource_id
-      firewall_ip_address   = module.example_hub.firewall_ip_address
     }
   }
   ai_foundry_definition = {
@@ -160,8 +159,9 @@ module "test" {
     }
   }
   apim_definition = {
-    publisher_email = "DoNotReply@exampleEmail.com"
-    publisher_name  = "Azure API Management"
+    deploy_sample_apis = true
+    publisher_email    = "DoNotReply@exampleEmail.com"
+    publisher_name     = "Azure API Management"
   }
   app_gateway_definition = {
     backend_address_pools = {

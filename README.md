@@ -25,6 +25,11 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
+- [azapi_resource.apim_api_ai_foundry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.apim_api_operation_chat_completions](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.apim_api_operation_list_models](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.apim_api_policy_ai_foundry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.apim_backend_ai_foundry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.bing_grounding](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource_action.purge_ai_foundry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action) (resource)
 - [azurerm_network_security_rule.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_security_rule) (resource)
@@ -186,7 +191,7 @@ object({
       reverse_name                         = optional(string)
       reverse_use_remote_gateways          = optional(bool, false)
       use_remote_gateways                  = optional(bool, false)
-    }), {})
+    }))
     vwan_hub_peering_configuration = optional(object({
       peer_vwan_hub_resource_id = optional(string)
       #TODO: Add other connection properties here?
@@ -701,6 +706,7 @@ Default: `{}`
 Description: Configuration object for the Azure API Management service to be deployed.
 
 - `deploy` - (Optional) Whether to deploy the API Management service. Default is true.
+- `deploy_sample_apis` - (Optional) Whether to deploy sample APIs in APIM that route to Azure AI Foundry. This creates a backend, API, operations, and policy to validate end-to-end connectivity between APIM and AI Foundry. Default is false.
 - `name` - (Optional) The name of the API Management service. If not provided, a name will be generated.
 - `publisher_email` - (Required) The email address of the publisher of the API Management service.
 - `publisher_name` - (Required) The name of the publisher of the API Management service.
@@ -779,10 +785,11 @@ Type:
 
 ```hcl
 object({
-    deploy          = optional(bool, true)
-    name            = optional(string)
-    publisher_email = string
-    publisher_name  = string
+    deploy             = optional(bool, true)
+    deploy_sample_apis = optional(bool, false)
+    name               = optional(string)
+    publisher_email    = string
+    publisher_name     = string
     additional_locations = optional(list(object({
       location             = string
       capacity             = optional(number, null)
