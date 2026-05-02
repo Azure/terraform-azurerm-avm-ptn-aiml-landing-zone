@@ -228,6 +228,7 @@ Description: Configuration object for the Azure AI Foundry deployment (hub, proj
   - `allow_project_management` - (Optional) Whether project management is allowed from the hub. Default is true.
   - `create_ai_agent_service` - (Optional) Whether to create the AI Agent service in the hub. Default is false.
   - `private_dns_zone_resource_ids` - (Optional) List of private DNS zone resource IDs for hub endpoints. Default is [].
+  - `private_endpoints_manage_dns_zone_group` - (Optional) Whether to manage private DNS zone groups with this module. If set to false, you must manage 
   - `sku` - (Optional) The SKU for the hub. Default is "S0".
   - `role_assignments` - (Optional) Map of role assignments on the hub. The map key is deliberately arbitrary to avoid plan-time unknown key issues.
     - `role_definition_id_or_name` - Role definition ID or name to assign.
