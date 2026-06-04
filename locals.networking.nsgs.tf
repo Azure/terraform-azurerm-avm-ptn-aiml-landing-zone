@@ -13,20 +13,20 @@ locals {
       source_port_range            = "*"
     }
     "appgw_rule01" = {
-      name                         = "Allow-AppGW_Management"
-      access                       = "Allow"
-      destination_address_prefixes = try(var.vnet_definition.subnets["AppGatewaySubnet"].address_prefix, null) != null ? [var.vnet_definition.subnets["AppGatewaySubnet"].address_prefix] : [cidrsubnet(var.vnet_definition.address_space, 4, 5)]
-      destination_port_range       = "65200-65535"
-      direction                    = "Inbound"
-      priority                     = 110
-      protocol                     = "*"
-      source_address_prefix        = "GatewayManager"
-      source_port_range            = "*"
+      name                       = "Allow-AppGW_Management"
+      access                     = "Allow"
+      destination_address_prefix = "*" # Allow to all addresses as per MS documentation, https://learn.microsoft.com/en-us/azure/application-gateway/configuration-infrastructure#network-security-groups
+      destination_port_range     = "65200-65535"
+      direction                  = "Inbound"
+      priority                   = 110
+      protocol                   = "*"
+      source_address_prefix      = "GatewayManager"
+      source_port_range          = "*"
     }
     "appgw_rule02" = {
       name                         = "Allow-AppGW_Web"
       access                       = "Allow"
-      destination_address_prefixes = try(var.vnet_definition.subnets["AppGatewaySubnet"].address_prefix, null) != null ? [var.vnet_definition.subnets["AppGatewaySubnet"].address_prefix] : [cidrsubnet(var.vnet_definition.address_space, 4, 5)]
+      destination_address_prefixes = length(var.vnet_definition.existing_byo_vnet) > 0 ? module.byo_subnets["AppGatewaySubnet"].address_prefixes : module.ai_lz_vnet[0].subnets["AppGatewaySubnet"].address_prefixes
       destination_port_ranges      = ["80", "443"]
       direction                    = "Inbound"
       priority                     = 120
@@ -37,13 +37,46 @@ locals {
     "appgw_rule03" = {
       name                         = "Allow-AppGW_LoadBalancer"
       access                       = "Allow"
-      destination_address_prefixes = try(var.vnet_definition.subnets["AppGatewaySubnet"].address_prefix, null) != null ? [var.vnet_definition.subnets["AppGatewaySubnet"].address_prefix] : [cidrsubnet(var.vnet_definition.address_space, 4, 5)]
+      destination_address_prefixes = length(var.vnet_definition.existing_byo_vnet) > 0 ? module.byo_subnets["AppGatewaySubnet"].address_prefixes : module.ai_lz_vnet[0].subnets["AppGatewaySubnet"].address_prefixes
       destination_port_range       = "*"
       direction                    = "Inbound"
       priority                     = 4000
       protocol                     = "*"
       source_address_prefix        = "AzureLoadBalancer"
       source_port_range            = "*"
+    }
+    "apim_rule01" = {
+      name                       = "Allow-APIM-Management"
+      access                     = "Allow"
+      destination_address_prefix = "VirtualNetwork"
+      destination_port_range     = "3443"
+      direction                  = "Inbound"
+      priority                   = 130
+      protocol                   = "Tcp"
+      source_address_prefix      = "ApiManagement"
+      source_port_range          = "*"
+    }
+    "apim_rule02" = {
+      name                       = "Allow-APIM-Storage-Outbound"
+      access                     = "Allow"
+      destination_address_prefix = "Storage"
+      destination_port_range     = "443"
+      direction                  = "Outbound"
+      priority                   = 110
+      protocol                   = "Tcp"
+      source_address_prefix      = "VirtualNetwork"
+      source_port_range          = "*"
+    }
+    "apim_rule03" = {
+      name                       = "Allow-APIM-LoadBalancer"
+      access                     = "Allow"
+      destination_address_prefix = "VirtualNetwork"
+      destination_port_range     = "6390"
+      direction                  = "Inbound"
+      priority                   = 140
+      protocol                   = "Tcp"
+      source_address_prefix      = "AzureLoadBalancer"
+      source_port_range          = "*"
     }
 
   }

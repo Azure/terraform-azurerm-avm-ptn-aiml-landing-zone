@@ -10,6 +10,7 @@ variable "jumpvm_definition" {
   description = <<DESCRIPTION
 Configuration object for the Jump VM to be created for managing the implementation services.
 
+- `deploy` - (Optional) Whether to deploy the Jump VM. Default is true.
 - `name` - (Optional) The name of the Jump VM. If not provided, a name will be generated.
 - `sku` - (Optional) The VM size/SKU for the Jump VM. Default is "Standard_B2s".
 - `tags` - (Optional) Map of tags to assign to the Jump VM.

@@ -15,6 +15,8 @@ The following requirements are needed by this module:
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 
+- <a name="requirement_time"></a> [time](#requirement\_time) (~> 0.12)
+
 ## Resources
 
 The following resources are used by this module:
@@ -23,6 +25,7 @@ The following resources are used by this module:
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [random_integer.zone_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 - [random_string.name_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
+- [time_sleep.wait_for_kv_rbac](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
 - [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 
 <!-- markdownlint-disable MD013 -->
@@ -156,19 +159,19 @@ The following Modules are called:
 
 Source: Azure/avm-res-network-virtualnetwork/azurerm
 
-Version: =0.7.1
+Version: =0.16.0
 
 ### <a name="module_avm_res_keyvault_vault"></a> [avm\_res\_keyvault\_vault](#module\_avm\_res\_keyvault\_vault)
 
 Source: Azure/avm-res-keyvault-vault/azurerm
 
-Version: =0.10.0
+Version: =0.10.2
 
 ### <a name="module_avm_utl_regions"></a> [avm\_utl\_regions](#module\_avm\_utl\_regions)
 
 Source: Azure/avm-utl-regions/azurerm
 
-Version: 0.5.2
+Version: 0.9.2
 
 ### <a name="module_bastion_pip"></a> [bastion\_pip](#module\_bastion\_pip)
 
@@ -180,7 +183,7 @@ Version: 0.2.0
 
 Source: Azure/avm-res-network-azurefirewall/azurerm
 
-Version: 0.3.0
+Version: 0.4.0
 
 ### <a name="module_firewall_network_rule_collection_group"></a> [firewall\_network\_rule\_collection\_group](#module\_firewall\_network\_rule\_collection\_group)
 
@@ -204,7 +207,7 @@ Version: 0.2.0
 
 Source: Azure/avm-res-compute-virtualmachine/azurerm
 
-Version: 0.19.3
+Version: 0.20.0
 
 ### <a name="module_log_analytics_workspace"></a> [log\_analytics\_workspace](#module\_log\_analytics\_workspace)
 
@@ -222,7 +225,7 @@ Version: 0.2.1
 
 Source: Azure/avm-res-network-privatednszone/azurerm
 
-Version: 0.3.4
+Version: 0.4.2
 
 ### <a name="module_private_resolver"></a> [private\_resolver](#module\_private\_resolver)
 

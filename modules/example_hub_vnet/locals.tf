@@ -117,7 +117,7 @@ locals {
       enabled          = true
       name             = "DNSResolverInbound"
       address_prefixes = [cidrsubnet(var.vnet_definition.address_space, 2, 3)]
-      delegation = [{
+      delegations = [{
         name = "DNSResolverInboundDelegation"
         service_delegation = {
           name = "Microsoft.Network/dnsResolvers"

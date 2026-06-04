@@ -1,30 +1,28 @@
 module "avm_res_keyvault_vault" {
   source  = "Azure/avm-res-keyvault-vault/azurerm"
-  version = "=0.10.0"
+  version = "=0.10.2"
 
-  location            = azurerm_resource_group.this.location
-  name                = local.genai_key_vault_name
-  resource_group_name = azurerm_resource_group.this.name
-  tenant_id           = var.genai_key_vault_definition.tenant_id != null ? var.genai_key_vault_definition.tenant_id : data.azurerm_client_config.current.tenant_id
-  diagnostic_settings = {
-    to_law = {
-      name                  = "sendToLogAnalytics-kv-${random_string.name_suffix.result}"
-      workspace_resource_id = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
-    }
-  }
+  location                        = azurerm_resource_group.this.location
+  name                            = local.genai_key_vault_name
+  resource_group_name             = azurerm_resource_group.this.name
+  tenant_id                       = var.genai_key_vault_definition.tenant_id != null ? var.genai_key_vault_definition.tenant_id : data.azurerm_client_config.current.tenant_id
+  diagnostic_settings             = local.genai_key_vault_diagnostic_settings
   enabled_for_deployment          = true
   enabled_for_disk_encryption     = true
   enabled_for_template_deployment = true
   network_acls                    = var.genai_key_vault_definition.network_acls
   private_endpoints = {
     primary = {
-      private_dns_zone_resource_ids = var.flag_platform_landing_zone ? [module.private_dns_zones.key_vault_zone.resource_id] : [local.private_dns_zones_existing.key_vault_zone.resource_id]
-      subnet_resource_id            = module.ai_lz_vnet.subnets["PrivateEndpointSubnet"].resource_id
+      private_dns_zone_resource_ids = var.private_dns_zones.azure_policy_pe_zone_linking_enabled ? null : (!var.flag_platform_landing_zone ? [module.private_dns_zones.key_vault_zone.resource_id] : [local.private_dns_zones_existing.key_vault_zone.resource_id])
+      subnet_resource_id            = local.subnet_ids["PrivateEndpointSubnet"]
     }
   }
   public_network_access_enabled = var.genai_key_vault_definition.public_network_access_enabled
   role_assignments              = local.genai_key_vault_role_assignments
   tags                          = var.genai_key_vault_definition.tags
+  wait_for_rbac_before_contact_operations = {
+    create = "60s"
+  }
   wait_for_rbac_before_key_operations = {
     create = "60s"
   }
@@ -43,12 +41,21 @@ resource "azurerm_role_assignment" "deployment_user_kv_admin" {
   role_definition_name = "Key Vault Administrator"
 }
 
+resource "time_sleep" "wait_for_kv_rbac" {
+  create_duration = "60s"
+  triggers = {
+    role_assignment = azurerm_role_assignment.deployment_user_kv_admin.id
+  }
+
+  depends_on = [azurerm_role_assignment.deployment_user_kv_admin]
+}
+
 #TODO:
 # validate the defaults for the cosmosdb module
 # create private endpoint config
 module "cosmosdb" {
   source  = "Azure/avm-res-documentdb-databaseaccount/azurerm"
-  version = "0.8.0"
+  version = "0.10.0"
   count   = var.genai_cosmosdb_definition.deploy ? 1 : 0
 
   location                   = azurerm_resource_group.this.location
@@ -65,15 +72,10 @@ module "cosmosdb" {
     max_interval_in_seconds = var.genai_cosmosdb_definition.consistency_policy.max_interval_in_seconds
     max_staleness_prefix    = var.genai_cosmosdb_definition.consistency_policy.max_staleness_prefix
   }
-  cors_rule = var.genai_cosmosdb_definition.cors_rule
-  diagnostic_settings = var.genai_cosmosdb_definition.enable_diagnostic_settings ? {
-    to_law = {
-      name                  = "sendToLogAnalytics-cosmosdb-${random_string.name_suffix.result}"
-      workspace_resource_id = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
-    }
-  } : {}
-  enable_telemetry = var.enable_telemetry
-  geo_locations    = local.genai_cosmosdb_secondary_regions
+  cors_rule           = var.genai_cosmosdb_definition.cors_rule
+  diagnostic_settings = local.genai_cosmosdb_diagnostic_settings
+  enable_telemetry    = var.enable_telemetry
+  geo_locations       = local.genai_cosmosdb_secondary_regions
   ip_range_filter = [
     "168.125.123.255",
     "170.0.0.0/24",                                                                 #TODO: check 0.0.0.0 for validity
@@ -86,9 +88,9 @@ module "cosmosdb" {
   partition_merge_enabled               = var.genai_cosmosdb_definition.partition_merge_enabled
   private_endpoints = {
     "sql" = {
-      subnet_resource_id            = module.ai_lz_vnet.subnets["PrivateEndpointSubnet"].resource_id
+      subnet_resource_id            = local.subnet_ids["PrivateEndpointSubnet"]
       subresource_name              = "sql"
-      private_dns_zone_resource_ids = var.flag_platform_landing_zone ? [module.private_dns_zones.cosmos_sql_zone.resource_id] : [local.private_dns_zones_existing.cosmos_sql_zone.resource_id]
+      private_dns_zone_resource_ids = var.private_dns_zones.azure_policy_pe_zone_linking_enabled ? null : (!var.flag_platform_landing_zone ? [module.private_dns_zones.cosmos_sql_zone.resource_id] : [local.private_dns_zones_existing.cosmos_sql_zone.resource_id])
     }
   }
   public_network_access_enabled = var.genai_cosmosdb_definition.public_network_access_enabled
@@ -103,29 +105,25 @@ module "cosmosdb" {
 
 module "storage_account" {
   source  = "Azure/avm-res-storage-storageaccount/azurerm"
-  version = "0.6.3"
+  version = "0.6.6"
   count   = var.genai_storage_account_definition.deploy ? 1 : 0
 
-  location                 = azurerm_resource_group.this.location
-  name                     = local.genai_storage_account_name
-  resource_group_name      = azurerm_resource_group.this.name
-  access_tier              = var.genai_storage_account_definition.access_tier
-  account_kind             = var.genai_storage_account_definition.account_kind
-  account_replication_type = var.genai_storage_account_definition.account_replication_type
-  account_tier             = var.genai_storage_account_definition.account_tier
-  diagnostic_settings_storage_account = var.genai_storage_account_definition.enable_diagnostic_settings ? {
-    storage = {
-      name                  = "sendToLogAnalytics-sa-${random_string.name_suffix.result}"
-      workspace_resource_id = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
-    }
-  } : {}
-  enable_telemetry = var.enable_telemetry
+  location                            = azurerm_resource_group.this.location
+  name                                = local.genai_storage_account_name
+  resource_group_name                 = azurerm_resource_group.this.name
+  access_tier                         = var.genai_storage_account_definition.access_tier
+  account_kind                        = var.genai_storage_account_definition.account_kind
+  account_replication_type            = var.genai_storage_account_definition.account_replication_type
+  account_tier                        = var.genai_storage_account_definition.account_tier
+  diagnostic_settings_storage_account = local.genai_storage_account_diagnostic_settings
+  enable_telemetry                    = var.enable_telemetry
+  local_user_enabled                  = false
   private_endpoints = {
     for endpoint in var.genai_storage_account_definition.endpoint_types :
     endpoint => {
       name                          = "${local.genai_storage_account_name}-${endpoint}-pe"
-      private_dns_zone_resource_ids = var.flag_platform_landing_zone ? [module.private_dns_zones["storage_${lower(endpoint)}_zone"].resource_id] : [local.private_dns_zones_existing["storage_${lower(endpoint)}_zone"].resource_id]
-      subnet_resource_id            = module.ai_lz_vnet.subnets["PrivateEndpointSubnet"].resource_id
+      private_dns_zone_resource_ids = var.private_dns_zones.azure_policy_pe_zone_linking_enabled ? null : (!var.flag_platform_landing_zone ? [module.private_dns_zones["storage_${lower(endpoint)}_zone"].resource_id] : [local.private_dns_zones_existing["storage_${lower(endpoint)}_zone"].resource_id])
+      subnet_resource_id            = local.subnet_ids["PrivateEndpointSubnet"]
       subresource_name              = endpoint
     }
   }
@@ -140,23 +138,18 @@ module "storage_account" {
 
 module "containerregistry" {
   source  = "Azure/avm-res-containerregistry-registry/azurerm"
-  version = "0.4.0"
+  version = "0.5.0"
   count   = var.genai_container_registry_definition.deploy ? 1 : 0
 
   location            = azurerm_resource_group.this.location
   name                = local.genai_container_registry_name
   resource_group_name = azurerm_resource_group.this.name
-  diagnostic_settings = var.genai_container_registry_definition.enable_diagnostic_settings ? {
-    storage = {
-      name                  = "sendToLogAnalytics-acr-${random_string.name_suffix.result}"
-      workspace_resource_id = var.law_definition.resource_id != null ? var.law_definition.resource_id : module.log_analytics_workspace[0].resource_id
-    }
-  } : {}
-  enable_telemetry = var.enable_telemetry
+  diagnostic_settings = local.genai_container_registry_diagnostic_settings
+  enable_telemetry    = var.enable_telemetry
   private_endpoints = {
     container_registry = {
-      private_dns_zone_resource_ids = var.flag_platform_landing_zone ? [module.private_dns_zones.container_registry_zone.resource_id] : [local.private_dns_zones_existing.container_registry_zone.resource_id]
-      subnet_resource_id            = module.ai_lz_vnet.subnets["PrivateEndpointSubnet"].resource_id
+      private_dns_zone_resource_ids = var.private_dns_zones.azure_policy_pe_zone_linking_enabled ? null : (!var.flag_platform_landing_zone ? [module.private_dns_zones.container_registry_zone.resource_id] : [local.private_dns_zones_existing.container_registry_zone.resource_id])
+      subnet_resource_id            = local.subnet_ids["PrivateEndpointSubnet"]
     }
   }
   public_network_access_enabled = var.genai_container_registry_definition.public_network_access_enabled
@@ -169,19 +162,20 @@ module "containerregistry" {
 
 module "app_configuration" {
   source  = "Azure/avm-res-appconfiguration-configurationstore/azure"
-  version = "0.4.1"
+  version = "0.5.1"
   count   = var.genai_app_configuration_definition.deploy ? 1 : 0
 
   location                        = azurerm_resource_group.this.location
   name                            = local.genai_app_configuration_name
   resource_group_resource_id      = azurerm_resource_group.this.id
   azapi_schema_validation_enabled = false
+  diagnostic_settings             = local.genai_app_configuration_diagnostic_settings
   enable_telemetry                = var.enable_telemetry
   local_auth_enabled              = var.genai_app_configuration_definition.local_auth_enabled
   private_endpoints = {
     app_configuration = {
-      private_dns_zone_resource_ids = var.flag_platform_landing_zone ? [module.private_dns_zones.app_configuration_zone.resource_id] : [local.private_dns_zones_existing.app_configuration_zone.resource_id]
-      subnet_resource_id            = module.ai_lz_vnet.subnets["PrivateEndpointSubnet"].resource_id
+      private_dns_zone_resource_ids = var.private_dns_zones.azure_policy_pe_zone_linking_enabled ? null : (!var.flag_platform_landing_zone ? [module.private_dns_zones.app_configuration_zone.resource_id] : [local.private_dns_zones_existing.app_configuration_zone.resource_id])
+      subnet_resource_id            = local.subnet_ids["PrivateEndpointSubnet"]
     }
   }
   role_assignments           = local.genai_app_configuration_role_assignments

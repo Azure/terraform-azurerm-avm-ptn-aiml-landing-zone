@@ -1,9 +1,10 @@
 variable "apim_definition" {
   type = object({
-    deploy          = optional(bool, true)
-    name            = optional(string)
-    publisher_email = string
-    publisher_name  = string
+    deploy             = optional(bool, true)
+    deploy_sample_apis = optional(bool, false)
+    name               = optional(string)
+    publisher_email    = string
+    publisher_name     = string
     additional_locations = optional(list(object({
       location             = string
       capacity             = optional(number, null)
@@ -20,6 +21,19 @@ variable "apim_definition" {
       certificate_password = optional(string, null)
     })), [])
     client_certificate_enabled = optional(bool, false)
+    enable_diagnostic_settings = optional(bool, true)
+    diagnostic_settings = optional(map(object({
+      name                                     = optional(string, null)
+      log_categories                           = optional(set(string), [])
+      log_groups                               = optional(set(string), ["allLogs"])
+      metric_categories                        = optional(set(string), ["AllMetrics"])
+      log_analytics_destination_type           = optional(string, "Dedicated")
+      workspace_resource_id                    = optional(string, null)
+      storage_account_resource_id              = optional(string, null)
+      event_hub_authorization_rule_resource_id = optional(string, null)
+      event_hub_name                           = optional(string, null)
+      marketplace_partner_resource_id          = optional(string, null)
+    })), {})
     hostname_configuration = optional(object({
       management = optional(list(object({
         host_name                       = string
@@ -63,6 +77,10 @@ variable "apim_definition" {
         ssl_keyvault_identity_client_id = optional(string, null)
       })), [])
     }), null)
+    managed_identities = optional(object({
+      system_assigned            = optional(bool, false)
+      user_assigned_resource_ids = optional(set(string), [])
+    }))
     min_api_version           = optional(string)
     notification_sender_email = optional(string, null)
     protocols = optional(object({
@@ -95,6 +113,8 @@ variable "apim_definition" {
     tenant_access = optional(object({
       enabled = bool
     }), null)
+    virtual_network_type          = optional(string, "Internal")
+    public_network_access_enabled = optional(bool, true)
   })
   default = {
     publisher_email = "DoNotReply@exampleEmail.com"
@@ -104,6 +124,7 @@ variable "apim_definition" {
 Configuration object for the Azure API Management service to be deployed.
 
 - `deploy` - (Optional) Whether to deploy the API Management service. Default is true.
+- `deploy_sample_apis` - (Optional) Whether to deploy sample APIs in APIM that route to Azure AI Foundry. This creates a backend, API, operations, and policy to validate end-to-end connectivity between APIM and AI Foundry. Default is false.
 - `name` - (Optional) The name of the API Management service. If not provided, a name will be generated.
 - `publisher_email` - (Required) The email address of the publisher of the API Management service.
 - `publisher_name` - (Required) The name of the publisher of the API Management service.
@@ -120,6 +141,18 @@ Configuration object for the Azure API Management service to be deployed.
   - `store_name` - The certificate store name (e.g., "CertificateAuthority", "Root").
   - `certificate_password` - (Optional) The password for the certificate.
 - `client_certificate_enabled` - (Optional) Whether client certificate authentication is enabled. Default is false.
+- `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
+- `diagnostic_settings` - (Optional) Map of diagnostic settings configurations for the API Management service. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `name` - (Optional) The name of the diagnostic setting.
+  - `log_categories` - (Optional) Set of log categories to enable. Default is an empty set.
+  - `log_groups` - (Optional) Set of log groups to enable. Default is ["allLogs"].
+  - `metric_categories` - (Optional) Set of metric categories to enable. Default is ["AllMetrics"].
+  - `log_analytics_destination_type` - (Optional) The destination type for Log Analytics. Default is "Dedicated".
+  - `workspace_resource_id` - (Optional) Resource ID of the Log Analytics workspace.
+  - `storage_account_resource_id` - (Optional) Resource ID of the storage account for diagnostics.
+  - `event_hub_authorization_rule_resource_id` - (Optional) Resource ID of the Event Hub authorization rule.
+  - `event_hub_name` - (Optional) Name of the Event Hub.
+  - `marketplace_partner_resource_id` - (Optional) Resource ID of the marketplace partner resource.
 - `hostname_configuration` - (Optional) Hostname configuration for different endpoints.
   - `management` - (Optional) List of custom hostnames for the management endpoint.
   - `portal` - (Optional) List of custom hostnames for the developer portal endpoint.
@@ -134,6 +167,9 @@ Configuration object for the Azure API Management service to be deployed.
     - `negotiate_client_certificate` - (Optional) Whether to negotiate client certificates.
     - `ssl_keyvault_identity_client_id` - (Optional) Client ID of the user-assigned managed identity for Key Vault access.
     - `default_ssl_binding` - (Optional, proxy only) Whether this is the default SSL binding.
+- `managed_identities` - (Optional) Managed identities configuration.
+  - `system_assigned` - (Optional) Whether to enable system-assigned managed identity. Default is false.
+  - `user_assigned_resource_ids` - (Optional) Set of user-assigned managed identity resource IDs.
 - `min_api_version` - (Optional) The minimum API version that the API Management service will accept.
 - `notification_sender_email` - (Optional) Email address from which notifications will be sent.
 - `protocols` - (Optional) Protocol configuration.
@@ -160,5 +196,12 @@ Configuration object for the Azure API Management service to be deployed.
 - `tags` - (Optional) Map of tags to assign to the API Management service.
 - `tenant_access` - (Optional) Tenant access configuration.
   - `enabled` - Whether tenant access is enabled.
+- `virtual_network_type` - (Optional) The type of virtual network integration for the API Management service. Valid values are "None", "External", and "Internal". Default is "Internal". When set to "Internal" or "External", APIM is deployed inside the VNet and can directly access backend services within the VNet.
+- `public_network_access_enabled` - (Optional) Whether public network access is enabled for the API Management service. Default is true. Note: Azure does not allow disabling public network access during initial APIM creation.
 DESCRIPTION
+
+  validation {
+    condition     = contains(["None", "External", "Internal"], var.apim_definition.virtual_network_type)
+    error_message = "The virtual_network_type must be one of 'None', 'External', or 'Internal'."
+  }
 }

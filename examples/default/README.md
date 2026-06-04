@@ -9,6 +9,10 @@ terraform {
   required_version = ">= 1.9, < 2.0"
 
   required_providers {
+    azapi = {
+      source  = "azure/azapi"
+      version = "~> 2.0"
+    }
     azurerm = {
       source  = "hashicorp/azurerm"
       version = "~> 4.21"
@@ -25,6 +29,7 @@ terraform {
 }
 
 provider "azurerm" {
+  storage_use_azuread = true
   features {
     resource_group {
       prevent_deletion_if_contains_resources = false
@@ -38,11 +43,13 @@ provider "azurerm" {
   }
 }
 
+data "azurerm_client_config" "current" {}
+
 ## Section to provide a random Azure region for the resource group
 # This allows us to randomize the region for the resource group.
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.3.0"
+  version = "0.9.2"
 }
 
 # This allows us to randomize the region for the resource group.
@@ -55,7 +62,7 @@ resource "random_integer" "region_index" {
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "0.3.0"
+  version = "0.4.2"
 }
 
 data "http" "ip" {
@@ -74,6 +81,7 @@ module "example_hub" {
   deployer_ip_address = "${data.http.ip.response_body}/32"
   location            = "australiaeast"
   resource_group_name = "default-example-${module.naming.resource_group.name_unique}"
+  #resource_group_name = "default-example-rg-ivrh-1"
   vnet_definition = {
     address_space = "10.10.0.0/24"
   }
@@ -84,24 +92,25 @@ module "example_hub" {
 module "test" {
   source = "../../"
 
-  location            = "australiaeast" #temporarily pinning on australiaeast for capacity limits in test subscription.
+  location            = "australiaeast"
   resource_group_name = "ai-lz-rg-default-${substr(module.naming.unique-seed, 0, 5)}"
+  #resource_group_name = "ai-lz-rg-default-ivrhi-1"
   vnet_definition = {
-    name          = "ai-lz-vnet-default"
-    address_space = "192.168.0.0/23"                                                                 # has to be out of 192.168.0.0/16 currently. Other RFC1918 not supported for foundry capabilityHost injection.
+    name          = "ai-lz-vnet-default-1"
+    address_space = ["192.168.0.0/23"]                                                               # has to be out of 192.168.0.0/16 currently. Other RFC1918 not supported for foundry capabilityHost injection.
     dns_servers   = [for key, value in module.example_hub.dns_resolver_inbound_ip_addresses : value] # Use the DNS resolver IPs from the example hub
-    hub_vnet_peering_definition = {
+    vnet_peering_configuration = {
       peer_vnet_resource_id = module.example_hub.virtual_network_resource_id
-      firewall_ip_address   = module.example_hub.firewall_ip_address
     }
   }
   ai_foundry_definition = {
     purge_on_destroy = true
     ai_foundry = {
-      create_ai_agent_service = true
+      create_ai_agent_service    = true
+      enable_diagnostic_settings = false
     }
     ai_model_deployments = {
-      "gpt-4o" = {
+      "gpt-4.1" = {
         name = "gpt-4.1"
         model = {
           format  = "OpenAI"
@@ -133,25 +142,21 @@ module "test" {
     }
     ai_search_definition = {
       this = {
-        enable_diagnostic_settings = false
       }
     }
     cosmosdb_definition = {
       this = {
-        enable_diagnostic_settings = false
-        consistency_level          = "Session"
+        consistency_level = "Session"
       }
     }
     key_vault_definition = {
       this = {
-        enable_diagnostic_settings = false
       }
     }
 
     storage_account_definition = {
       this = {
-        enable_diagnostic_settings = false
-        shared_access_key_enabled  = true #configured for testing
+        shared_access_key_enabled = true #configured for testing
         endpoints = {
           blob = {
             type = "blob"
@@ -159,6 +164,11 @@ module "test" {
         }
       }
     }
+  }
+  apim_definition = {
+    deploy_sample_apis = true
+    publisher_email    = "DoNotReply@exampleEmail.com"
+    publisher_name     = "Azure API Management"
   }
   app_gateway_definition = {
     backend_address_pools = {
@@ -201,18 +211,21 @@ module "test" {
     }
   }
   bastion_definition = {
+
   }
   container_app_environment_definition = {
     enable_diagnostic_settings = false
   }
   enable_telemetry           = var.enable_telemetry
-  flag_platform_landing_zone = false
+  flag_platform_landing_zone = true
+  genai_app_configuration_definition = {
+    enable_diagnostic_settings = false
+  }
   genai_container_registry_definition = {
     enable_diagnostic_settings = false
   }
   genai_cosmosdb_definition = {
-    enable_diagnostic_settings = false
-    consistency_level          = "Session"
+    consistency_level = "Session"
   }
   genai_key_vault_definition = {
     public_network_access_enabled = true # configured for testing
@@ -222,16 +235,15 @@ module "test" {
     }
   }
   genai_storage_account_definition = {
-    enable_diagnostic_settings = false
   }
   ks_ai_search_definition = {
     enable_diagnostic_settings = false
   }
   private_dns_zones = {
+    azure_policy_pe_zone_linking_enabled      = true
     existing_zones_resource_group_resource_id = module.example_hub.resource_group_resource_id
   }
 }
-
 ```
 
 <!-- markdownlint-disable MD033 -->
@@ -240,6 +252,8 @@ module "test" {
 The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
+
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.0)
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.21)
 
@@ -251,7 +265,9 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
+- [azapi_update_resource.allow_drop_unencrypted_vnet](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/update_resource) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
+- [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 - [http_http.ip](https://registry.terraform.io/providers/hashicorp/http/latest/docs/data-sources/http) (data source)
 
 <!-- markdownlint-disable MD013 -->
@@ -291,13 +307,13 @@ Version:
 
 Source: Azure/naming/azurerm
 
-Version: 0.3.0
+Version: 0.4.2
 
 ### <a name="module_regions"></a> [regions](#module\_regions)
 
 Source: Azure/avm-utl-regions/azurerm
 
-Version: 0.3.0
+Version: 0.9.2
 
 ### <a name="module_test"></a> [test](#module\_test)
 

@@ -1,8 +1,20 @@
 variable "container_app_environment_definition" {
   type = object({
-    deploy                              = optional(bool, true)
-    name                                = optional(string)
-    enable_diagnostic_settings          = optional(bool, true)
+    deploy                     = optional(bool, true)
+    name                       = optional(string)
+    enable_diagnostic_settings = optional(bool, true)
+    diagnostic_settings = optional(map(object({
+      name                                     = optional(string, null)
+      log_categories                           = optional(set(string), [])
+      log_groups                               = optional(set(string), ["allLogs"])
+      metric_categories                        = optional(set(string), ["AllMetrics"])
+      log_analytics_destination_type           = optional(string, "Dedicated")
+      workspace_resource_id                    = optional(string, null)
+      storage_account_resource_id              = optional(string, null)
+      event_hub_authorization_rule_resource_id = optional(string, null)
+      event_hub_name                           = optional(string, null)
+      marketplace_partner_resource_id          = optional(string, null)
+    })), {})
     tags                                = optional(map(string), {})
     internal_load_balancer_enabled      = optional(bool, true)
     log_analytics_workspace_resource_id = optional(string)
@@ -41,6 +53,17 @@ Configuration object for the Container App Environment to be created for GenAI s
 - `deploy` - (Optional) Whether to deploy the Container App Environment. Default is true.
 - `name` - (Optional) The name of the Container App Environment. If not provided, a name will be generated.
 - `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
+- `diagnostic_settings` - (Optional) Map of diagnostic settings configurations for the Container App Environment. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+  - `name` - (Optional) The name of the diagnostic setting.
+  - `log_categories` - (Optional) Set of log categories to enable. Default is an empty set.
+  - `log_groups` - (Optional) Set of log groups to enable. Default is ["allLogs"].
+  - `metric_categories` - (Optional) Set of metric categories to enable. Default is ["AllMetrics"].
+  - `log_analytics_destination_type` - (Optional) The destination type for Log Analytics. Default is "Dedicated".
+  - `workspace_resource_id` - (Optional) Resource ID of the Log Analytics workspace.
+  - `storage_account_resource_id` - (Optional) Resource ID of the storage account for diagnostics.
+  - `event_hub_authorization_rule_resource_id` - (Optional) Resource ID of the Event Hub authorization rule.
+  - `event_hub_name` - (Optional) Name of the Event Hub.
+  - `marketplace_partner_resource_id` - (Optional) Resource ID of the marketplace partner resource.
 - `tags` - (Optional) Map of tags to assign to the Container App Environment.
 - `internal_load_balancer_enabled` - (Optional) Whether the load balancer is internal. Default is true.
 - `log_analytics_workspace_resource_id` - (Optional) Resource ID of the Log Analytics workspace for logging.
