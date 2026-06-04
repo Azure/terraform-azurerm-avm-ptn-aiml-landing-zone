@@ -180,7 +180,7 @@ locals {
       }
     }
     AppGatewaySubnet = {
-      enabled = true
+      enabled = try(local.subnets_definition["AppGatewaySubnet"].enabled, true)
       name    = try(local.subnets_definition["AppGatewaySubnet"].name, null) != null ? local.subnets_definition["AppGatewaySubnet"].name : "AppGatewaySubnet"
       address_prefixes = (var.vnet_definition.ipam_pools == null ?
         try(local.subnets_definition["AppGatewaySubnet"].address_prefix, null) != null ?
@@ -210,7 +210,7 @@ locals {
       }]
     }
     APIMSubnet = {
-      enabled = true
+      enabled = try(local.subnets_definition["APIMSubnet"].enabled, true)
       name    = try(local.subnets_definition["APIMSubnet"].name, null) != null ? local.subnets_definition["APIMSubnet"].name : "APIMSubnet"
       address_prefixes = (var.vnet_definition.ipam_pools == null ?
         try(local.subnets_definition["APIMSubnet"].address_prefix, null) != null ?
@@ -242,7 +242,7 @@ locals {
       }] : []
     }
     AIFoundrySubnet = {
-      enabled = true
+      enabled = try(local.subnets_definition["AIFoundrySubnet"].enabled, true)
       name    = try(local.subnets_definition["AIFoundrySubnet"].name, null) != null ? local.subnets_definition["AIFoundrySubnet"].name : "AIFoundrySubnet"
       address_prefixes = (var.vnet_definition.ipam_pools == null ?
         try(local.subnets_definition["AIFoundrySubnet"].address_prefix, null) != null ?
@@ -273,7 +273,7 @@ locals {
       }]
     }
     DevOpsBuildSubnet = {
-      enabled = true
+      enabled = try(local.subnets_definition["DevOpsBuildSubnet"].enabled, true)
       name    = try(local.subnets_definition["DevOpsBuildSubnet"].name, null) != null ? local.subnets_definition["DevOpsBuildSubnet"].name : "DevOpsBuildSubnet"
       address_prefixes = (var.vnet_definition.ipam_pools == null ?
         try(local.subnets_definition["DevOpsBuildSubnet"].address_prefix, null) != null ?
@@ -303,7 +303,7 @@ locals {
           name = "Microsoft.App/environments"
         }
       }]
-      enabled = true
+      enabled = try(local.subnets_definition["ContainerAppEnvironmentSubnet"].enabled, true)
       name    = try(local.subnets_definition["ContainerAppEnvironmentSubnet"].name, null) != null ? local.subnets_definition["ContainerAppEnvironmentSubnet"].name : "ContainerAppEnvironmentSubnet"
       address_prefixes = (var.vnet_definition.ipam_pools == null ?
         try(local.subnets_definition["ContainerAppEnvironmentSubnet"].address_prefix, null) != null ?
@@ -324,7 +324,7 @@ locals {
       } : null
     }
     PrivateEndpointSubnet = {
-      enabled = true
+      enabled = try(local.subnets_definition["PrivateEndpointSubnet"].enabled, true)
       name    = try(local.subnets_definition["PrivateEndpointSubnet"].name, null) != null ? local.subnets_definition["PrivateEndpointSubnet"].name : "PrivateEndpointSubnet"
       address_prefixes = (var.vnet_definition.ipam_pools == null ?
         try(local.subnets_definition["PrivateEndpointSubnet"].address_prefix, null) != null ?
