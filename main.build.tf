@@ -46,7 +46,7 @@ module "buildvm" {
     sku       = "20_04-lts-gen2"
     version   = "latest"
   }
-  tags = var.buildvm_definition.tags
+  tags = merge(local.tags, var.buildvm_definition.tags != null ? var.buildvm_definition.tags : {})
 
   depends_on = [module.avm_res_keyvault_vault, time_sleep.wait_for_kv_rbac]
 }

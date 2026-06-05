@@ -27,6 +27,7 @@ variable "ai_foundry_definition" {
       private_dns_zone_resource_ids           = optional(list(string), [])
       private_endpoints_manage_dns_zone_group = optional(bool, true)
       sku                           = optional(string, "S0")
+      tags                          = optional(map(string))
       role_assignments = optional(map(object({
         role_definition_id_or_name             = string
         principal_id                           = string
@@ -106,7 +107,7 @@ variable "ai_foundry_definition" {
       semantic_search_sku          = optional(string, "standard")
       semantic_search_enabled      = optional(bool, false)
       hosting_mode                 = optional(string, "default")
-      tags                         = optional(map(string), {})
+      tags                         = optional(map(string))
       role_assignments = optional(map(object({
         role_definition_id_or_name             = string
         principal_id                           = string
@@ -186,7 +187,7 @@ variable "ai_foundry_definition" {
         delegated_managed_identity_resource_id = optional(string, null)
         principal_type                         = optional(string, null)
       })), {})
-      tags = optional(map(string), {})
+      tags = optional(map(string))
     })), {})
 
     key_vault_definition = optional(map(object({
@@ -218,7 +219,7 @@ variable "ai_foundry_definition" {
         delegated_managed_identity_resource_id = optional(string, null)
         principal_type                         = optional(string, null)
       })), {})
-      tags = optional(map(string), {})
+      tags = optional(map(string))
     })), {})
 
     storage_account_definition = optional(map(object({
@@ -260,7 +261,7 @@ variable "ai_foundry_definition" {
         delegated_managed_identity_resource_id = optional(string, null)
         principal_type                         = optional(string, null)
       })), {})
-      tags = optional(map(string), {})
+      tags = optional(map(string))
     })), {})
   })
   default     = {}
@@ -288,6 +289,7 @@ Configuration object for the Azure AI Foundry deployment (hub, projects, and Bri
   - `create_ai_agent_service` - (Optional) Whether to create the AI Agent service in the hub. Default is false.
   - `private_dns_zone_resource_ids` - (Optional) List of private DNS zone resource IDs for hub endpoints. Default is [].
   - `sku` - (Optional) The SKU for the hub. Default is "S0".
+  - `tags` - (Optional) Map of tags to assign to the AI Foundry hub.
   - `role_assignments` - (Optional) Map of role assignments on the hub. The map key is deliberately arbitrary to avoid plan-time unknown key issues.
     - `role_definition_id_or_name` - Role definition ID or name to assign.
     - `principal_id` - Principal ID for the assignment.
