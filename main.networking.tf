@@ -239,6 +239,20 @@ module "private_dns_zones" {
   depends_on = [module.hub_vnet_peering]
 }
 
+module "private_dns_zone_existing_vnet_links" {
+  source   = "Azure/avm-res-network-privatednszone/azurerm//modules/private_dns_virtual_network_link"
+  version  = "0.4.2"
+  for_each = local.private_dns_zones_existing_vnet_links
+
+  name                                   = each.value.vnetlinkname
+  parent_id                              = each.value.zone_resource_id
+  virtual_network_id                     = each.value.vnetid
+  private_dns_zone_supports_private_link = each.value.private_dns_zone_supports_private_link
+  registration_enabled                   = each.value.registration_enabled
+  resolution_policy                      = each.value.resolution_policy
+
+  depends_on = [module.hub_vnet_peering]
+}
 moved {
   from = module.app_gateway_waf_policy
   to   = module.app_gateway_waf_policy[0]
