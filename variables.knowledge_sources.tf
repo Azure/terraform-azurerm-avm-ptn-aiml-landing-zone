@@ -17,6 +17,7 @@ variable "ks_ai_search_definition" {
     })), {})
     sku                           = optional(string, "standard")
     local_authentication_enabled  = optional(bool, true)
+    network_rule_bypass_option    = optional(string, "None")
     partition_count               = optional(number, 1)
     public_network_access_enabled = optional(bool, false)
     replica_count                 = optional(number, 2)
@@ -54,6 +55,7 @@ Configuration object for the Azure AI Search service to be created as part of th
   - `marketplace_partner_resource_id` - (Optional) Resource ID of the marketplace partner resource.
 - `sku` - (Optional) The SKU of the AI Search service. Default is "standard".
 - `local_authentication_enabled` - (Optional) Whether local authentication is enabled. Default is true.
+- `network_rule_bypass_option` - (Optional) Whether trusted Azure services can access a network restricted AI Search service. Possible values are "None" and "AzureServices". Default is "None".
 - `partition_count` - (Optional) The number of partitions for the search service. Default is 1.
 - `public_network_access_enabled` - (Optional) Whether public network access is enabled. Default is false.
 - `replica_count` - (Optional) The number of replicas for the search service. Default is 2.
@@ -70,6 +72,11 @@ Configuration object for the Azure AI Search service to be created as part of th
   - `principal_type` - (Optional) Type of the principal (User, Group, ServicePrincipal).
 - `enable_telemetry` - (Optional) Whether telemetry is enabled for the AI Search module. Default is true.
 DESCRIPTION
+
+  validation {
+    condition     = contains(["None", "AzureServices"], var.ks_ai_search_definition.network_rule_bypass_option)
+    error_message = "The network_rule_bypass_option must be one of: 'None', 'AzureServices'."
+  }
 }
 
 variable "ks_bing_grounding_definition" {

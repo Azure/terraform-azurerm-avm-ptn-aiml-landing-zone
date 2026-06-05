@@ -9,6 +9,7 @@ module "search_service" {
   diagnostic_settings          = local.ks_ai_search_diagnostic_settings
   enable_telemetry             = var.enable_telemetry # see variables.tf
   local_authentication_enabled = var.ks_ai_search_definition.local_authentication_enabled
+  network_rule_bypass_option   = var.ks_ai_search_definition.network_rule_bypass_option
   partition_count              = var.ks_ai_search_definition.partition_count
   private_endpoints = {
     primary = {
