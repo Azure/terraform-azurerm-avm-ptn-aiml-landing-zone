@@ -1,6 +1,6 @@
 locals {
   app_gw_diagnostic_settings = var.app_gateway_definition.enable_diagnostic_settings ? (length(var.app_gateway_definition.diagnostic_settings) > 0 ? var.app_gateway_definition.diagnostic_settings : local.app_gw_diagnostic_settings_inner) : {}
-  app_gw_diagnostic_settings_inner = ((try(var.law_definition.deploy, false) == true) ? {
+  app_gw_diagnostic_settings_inner = ((local.log_analytics_workspace_id != null) ? {
     sendToLogAnalytics = {
       name                                     = "sendToLogAnalytics-appgw-${random_string.name_suffix.result}"
       workspace_resource_id                    = local.log_analytics_workspace_id
@@ -17,7 +17,7 @@ locals {
   application_gateway_name             = try(var.app_gateway_definition.name, null) != null ? var.app_gateway_definition.name : (var.name_prefix != null ? "${var.name_prefix}-appgw" : "ai-alz-appgw")
   application_gateway_role_assignments = try(var.app_gateway_definition.role_assignments, {}) #TODO - do we need this or can we just point it at the var?
   az_fw_diagnostic_settings            = var.firewall_definition.enable_diagnostic_settings ? (length(var.firewall_definition.diagnostic_settings) > 0 ? var.firewall_definition.diagnostic_settings : local.az_fw_diagnostic_settings_inner) : {}
-  az_fw_diagnostic_settings_inner = ((try(var.law_definition.deploy, false) == true) ? {
+  az_fw_diagnostic_settings_inner = ((local.log_analytics_workspace_id != null) ? {
     sendToLogAnalytics = {
       name                                     = "sendToLogAnalytics-azfw-${random_string.name_suffix.result}"
       workspace_resource_id                    = local.log_analytics_workspace_id
@@ -352,7 +352,7 @@ locals {
   virtual_network_links    = merge(local.default_virtual_network_link, var.private_dns_zones.network_links)
   vnet_address_space       = length(var.vnet_definition.existing_byo_vnet) > 0 ? data.azurerm_virtual_network.ai_lz_vnet[0].address_space[0] : var.vnet_definition.address_space[0]
   vnet_diagnostic_settings = var.vnet_definition.enable_diagnostic_settings ? (length(var.vnet_definition.diagnostic_settings) > 0 ? var.vnet_definition.diagnostic_settings : local.vnet_diagnostic_settings_inner) : {}
-  vnet_diagnostic_settings_inner = ((try(var.law_definition.deploy, false) == true) ? {
+  vnet_diagnostic_settings_inner = ((local.log_analytics_workspace_id != null) ? {
     sendToLogAnalytics = {
       name                                     = "sendToLogAnalytics-vnet-${random_string.name_suffix.result}"
       workspace_resource_id                    = local.log_analytics_workspace_id
