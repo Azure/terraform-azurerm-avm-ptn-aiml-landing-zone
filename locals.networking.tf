@@ -253,7 +253,7 @@ locals {
         contains(["BasicV2", "StandardV2", "PremiumV2"], var.apim_definition.sku_root)) ? [{
           name = "APIMSubnetDelegation"
           service_delegation = {
-            name = "Microsoft.Web/hostingEnvironments"
+            name = "Microsoft.Web/serverFarms"
           }
       }] : []
     }
