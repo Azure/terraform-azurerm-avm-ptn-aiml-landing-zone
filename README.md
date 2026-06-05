@@ -778,7 +778,7 @@ Description: Configuration object for the Azure API Management service to be dep
   - `portal` - (Optional) List of custom hostnames for the developer portal endpoint.
   - `developer_portal` - (Optional) List of custom hostnames for the new developer portal endpoint.
   - `proxy` - (Optional) List of custom hostnames for the proxy endpoint.
-  - `scm` - (Optional) List of custom hostnames for the SCM endpoint.  
+  - `scm` - (Optional) List of custom hostnames for the SCM endpoint.
     Each hostname configuration includes:
     - `host_name` - The custom hostname.
     - `key_vault_id` - (Optional) Resource ID of the Key Vault containing the certificate.
@@ -1452,8 +1452,8 @@ Default: `{}`
 
 ### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
 
-Description: This variable controls whether or not telemetry is enabled for the module.  
-For more information see <https://aka.ms/avm/telemetryinfo>.  
+Description: This variable controls whether or not telemetry is enabled for the module.
+For more information see <https://aka.ms/avm/telemetryinfo>.
 If it is set to false, then no telemetry will be collected.
 
 Type: `bool`
@@ -2272,14 +2272,14 @@ Default: `null`
 
 Description: Use direct internet routing instead of firewall routing for subnets when platform landing zone is not enabled.
 
-When set to true and `flag_platform_landing_zone` is false, route tables will use NextHopType = "Internet"  
+When set to true and `flag_platform_landing_zone` is false, route tables will use NextHopType = "Internet"
 for 0.0.0.0/0 traffic instead of NextHopType = "VirtualAppliance" routing through the Azure Firewall.
 
-This setting is particularly useful for Azure Application Gateway v2 deployments that require direct  
+This setting is particularly useful for Azure Application Gateway v2 deployments that require direct
 internet connectivity and cannot use virtual appliance routing.
 
-**Security Considerations**: Enabling this setting bypasses the Azure Firewall for internet-bound traffic  
-from associated subnets, which may impact security posture. Ensure proper network security group rules  
+**Security Considerations**: Enabling this setting bypasses the Azure Firewall for internet-bound traffic
+from associated subnets, which may impact security posture. Ensure proper network security group rules
 are in place when using this option.
 
 **Compatibility**: This setting only applies when `flag_platform_landing_zone = false`. When
