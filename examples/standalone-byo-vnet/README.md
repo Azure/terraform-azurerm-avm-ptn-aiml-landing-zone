@@ -74,6 +74,12 @@ Source: ../../
 
 Version:
 
+### <a name="module_vm_sku"></a> [vm\_sku](#module\_vm\_sku)
+
+Source: Azure/avm-utl-sku-finder/azapi
+
+Version: 0.3.0
+
 ### <a name="module_vnet"></a> [vnet](#module\_vnet)
 
 Source: Azure/avm-res-network-virtualnetwork/azurerm

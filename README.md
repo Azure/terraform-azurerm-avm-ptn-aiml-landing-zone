@@ -365,7 +365,7 @@ Description: Configuration object for the Azure AI Foundry deployment (hub, proj
       - `zone_redundant` - (Optional) Whether zone redundancy is enabled. Default is true.
       - `failover_priority` - (Optional) Failover priority. Default is 0.
     - `public_network_access_enabled` - (Optional) Whether public network access is enabled. Default is false.
-    - `analytical_storage_enabled` - (Optional) Whether analytical storage is enabled. Default is true.
+    - `analytical_storage_enabled` - (Optional) Whether analytical storage is enabled. Default is false.
     - `automatic_failover_enabled` - (Optional) Whether automatic failover is enabled. Default is true.
     - `local_authentication_disabled` - (Optional) Whether local authentication is disabled. Default is true.
     - `partition_merge_enabled` - (Optional) Whether partition merge is enabled. Default is false.
@@ -615,7 +615,7 @@ object({
         failover_priority = optional(number, 0)
       })), [])
       public_network_access_enabled    = optional(bool, false)
-      analytical_storage_enabled       = optional(bool, true)
+      analytical_storage_enabled       = optional(bool, false)
       automatic_failover_enabled       = optional(bool, true)
       local_authentication_disabled    = optional(bool, true)
       partition_merge_enabled          = optional(bool, false)
@@ -1749,7 +1749,7 @@ Description: Configuration object for the Azure Cosmos DB account to be created 
   - `zone_redundant` - (Optional) Whether zone redundancy is enabled for the secondary region. Default is true.
   - `failover_priority` - (Optional) The failover priority for the secondary region. Default is 0.
 - `public_network_access_enabled` - (Optional) Whether public network access is enabled. Default is false.
-- `analytical_storage_enabled` - (Optional) Whether analytical storage is enabled. Default is true.
+- `analytical_storage_enabled` - (Optional) Whether analytical storage is enabled. Default is false.
 - `automatic_failover_enabled` - (Optional) Whether automatic failover is enabled. Default is true.
 - `local_authentication_disabled` - (Optional) Whether local authentication is disabled. Default is true.
 - `partition_merge_enabled` - (Optional) Whether partition merge is enabled. Default is false.
@@ -1803,7 +1803,7 @@ object({
       failover_priority = optional(number, 0)
     })), [])
     public_network_access_enabled    = optional(bool, false)
-    analytical_storage_enabled       = optional(bool, true)
+    analytical_storage_enabled       = optional(bool, false)
     automatic_failover_enabled       = optional(bool, true)
     local_authentication_disabled    = optional(bool, true)
     partition_merge_enabled          = optional(bool, false)
