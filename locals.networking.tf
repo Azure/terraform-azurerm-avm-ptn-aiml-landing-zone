@@ -113,6 +113,22 @@ locals {
     resource_id = "${coalesce(var.private_dns_zones.existing_zones_resource_group_resource_id, "notused")}/providers/Microsoft.Network/privateDnsZones/${value.name}" #TODO: determine if there is a more elegant way to do this while avoiding errors
     }
   } : {}
+  private_dns_zones_existing_vnet_links = var.flag_platform_landing_zone && var.private_dns_zones.existing_zones_resource_group_resource_id != null ? {
+    for pair in flatten([
+      for zone_key, zone in local.private_dns_zones_existing : [
+        for link_key, link in local.virtual_network_links : {
+          key                                    = "${zone_key}-${link_key}"
+          zone_resource_id                       = zone.resource_id
+          zone_name                              = zone.name
+          vnetlinkname                           = try(link.vnetlinkname, link.name)
+          vnetid                                 = try(link.vnetid, link.virtual_network_id)
+          registration_enabled                   = try(link.autoregistration, try(link.registration_enabled, false))
+          resolution_policy                      = try(link.resolution_policy, try(link.resolutionPolicy, "Default"))
+          private_dns_zone_supports_private_link = startswith(zone.name, "privatelink.")
+        }
+      ]
+    ]) : pair.key => pair
+  } : {}
   route_table_name = "${local.vnet_name}-firewall-route-table"
   subnet_ids       = length(var.vnet_definition.existing_byo_vnet) > 0 ? { for key, m in module.byo_subnets : key => try(m.resource_id, m.id) } : { for key, s in module.ai_lz_vnet[0].subnets : key => s.resource_id }
   subnets = {
