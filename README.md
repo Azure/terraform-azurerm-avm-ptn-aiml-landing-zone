@@ -2352,9 +2352,13 @@ object({
       }))
       }), {
       managed_rule_set = {
-        owasp = {
-          version = "3.2"
-          type    = "OWASP"
+        drs = {
+          version = "2.1"
+          type    = "Microsoft_DefaultRuleSet"
+        }
+        bot = {
+          version = "1.1"
+          type    = "Microsoft_BotManagerRuleSet"
         }
       }
     })
