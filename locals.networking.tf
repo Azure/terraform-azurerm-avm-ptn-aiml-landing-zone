@@ -116,7 +116,7 @@ locals {
   # Build the for_each map using only the (statically known) keys of the source maps so the
   # resulting map keys are known at plan time. Apply-time values (e.g. zone resource IDs derived
   # from an existing resource group) are placed in the map values only.
-  private_dns_zones_existing_vnet_links = var.flag_platform_landing_zone && var.private_dns_zones.existing_zones_resource_group_resource_id != null ? {
+  private_dns_zones_existing_vnet_links = var.flag_platform_landing_zone ? {
     for pair in setproduct(keys(local.private_dns_zones_existing), keys(local.virtual_network_links)) :
     "${pair[0]}-${pair[1]}" => {
       zone_resource_id                       = local.private_dns_zones_existing[pair[0]].resource_id
