@@ -1,7 +1,7 @@
 locals {
   genai_app_configuration_default_role_assignments = {}
   genai_app_configuration_diagnostic_settings      = var.genai_app_configuration_definition.enable_diagnostic_settings ? (length(var.genai_app_configuration_definition.diagnostic_settings) > 0 ? var.genai_app_configuration_definition.diagnostic_settings : local.genai_app_configuration_diagnostic_settings_inner) : {}
-  genai_app_configuration_diagnostic_settings_inner = ((local.log_analytics_workspace_id != null) ? {
+  genai_app_configuration_diagnostic_settings_inner = (local.deploy_diagnostics_settings ? {
     sendToLogAnalytics = {
       name                                     = "sendToLogAnalytics-genai-appconfig-${random_string.name_suffix.result}"
       workspace_resource_id                    = local.log_analytics_workspace_id
@@ -22,7 +22,7 @@ locals {
   )
   genai_container_registry_default_role_assignments = {}
   genai_container_registry_diagnostic_settings      = var.genai_container_registry_definition.enable_diagnostic_settings ? (length(var.genai_container_registry_definition.diagnostic_settings) > 0 ? var.genai_container_registry_definition.diagnostic_settings : local.genai_container_registry_diagnostic_settings_inner) : {}
-  genai_container_registry_diagnostic_settings_inner = ((local.log_analytics_workspace_id != null) ? {
+  genai_container_registry_diagnostic_settings_inner = (local.deploy_diagnostics_settings ? {
     sendToLogAnalytics = {
       name                                     = "sendToLogAnalytics-genai-acr-${random_string.name_suffix.result}"
       workspace_resource_id                    = local.log_analytics_workspace_id
@@ -42,7 +42,7 @@ locals {
     var.genai_container_registry_definition.role_assignments
   )
   genai_cosmosdb_diagnostic_settings = var.genai_cosmosdb_definition.enable_diagnostic_settings ? (length(var.genai_cosmosdb_definition.diagnostic_settings) > 0 ? var.genai_cosmosdb_definition.diagnostic_settings : local.genai_cosmosdb_diagnostic_settings_inner) : {}
-  genai_cosmosdb_diagnostic_settings_inner = ((local.log_analytics_workspace_id != null) ? {
+  genai_cosmosdb_diagnostic_settings_inner = (local.deploy_diagnostics_settings ? {
     sendToLogAnalytics = {
       name                                     = "sendToLogAnalytics-genai-cosmosdb-${random_string.name_suffix.result}"
       workspace_resource_id                    = local.log_analytics_workspace_id
@@ -78,7 +78,7 @@ locals {
   genai_key_vault_default_role_assignments = {
   }
   genai_key_vault_diagnostic_settings = var.genai_key_vault_definition.enable_diagnostic_settings ? (length(var.genai_key_vault_definition.diagnostic_settings) > 0 ? var.genai_key_vault_definition.diagnostic_settings : local.genai_key_vault_diagnostic_settings_inner) : {}
-  genai_key_vault_diagnostic_settings_inner = ((local.log_analytics_workspace_id != null) ? {
+  genai_key_vault_diagnostic_settings_inner = (local.deploy_diagnostics_settings ? {
     sendToLogAnalytics = {
       name                                     = "sendToLogAnalytics-genai-kv-${random_string.name_suffix.result}"
       workspace_resource_id                    = local.log_analytics_workspace_id
@@ -100,7 +100,7 @@ locals {
   genai_storage_account_default_role_assignments = {
   }
   genai_storage_account_diagnostic_settings = var.genai_storage_account_definition.enable_diagnostic_settings ? (length(var.genai_storage_account_definition.diagnostic_settings) > 0 ? var.genai_storage_account_definition.diagnostic_settings : local.genai_storage_account_diagnostic_settings_inner) : {}
-  genai_storage_account_diagnostic_settings_inner = ((local.log_analytics_workspace_id != null) ? {
+  genai_storage_account_diagnostic_settings_inner = (local.deploy_diagnostics_settings ? {
     sendToLogAnalytics = {
       name                                     = "sendToLogAnalytics-genai-sa-${random_string.name_suffix.result}"
       workspace_resource_id                    = local.log_analytics_workspace_id

@@ -1,6 +1,6 @@
 locals {
   cae_diagnostic_settings = var.container_app_environment_definition.enable_diagnostic_settings ? (length(var.container_app_environment_definition.diagnostic_settings) > 0 ? var.container_app_environment_definition.diagnostic_settings : local.cae_diagnostic_settings_inner) : {}
-  cae_diagnostic_settings_inner = ((local.log_analytics_workspace_id != null) ? {
+  cae_diagnostic_settings_inner = (local.deploy_diagnostics_settings ? {
     sendToLogAnalytics = {
       name                                     = "sendToLogAnalytics-cae-${random_string.name_suffix.result}"
       workspace_resource_id                    = local.log_analytics_workspace_id

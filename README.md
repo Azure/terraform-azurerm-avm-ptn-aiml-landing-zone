@@ -212,7 +212,7 @@ object({
       })))
       }
     )), {})
-    tags = optional(map(string), {})
+    tags = optional(map(string))
     vnet_peering_configuration = optional(object({
       peer_vnet_resource_id                = optional(string)
       name                                 = optional(string)
@@ -262,8 +262,8 @@ Description: Configuration object for the Azure AI Foundry deployment (hub, proj
   - `allow_project_management` - (Optional) Whether project management is allowed from the hub. Default is true.
   - `create_ai_agent_service` - (Optional) Whether to create the AI Agent service in the hub. Default is false.
   - `private_dns_zone_resource_ids` - (Optional) List of private DNS zone resource IDs for hub endpoints. Default is [].
-  - `private_endpoints_manage_dns_zone_group` - (Optional) Whether to manage private DNS zone groups with this module. If set to false, you must manage 
   - `sku` - (Optional) The SKU for the hub. Default is "S0".
+  - `tags` - (Optional) Map of tags to assign to the AI Foundry hub.
   - `role_assignments` - (Optional) Map of role assignments on the hub. The map key is deliberately arbitrary to avoid plan-time unknown key issues.
     - `role_definition_id_or_name` - Role definition ID or name to assign.
     - `principal_id` - Principal ID for the assignment.
@@ -495,8 +495,10 @@ object({
       allow_project_management = optional(bool, true)
       create_ai_agent_service  = optional(bool, false)
       #network_injections is statically set to vnet/subnet created in the module.
-      private_dns_zone_resource_ids = optional(list(string), [])
-      sku                           = optional(string, "S0")
+      private_dns_zone_resource_ids           = optional(list(string), [])
+      private_endpoints_manage_dns_zone_group = optional(bool, true)
+      sku                                     = optional(string, "S0")
+      tags                                    = optional(map(string))
       role_assignments = optional(map(object({
         role_definition_id_or_name             = string
         principal_id                           = string
@@ -576,7 +578,7 @@ object({
       semantic_search_sku          = optional(string, "standard")
       semantic_search_enabled      = optional(bool, false)
       hosting_mode                 = optional(string, "default")
-      tags                         = optional(map(string), {})
+      tags                         = optional(map(string))
       role_assignments = optional(map(object({
         role_definition_id_or_name             = string
         principal_id                           = string
@@ -656,7 +658,7 @@ object({
         delegated_managed_identity_resource_id = optional(string, null)
         principal_type                         = optional(string, null)
       })), {})
-      tags = optional(map(string), {})
+      tags = optional(map(string))
     })), {})
 
     key_vault_definition = optional(map(object({
@@ -688,7 +690,7 @@ object({
         delegated_managed_identity_resource_id = optional(string, null)
         principal_type                         = optional(string, null)
       })), {})
-      tags = optional(map(string), {})
+      tags = optional(map(string))
     })), {})
 
     storage_account_definition = optional(map(object({
@@ -730,7 +732,7 @@ object({
         delegated_managed_identity_resource_id = optional(string, null)
         principal_type                         = optional(string, null)
       })), {})
-      tags = optional(map(string), {})
+      tags = optional(map(string))
     })), {})
   })
 ```
@@ -930,7 +932,7 @@ object({
     }), null)
     sku_root     = optional(string, "Premium")
     sku_capacity = optional(number, 3)
-    tags         = optional(map(string), {})
+    tags         = optional(map(string))
     tenant_access = optional(object({
       enabled = bool
     }), null)
@@ -1274,7 +1276,7 @@ object({
       }))
     })), null)
 
-    tags                       = optional(map(string), {})
+    tags                       = optional(map(string))
     enable_diagnostic_settings = optional(bool, true)
     diagnostic_settings = optional(map(object({
       name                                     = optional(string, null)
@@ -1321,7 +1323,7 @@ object({
     deploy              = optional(bool, true)
     name                = optional(string)
     sku                 = optional(string, "Standard")
-    tags                = optional(map(string), {})
+    tags                = optional(map(string))
     zones               = optional(list(string), ["1", "2", "3"])
     resource_group_name = optional(string)
   })
@@ -1346,7 +1348,7 @@ object({
     deploy           = optional(bool, true)
     name             = optional(string)
     sku              = optional(string, "Standard_B2s")
-    tags             = optional(map(string), {})
+    tags             = optional(map(string))
     enable_telemetry = optional(bool, true)
   })
 ```
@@ -1413,7 +1415,7 @@ object({
       event_hub_name                           = optional(string, null)
       marketplace_partner_resource_id          = optional(string, null)
     })), {})
-    tags                                = optional(map(string), {})
+    tags                                = optional(map(string))
     internal_load_balancer_enabled      = optional(bool, true)
     log_analytics_workspace_resource_id = optional(string)
     zone_redundancy_enabled             = optional(bool, true)
@@ -1523,7 +1525,7 @@ object({
       delegated_managed_identity_resource_id = optional(string, null)
       principal_type                         = optional(string, null)
     })), {})
-    tags                = optional(map(string), {})
+    tags                = optional(map(string))
     resource_group_name = optional(string)
   })
 ```
@@ -1625,7 +1627,7 @@ object({
     purge_protection_enabled      = optional(bool, true)
     sku                           = optional(string, "standard")
     soft_delete_retention_in_days = optional(number, 7)
-    tags                          = optional(map(string), {})
+    tags                          = optional(map(string))
     role_assignments = optional(map(object({
       role_definition_id_or_name             = string
       principal_id                           = string
@@ -1708,7 +1710,7 @@ object({
       event_hub_name                           = optional(string, null)
       marketplace_partner_resource_id          = optional(string, null)
     })), {})
-    tags = optional(map(string), {})
+    tags = optional(map(string))
     role_assignments = optional(map(object({
       role_definition_id_or_name             = string
       principal_id                           = string
@@ -1774,6 +1776,7 @@ Description: Configuration object for the Azure Cosmos DB account to be created 
   - `allowed_origins` - Set of allowed origins.
   - `exposed_headers` - Set of exposed headers.
   - `max_age_in_seconds` - (Optional) Maximum age in seconds for CORS.
+- `tags` - (Optional) Map of tags to assign to the Cosmos DB account.
 
 Type:
 
@@ -1833,6 +1836,7 @@ object({
       exposed_headers    = set(string)
       max_age_in_seconds = optional(number, null)
     }), null)
+    tags = optional(map(string))
   })
 ```
 
@@ -1842,6 +1846,7 @@ Default: `{}`
 
 Description: Configuration object for the Azure Key Vault to be created for GenAI services.
 
+- `deploy` - (Optional) Whether to deploy the Key Vault. Default is true.
 - `name` - (Optional) The name of the Key Vault. If not provided, a name will be generated.
 - `network_acls` - (Optional) Network access control list configuration for the Key Vault.
   - `bypass` - (Optional) Services that can bypass the network ACLs. Default is "AzureServices".
@@ -1878,7 +1883,8 @@ Type:
 
 ```hcl
 object({
-    name = optional(string)
+    deploy = optional(bool, true)
+    name   = optional(string)
     network_acls = optional(object({
       bypass                     = optional(string, "AzureServices")
       default_action             = optional(string, "Deny")
@@ -1911,7 +1917,7 @@ object({
       delegated_managed_identity_resource_id = optional(string, null)
       principal_type                         = optional(string, null)
     })), {})
-    tags = optional(map(string), {})
+    tags = optional(map(string))
   })
 ```
 
@@ -1989,7 +1995,7 @@ object({
       delegated_managed_identity_resource_id = optional(string, null)
       principal_type                         = optional(string, null)
     })), {})
-    tags = optional(map(string), {})
+    tags = optional(map(string))
 
     #TODO:
     # Implement subservice passthrough here
@@ -2015,7 +2021,7 @@ object({
     deploy           = optional(bool, true)
     name             = optional(string)
     sku              = optional(string, "Standard_B2s")
-    tags             = optional(map(string), {})
+    tags             = optional(map(string))
     enable_telemetry = optional(bool, true)
   })
 ```
@@ -2042,6 +2048,7 @@ Description: Configuration object for the Azure AI Search service to be created 
   - `marketplace_partner_resource_id` - (Optional) Resource ID of the marketplace partner resource.
 - `sku` - (Optional) The SKU of the AI Search service. Default is "standard".
 - `local_authentication_enabled` - (Optional) Whether local authentication is enabled. Default is true.
+- `network_rule_bypass_option` - (Optional) Whether trusted Azure services can access a network restricted AI Search service. Possible values are "None" and "AzureServices". Default is "None".
 - `partition_count` - (Optional) The number of partitions for the search service. Default is 1.
 - `public_network_access_enabled` - (Optional) Whether public network access is enabled. Default is false.
 - `replica_count` - (Optional) The number of replicas for the search service. Default is 2.
@@ -2079,11 +2086,12 @@ object({
     })), {})
     sku                           = optional(string, "standard")
     local_authentication_enabled  = optional(bool, true)
+    network_rule_bypass_option    = optional(string, "None")
     partition_count               = optional(number, 1)
     public_network_access_enabled = optional(bool, false)
     replica_count                 = optional(number, 2)
     semantic_search_sku           = optional(string, "standard")
-    tags                          = optional(map(string), {})
+    tags                          = optional(map(string))
     role_assignments = optional(map(object({
       role_definition_id_or_name             = string
       principal_id                           = string
@@ -2116,7 +2124,7 @@ object({
     deploy = optional(bool, true)
     name   = optional(string)
     sku    = optional(string, "G1")
-    tags   = optional(map(string), {})
+    tags   = optional(map(string))
   })
 ```
 
@@ -2125,8 +2133,8 @@ Default: `{}`
 ### <a name="input_law_definition"></a> [law\_definition](#input\_law\_definition)
 
 Description: Configuration object for the Log Analytics Workspace to be created for monitoring and logging. If no resource\_id is provided, and deploy is set to false, then each resource will default to not including diagnostic settings unless an explicit diagnostic\_setting value is provided for that resource. Explicitly set resource diagnostic\_settings values will always be preferred.
-- `deploy` - (Optional) Boolean to indicate whether to deploy a new Log Analytics Workspace if no resource\_id is provided. Default is true.
-- `resource_id` - (Optional) The resource ID of an existing Log Analytics Workspace to use. If provided, the workspace will not be created and the other inputs will be ignored.
+- `deploy` - (Optional) Boolean to indicate whether to deploy a new Log Analytics Workspace if no resource\_id is provided. Default is true. Set to false with no resource\_id provided to disable automatic diagnostic settings management for all resources (useful when policy-driven diagnostic settings are in place).
+- `resource_id` - (Optional) The resource ID of an existing Log Analytics Workspace to use. If provided, the workspace will not be created and the other inputs will be ignored. When set, all resources will automatically be configured to send diagnostics to this workspace unless explicitly overridden.
 - `name` - (Optional) The name of the Log Analytics Workspace. If not provided, a name will be generated.
 - `retention` - (Optional) The data retention period in days for the workspace. Default is 30.
 - `sku` - (Optional) The SKU of the Log Analytics Workspace. Default is "PerGB2018".
@@ -2141,7 +2149,7 @@ object({
     name        = optional(string)
     retention   = optional(number, 30)
     sku         = optional(string, "PerGB2018")
-    tags        = optional(map(string), {})
+    tags        = optional(map(string))
   })
 ```
 
@@ -2363,7 +2371,7 @@ object({
       }
     })
 
-    tags = optional(map(string), {})
+    tags = optional(map(string))
   })
 ```
 
@@ -2372,6 +2380,10 @@ Default: `{}`
 ## Outputs
 
 The following outputs are exported:
+
+### <a name="output_apim"></a> [apim](#output\_apim)
+
+Description: Details of the deployed APIM instance.
 
 ### <a name="output_log_analytics_workspace_id"></a> [log\_analytics\_workspace\_id](#output\_log\_analytics\_workspace\_id)
 
@@ -2530,6 +2542,12 @@ Version: 0.4.2
 Source: Azure/avm-res-network-networksecuritygroup/azurerm
 
 Version: 0.5.0
+
+### <a name="module_private_dns_zone_existing_vnet_links"></a> [private\_dns\_zone\_existing\_vnet\_links](#module\_private\_dns\_zone\_existing\_vnet\_links)
+
+Source: Azure/avm-res-network-privatednszone/azurerm//modules/private_dns_virtual_network_link
+
+Version: 0.4.2
 
 ### <a name="module_private_dns_zones"></a> [private\_dns\_zones](#module\_private\_dns\_zones)
 

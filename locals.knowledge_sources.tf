@@ -1,6 +1,6 @@
 locals {
   ks_ai_search_diagnostic_settings = var.ks_ai_search_definition.enable_diagnostic_settings ? (length(var.ks_ai_search_definition.diagnostic_settings) > 0 ? var.ks_ai_search_definition.diagnostic_settings : local.ks_ai_search_diagnostic_settings_inner) : {}
-  ks_ai_search_diagnostic_settings_inner = ((local.log_analytics_workspace_id != null) ? {
+  ks_ai_search_diagnostic_settings_inner = (local.deploy_diagnostics_settings ? {
     sendToLogAnalytics = {
       name                                     = "sendToLogAnalytics-ks-ai-search-${random_string.name_suffix.result}"
       workspace_resource_id                    = local.log_analytics_workspace_id
