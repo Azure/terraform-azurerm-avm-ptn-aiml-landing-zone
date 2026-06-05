@@ -67,6 +67,22 @@ data "http" "ip" {
   }
 }
 
+module "vm_sku" {
+  source  = "Azure/avm-utl-sku-finder/azapi"
+  version = "0.3.0"
+
+  location      = "australiaeast"
+  cache_results = true
+  vm_filters = {
+    cpu_architecture_type          = "x64"
+    min_vcpus                      = 2
+    max_vcpus                      = 2
+    encryption_at_host_supported   = true
+    accelerated_networking_enabled = true
+    premium_io_supported           = true
+  }
+}
+
 #create a sample hub to mimic an existing network landing zone configuration
 module "example_hub" {
   source = "../../modules/example_hub_vnet"
@@ -206,6 +222,9 @@ module "test" {
   bastion_definition = {
 
   }
+  buildvm_definition = {
+    sku = module.vm_sku.sku
+  }
   container_app_environment_definition = {
     enable_diagnostic_settings = false
   }
@@ -228,6 +247,9 @@ module "test" {
     }
   }
   genai_storage_account_definition = {
+  }
+  jumpvm_definition = {
+    sku = module.vm_sku.sku
   }
   ks_ai_search_definition = {
     enable_diagnostic_settings = false

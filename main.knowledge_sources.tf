@@ -46,4 +46,12 @@ resource "azapi_resource" "bing_grounding" {
   schema_validation_enabled = false
   tags                      = merge(local.tags, var.ks_bing_grounding_definition.tags != null ? var.ks_bing_grounding_definition.tags : {})
   update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+
+  # The Microsoft.Bing/accounts resource provider normalizes tag keys by
+  # lower-casing the first character (e.g. "SecurityControl" -> "securityControl"),
+  # which produces a permanent, non-idempotent diff on every plan. Tags are still
+  # applied on create; ignore subsequent drift so the plan stays idempotent.
+  lifecycle {
+    ignore_changes = [tags]
+  }
 }
