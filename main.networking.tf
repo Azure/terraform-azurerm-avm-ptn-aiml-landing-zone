@@ -21,7 +21,7 @@ module "ai_lz_vnet" {
   name             = local.vnet_name
   role_assignments = var.vnet_definition.role_assignments
   subnets          = local.deployed_subnets
-  tags             = var.vnet_definition.tags
+  tags             = merge(local.tags, var.vnet_definition.tags != null ? var.vnet_definition.tags : {})
 }
 
 data "azurerm_virtual_network" "ai_lz_vnet" {
@@ -182,7 +182,7 @@ module "firewall" {
   firewall_policy_id = !var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0 ? module.firewall_policy[0].resource_id : null
   firewall_zones     = var.firewall_definition.zones
   role_assignments   = var.firewall_definition.role_assignments
-  tags               = var.firewall_definition.tags
+  tags               = merge(local.tags, var.firewall_definition.tags != null ? var.firewall_definition.tags : {})
 }
 
 module "firewall_policy" {
@@ -222,7 +222,7 @@ module "azure_bastion" {
     subnet_id = local.subnet_ids["AzureBastionSubnet"]
   }
   sku   = var.bastion_definition.sku
-  tags  = var.bastion_definition.tags
+  tags  = merge(local.tags, var.bastion_definition.tags != null ? var.bastion_definition.tags : {})
   zones = var.bastion_definition.zones
 }
 
@@ -249,6 +249,7 @@ module "app_gateway_waf_policy" {
   resource_group_name = azurerm_resource_group.this.name
   enable_telemetry    = var.enable_telemetry
   policy_settings     = var.waf_policy_definition.policy_settings
+  tags                = merge(local.tags, var.waf_policy_definition.tags != null ? var.waf_policy_definition.tags : {})
 }
 
 
@@ -283,7 +284,7 @@ module "application_gateway" {
   ssl_certificates                   = var.app_gateway_definition.ssl_certificates
   ssl_policy                         = var.app_gateway_definition.ssl_policy
   ssl_profile                        = var.app_gateway_definition.ssl_profile
-  tags                               = var.app_gateway_definition.tags
+  tags                               = merge(local.tags, var.app_gateway_definition.tags != null ? var.app_gateway_definition.tags : {})
   trusted_client_certificate         = var.app_gateway_definition.trusted_client_certificate
   trusted_root_certificate           = var.app_gateway_definition.trusted_root_certificate
   url_path_map_configurations        = var.app_gateway_definition.url_path_map_configurations

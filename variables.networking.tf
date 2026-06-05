@@ -46,7 +46,7 @@ variable "vnet_definition" {
       })))
       }
     )), {})
-    tags = optional(map(string), {})
+    tags = optional(map(string))
     vnet_peering_configuration = optional(object({
       peer_vnet_resource_id                = optional(string)
       name                                 = optional(string)
@@ -316,7 +316,7 @@ variable "app_gateway_definition" {
       }))
     })), null)
 
-    tags                       = optional(map(string), {})
+    tags                       = optional(map(string))
     enable_diagnostic_settings = optional(bool, true)
     diagnostic_settings = optional(map(object({
       name                                     = optional(string, null)
@@ -483,7 +483,7 @@ variable "bastion_definition" {
     deploy              = optional(bool, true)
     name                = optional(string)
     sku                 = optional(string, "Standard")
-    tags                = optional(map(string), {})
+    tags                = optional(map(string))
     zones               = optional(list(string), ["1", "2", "3"])
     resource_group_name = optional(string)
   })
@@ -530,7 +530,7 @@ variable "firewall_definition" {
       delegated_managed_identity_resource_id = optional(string, null)
       principal_type                         = optional(string, null)
     })), {})
-    tags                = optional(map(string), {})
+    tags                = optional(map(string))
     resource_group_name = optional(string)
   })
   default     = {}
@@ -751,7 +751,7 @@ variable "waf_policy_definition" {
       }
     })
 
-    tags = optional(map(string), {})
+    tags = optional(map(string))
   })
   default     = {}
   description = <<DESCRIPTION

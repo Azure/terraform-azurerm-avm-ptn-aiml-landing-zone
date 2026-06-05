@@ -32,7 +32,7 @@ module "jumpvm" {
   }
   enable_telemetry = var.enable_telemetry
   sku_size         = var.jumpvm_definition.sku
-  tags             = var.jumpvm_definition.tags
+  tags             = merge(local.tags, var.jumpvm_definition.tags != null ? var.jumpvm_definition.tags : {})
 
   depends_on = [module.avm_res_keyvault_vault, time_sleep.wait_for_kv_rbac]
 }
