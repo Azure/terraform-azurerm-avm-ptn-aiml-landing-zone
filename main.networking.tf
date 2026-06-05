@@ -252,6 +252,7 @@ module "private_dns_zone_existing_vnet_links" {
   resolution_policy                      = each.value.resolution_policy
 
   depends_on = [module.hub_vnet_peering]
+}
 moved {
   from = module.app_gateway_waf_policy
   to   = module.app_gateway_waf_policy[0]
