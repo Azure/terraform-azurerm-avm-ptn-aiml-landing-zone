@@ -3,3 +3,8 @@ output "resource_id" {
   description = "Future resource ID output for the LZA."
   value       = "tbd"
 }
+
+output "apim" {
+  description = "Details of the deployed APIM instance."
+  value       = try(module.apim[0], null)
+}

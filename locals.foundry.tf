@@ -32,7 +32,7 @@ locals {
     }
   ) }
   foundry_diagnostic_settings = var.ai_foundry_definition.ai_foundry.enable_diagnostic_settings ? (length(var.ai_foundry_definition.ai_foundry.diagnostic_settings) > 0 ? var.ai_foundry_definition.ai_foundry.diagnostic_settings : local.foundry_diagnostic_settings_inner) : {}
-  foundry_diagnostic_settings_inner = ((try(var.law_definition.deploy, false) == true) ? {
+  foundry_diagnostic_settings_inner = ((local.log_analytics_workspace_id != null) ? {
     sendToLogAnalytics = {
       name                                     = "sendToLogAnalytics-foundry-${random_string.name_suffix.result}"
       workspace_resource_id                    = local.log_analytics_workspace_id
