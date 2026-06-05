@@ -244,12 +244,12 @@ module "private_dns_zone_existing_vnet_links" {
   version  = "0.4.2"
   for_each = local.private_dns_zones_existing_vnet_links
 
-  name                                   = each.value.vnetlinkname
   parent_id                              = each.value.zone_resource_id
-  virtual_network_id                     = each.value.vnetid
+  name                                   = each.value.vnetlinkname
   private_dns_zone_supports_private_link = each.value.private_dns_zone_supports_private_link
   registration_enabled                   = each.value.registration_enabled
   resolution_policy                      = each.value.resolution_policy
+  virtual_network_id                     = each.value.vnetid
 
   depends_on = [module.hub_vnet_peering]
 }
