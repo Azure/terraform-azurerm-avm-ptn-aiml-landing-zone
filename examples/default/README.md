@@ -101,8 +101,9 @@ module "example_hub" {
   vnet_definition = {
     address_space = "10.10.0.0/24"
   }
-  enable_telemetry = var.enable_telemetry
-  name_prefix      = "${module.naming.resource_group.name_unique}-hub"
+  enable_telemetry   = var.enable_telemetry
+  jump_vm_definition = { sku = module.vm_sku.sku }
+  name_prefix        = "${module.naming.resource_group.name_unique}-hub"
 }
 
 module "test" {
