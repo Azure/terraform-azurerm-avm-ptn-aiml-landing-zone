@@ -48,7 +48,7 @@ module "byo_subnets" {
 
 module "nsgs" {
   source  = "Azure/avm-res-network-networksecuritygroup/azurerm"
-  version = "0.5.0"
+  version = "0.5.1"
 
   location            = azurerm_resource_group.this.location
   name                = local.nsg_name
