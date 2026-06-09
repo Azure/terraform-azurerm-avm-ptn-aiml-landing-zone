@@ -1,6 +1,7 @@
 module "avm_res_keyvault_vault" {
   source  = "Azure/avm-res-keyvault-vault/azurerm"
   version = "=0.10.2"
+  count   = var.genai_key_vault_definition.deploy ? 1 : 0
 
   location                        = azurerm_resource_group.this.location
   name                            = local.genai_key_vault_name
@@ -19,7 +20,7 @@ module "avm_res_keyvault_vault" {
   }
   public_network_access_enabled = var.genai_key_vault_definition.public_network_access_enabled
   role_assignments              = local.genai_key_vault_role_assignments
-  tags                          = var.genai_key_vault_definition.tags
+  tags                          = merge(local.tags, var.genai_key_vault_definition.tags != null ? var.genai_key_vault_definition.tags : {})
   wait_for_rbac_before_contact_operations = {
     create = "60s"
   }
@@ -36,15 +37,19 @@ module "avm_res_keyvault_vault" {
 #moving this outside of the KV AVM module so I can set an implicit dependency from the jump vm module to order deletion properly.
 #TODO: Review if this permission is too permissive.  Can this be Secrets User instead?
 resource "azurerm_role_assignment" "deployment_user_kv_admin" {
+  count = var.genai_key_vault_definition.deploy ? 1 : 0
+
   principal_id         = data.azurerm_client_config.current.object_id
-  scope                = module.avm_res_keyvault_vault.resource_id
+  scope                = module.avm_res_keyvault_vault[0].resource_id
   role_definition_name = "Key Vault Administrator"
 }
 
 resource "time_sleep" "wait_for_kv_rbac" {
+  count = var.genai_key_vault_definition.deploy ? 1 : 0
+
   create_duration = "60s"
   triggers = {
-    role_assignment = azurerm_role_assignment.deployment_user_kv_admin.id
+    role_assignment = azurerm_role_assignment.deployment_user_kv_admin[0].id
   }
 
   depends_on = [azurerm_role_assignment.deployment_user_kv_admin]
@@ -94,6 +99,7 @@ module "cosmosdb" {
     }
   }
   public_network_access_enabled = var.genai_cosmosdb_definition.public_network_access_enabled
+  tags                          = merge(local.tags, var.genai_cosmosdb_definition.tags != null ? var.genai_cosmosdb_definition.tags : {})
 
   depends_on = [module.private_dns_zones, module.hub_vnet_peering]
 }
@@ -130,7 +136,7 @@ module "storage_account" {
   public_network_access_enabled = var.genai_storage_account_definition.public_network_access_enabled
   role_assignments              = local.genai_storage_account_role_assignments
   shared_access_key_enabled     = var.genai_storage_account_definition.shared_access_key_enabled
-  tags                          = var.genai_storage_account_definition.tags
+  tags                          = merge(local.tags, var.genai_storage_account_definition.tags != null ? var.genai_storage_account_definition.tags : {})
 
   depends_on = [module.private_dns_zones, module.hub_vnet_peering]
 }
@@ -154,6 +160,7 @@ module "containerregistry" {
   }
   public_network_access_enabled = var.genai_container_registry_definition.public_network_access_enabled
   role_assignments              = local.genai_container_registry_role_assignments
+  tags                          = merge(local.tags, var.genai_container_registry_definition.tags != null ? var.genai_container_registry_definition.tags : {})
   zone_redundancy_enabled       = length(local.region_zones) > 1 ? var.genai_container_registry_definition.zone_redundancy_enabled : false
 
   depends_on = [module.private_dns_zones, module.hub_vnet_peering]
@@ -181,6 +188,6 @@ module "app_configuration" {
   role_assignments           = local.genai_app_configuration_role_assignments
   sku                        = var.genai_app_configuration_definition.sku
   soft_delete_retention_days = var.genai_app_configuration_definition.soft_delete_retention_in_days
-  tags                       = var.genai_app_configuration_definition.tags
+  tags                       = merge(local.tags, var.genai_app_configuration_definition.tags != null ? var.genai_app_configuration_definition.tags : {})
 }
 

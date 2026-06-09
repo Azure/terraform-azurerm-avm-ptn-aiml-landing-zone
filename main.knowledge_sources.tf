@@ -9,6 +9,7 @@ module "search_service" {
   diagnostic_settings          = local.ks_ai_search_diagnostic_settings
   enable_telemetry             = var.enable_telemetry # see variables.tf
   local_authentication_enabled = var.ks_ai_search_definition.local_authentication_enabled
+  network_rule_bypass_option   = var.ks_ai_search_definition.network_rule_bypass_option
   partition_count              = var.ks_ai_search_definition.partition_count
   private_endpoints = {
     primary = {
@@ -21,7 +22,7 @@ module "search_service" {
   role_assignments              = local.ks_ai_search_role_assignments
   semantic_search_sku           = var.ks_ai_search_definition.semantic_search_sku
   sku                           = var.ks_ai_search_definition.sku
-  tags                          = var.ks_ai_search_definition.tags
+  tags                          = merge(local.tags, var.ks_ai_search_definition.tags != null ? var.ks_ai_search_definition.tags : {})
 
   depends_on = [module.private_dns_zones, module.hub_vnet_peering]
 }
@@ -43,6 +44,14 @@ resource "azapi_resource" "bing_grounding" {
   delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   read_headers              = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   schema_validation_enabled = false
-  tags                      = var.ks_bing_grounding_definition.tags
+  tags                      = merge(local.tags, var.ks_bing_grounding_definition.tags != null ? var.ks_bing_grounding_definition.tags : {})
   update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+
+  # The Microsoft.Bing/accounts resource provider normalizes tag keys by
+  # lower-casing the first character (e.g. "SecurityControl" -> "securityControl"),
+  # which produces a permanent, non-idempotent diff on every plan. Tags are still
+  # applied on create; ignore subsequent drift so the plan stays idempotent.
+  lifecycle {
+    ignore_changes = [tags]
+  }
 }

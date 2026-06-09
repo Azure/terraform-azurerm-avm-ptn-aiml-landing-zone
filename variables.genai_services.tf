@@ -11,7 +11,7 @@ variable "genai_app_configuration_definition" {
     purge_protection_enabled      = optional(bool, true)
     sku                           = optional(string, "standard")
     soft_delete_retention_in_days = optional(number, 7)
-    tags                          = optional(map(string), {})
+    tags                          = optional(map(string))
     role_assignments = optional(map(object({
       role_definition_id_or_name             = string
       principal_id                           = string
@@ -96,7 +96,7 @@ variable "genai_container_registry_definition" {
       event_hub_name                           = optional(string, null)
       marketplace_partner_resource_id          = optional(string, null)
     })), {})
-    tags = optional(map(string), {})
+    tags = optional(map(string))
     role_assignments = optional(map(object({
       role_definition_id_or_name             = string
       principal_id                           = string
@@ -165,7 +165,7 @@ variable "genai_cosmosdb_definition" {
       failover_priority = optional(number, 0)
     })), [])
     public_network_access_enabled    = optional(bool, false)
-    analytical_storage_enabled       = optional(bool, true)
+    analytical_storage_enabled       = optional(bool, false)
     automatic_failover_enabled       = optional(bool, true)
     local_authentication_disabled    = optional(bool, true)
     partition_merge_enabled          = optional(bool, false)
@@ -198,6 +198,7 @@ variable "genai_cosmosdb_definition" {
       exposed_headers    = set(string)
       max_age_in_seconds = optional(number, null)
     }), null)
+    tags = optional(map(string))
   })
   default     = {}
   description = <<DESCRIPTION
@@ -222,7 +223,7 @@ Configuration object for the Azure Cosmos DB account to be created for GenAI ser
   - `zone_redundant` - (Optional) Whether zone redundancy is enabled for the secondary region. Default is true.
   - `failover_priority` - (Optional) The failover priority for the secondary region. Default is 0.
 - `public_network_access_enabled` - (Optional) Whether public network access is enabled. Default is false.
-- `analytical_storage_enabled` - (Optional) Whether analytical storage is enabled. Default is true.
+- `analytical_storage_enabled` - (Optional) Whether analytical storage is enabled. Default is false.
 - `automatic_failover_enabled` - (Optional) Whether automatic failover is enabled. Default is true.
 - `local_authentication_disabled` - (Optional) Whether local authentication is disabled. Default is true.
 - `partition_merge_enabled` - (Optional) Whether partition merge is enabled. Default is false.
@@ -249,12 +250,14 @@ Configuration object for the Azure Cosmos DB account to be created for GenAI ser
   - `allowed_origins` - Set of allowed origins.
   - `exposed_headers` - Set of exposed headers.
   - `max_age_in_seconds` - (Optional) Maximum age in seconds for CORS.
+- `tags` - (Optional) Map of tags to assign to the Cosmos DB account.
 DESCRIPTION
 }
 
 variable "genai_key_vault_definition" {
   type = object({
-    name = optional(string)
+    deploy = optional(bool, true)
+    name   = optional(string)
     network_acls = optional(object({
       bypass                     = optional(string, "AzureServices")
       default_action             = optional(string, "Deny")
@@ -287,12 +290,13 @@ variable "genai_key_vault_definition" {
       delegated_managed_identity_resource_id = optional(string, null)
       principal_type                         = optional(string, null)
     })), {})
-    tags = optional(map(string), {})
+    tags = optional(map(string))
   })
   default     = {}
   description = <<DESCRIPTION
 Configuration object for the Azure Key Vault to be created for GenAI services.
 
+- `deploy` - (Optional) Whether to deploy the Key Vault. Default is true.
 - `name` - (Optional) The name of the Key Vault. If not provided, a name will be generated.
 - `network_acls` - (Optional) Network access control list configuration for the Key Vault.
   - `bypass` - (Optional) Services that can bypass the network ACLs. Default is "AzureServices".
@@ -361,7 +365,7 @@ variable "genai_storage_account_definition" {
       delegated_managed_identity_resource_id = optional(string, null)
       principal_type                         = optional(string, null)
     })), {})
-    tags = optional(map(string), {})
+    tags = optional(map(string))
 
     #TODO:
     # Implement subservice passthrough here

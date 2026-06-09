@@ -1,6 +1,6 @@
 locals {
   app_gw_diagnostic_settings = var.app_gateway_definition.enable_diagnostic_settings ? (length(var.app_gateway_definition.diagnostic_settings) > 0 ? var.app_gateway_definition.diagnostic_settings : local.app_gw_diagnostic_settings_inner) : {}
-  app_gw_diagnostic_settings_inner = ((try(var.law_definition.deploy, false) == true) ? {
+  app_gw_diagnostic_settings_inner = (local.deploy_diagnostics_settings ? {
     sendToLogAnalytics = {
       name                                     = "sendToLogAnalytics-appgw-${random_string.name_suffix.result}"
       workspace_resource_id                    = local.log_analytics_workspace_id
@@ -17,7 +17,7 @@ locals {
   application_gateway_name             = try(var.app_gateway_definition.name, null) != null ? var.app_gateway_definition.name : (var.name_prefix != null ? "${var.name_prefix}-appgw" : "ai-alz-appgw")
   application_gateway_role_assignments = try(var.app_gateway_definition.role_assignments, {}) #TODO - do we need this or can we just point it at the var?
   az_fw_diagnostic_settings            = var.firewall_definition.enable_diagnostic_settings ? (length(var.firewall_definition.diagnostic_settings) > 0 ? var.firewall_definition.diagnostic_settings : local.az_fw_diagnostic_settings_inner) : {}
-  az_fw_diagnostic_settings_inner = ((try(var.law_definition.deploy, false) == true) ? {
+  az_fw_diagnostic_settings_inner = (local.deploy_diagnostics_settings ? {
     sendToLogAnalytics = {
       name                                     = "sendToLogAnalytics-azfw-${random_string.name_suffix.result}"
       workspace_resource_id                    = local.log_analytics_workspace_id
@@ -113,6 +113,21 @@ locals {
     resource_id = "${coalesce(var.private_dns_zones.existing_zones_resource_group_resource_id, "notused")}/providers/Microsoft.Network/privateDnsZones/${value.name}" #TODO: determine if there is a more elegant way to do this while avoiding errors
     }
   } : {}
+  # Build the for_each map using only the (statically known) keys of the source maps so the
+  # resulting map keys are known at plan time. Apply-time values (e.g. zone resource IDs derived
+  # from an existing resource group) are placed in the map values only.
+  private_dns_zones_existing_vnet_links = var.flag_platform_landing_zone ? {
+    for pair in setproduct(keys(local.private_dns_zones_existing), keys(local.virtual_network_links)) :
+    "${pair[0]}-${pair[1]}" => {
+      zone_resource_id                       = local.private_dns_zones_existing[pair[0]].resource_id
+      zone_name                              = local.private_dns_zones_existing[pair[0]].name
+      vnetlinkname                           = try(local.virtual_network_links[pair[1]].vnetlinkname, local.virtual_network_links[pair[1]].name)
+      vnetid                                 = try(local.virtual_network_links[pair[1]].vnetid, local.virtual_network_links[pair[1]].virtual_network_id)
+      registration_enabled                   = try(local.virtual_network_links[pair[1]].autoregistration, try(local.virtual_network_links[pair[1]].registration_enabled, false))
+      resolution_policy                      = try(local.virtual_network_links[pair[1]].resolution_policy, try(local.virtual_network_links[pair[1]].resolutionPolicy, "Default"))
+      private_dns_zone_supports_private_link = startswith(local.private_dns_zones_existing[pair[0]].name, "privatelink.")
+    }
+  } : {}
   route_table_name = "${local.vnet_name}-firewall-route-table"
   subnet_ids       = length(var.vnet_definition.existing_byo_vnet) > 0 ? { for key, m in module.byo_subnets : key => try(m.resource_id, m.id) } : { for key, s in module.ai_lz_vnet[0].subnets : key => s.resource_id }
   subnets = {
@@ -180,7 +195,7 @@ locals {
       }
     }
     AppGatewaySubnet = {
-      enabled = true
+      enabled = try(local.subnets_definition["AppGatewaySubnet"].enabled, true)
       name    = try(local.subnets_definition["AppGatewaySubnet"].name, null) != null ? local.subnets_definition["AppGatewaySubnet"].name : "AppGatewaySubnet"
       address_prefixes = (var.vnet_definition.ipam_pools == null ?
         try(local.subnets_definition["AppGatewaySubnet"].address_prefix, null) != null ?
@@ -210,7 +225,7 @@ locals {
       }]
     }
     APIMSubnet = {
-      enabled = true
+      enabled = try(local.subnets_definition["APIMSubnet"].enabled, true)
       name    = try(local.subnets_definition["APIMSubnet"].name, null) != null ? local.subnets_definition["APIMSubnet"].name : "APIMSubnet"
       address_prefixes = (var.vnet_definition.ipam_pools == null ?
         try(local.subnets_definition["APIMSubnet"].address_prefix, null) != null ?
@@ -237,12 +252,12 @@ locals {
         contains(["BasicV2", "StandardV2", "PremiumV2"], var.apim_definition.sku_root)) ? [{
           name = "APIMSubnetDelegation"
           service_delegation = {
-            name = "Microsoft.Web/hostingEnvironments"
+            name = "Microsoft.Web/serverFarms"
           }
       }] : []
     }
     AIFoundrySubnet = {
-      enabled = true
+      enabled = try(local.subnets_definition["AIFoundrySubnet"].enabled, true)
       name    = try(local.subnets_definition["AIFoundrySubnet"].name, null) != null ? local.subnets_definition["AIFoundrySubnet"].name : "AIFoundrySubnet"
       address_prefixes = (var.vnet_definition.ipam_pools == null ?
         try(local.subnets_definition["AIFoundrySubnet"].address_prefix, null) != null ?
@@ -273,7 +288,7 @@ locals {
       }]
     }
     DevOpsBuildSubnet = {
-      enabled = true
+      enabled = try(local.subnets_definition["DevOpsBuildSubnet"].enabled, true)
       name    = try(local.subnets_definition["DevOpsBuildSubnet"].name, null) != null ? local.subnets_definition["DevOpsBuildSubnet"].name : "DevOpsBuildSubnet"
       address_prefixes = (var.vnet_definition.ipam_pools == null ?
         try(local.subnets_definition["DevOpsBuildSubnet"].address_prefix, null) != null ?
@@ -303,7 +318,7 @@ locals {
           name = "Microsoft.App/environments"
         }
       }]
-      enabled = true
+      enabled = try(local.subnets_definition["ContainerAppEnvironmentSubnet"].enabled, true)
       name    = try(local.subnets_definition["ContainerAppEnvironmentSubnet"].name, null) != null ? local.subnets_definition["ContainerAppEnvironmentSubnet"].name : "ContainerAppEnvironmentSubnet"
       address_prefixes = (var.vnet_definition.ipam_pools == null ?
         try(local.subnets_definition["ContainerAppEnvironmentSubnet"].address_prefix, null) != null ?
@@ -324,7 +339,7 @@ locals {
       } : null
     }
     PrivateEndpointSubnet = {
-      enabled = true
+      enabled = try(local.subnets_definition["PrivateEndpointSubnet"].enabled, true)
       name    = try(local.subnets_definition["PrivateEndpointSubnet"].name, null) != null ? local.subnets_definition["PrivateEndpointSubnet"].name : "PrivateEndpointSubnet"
       address_prefixes = (var.vnet_definition.ipam_pools == null ?
         try(local.subnets_definition["PrivateEndpointSubnet"].address_prefix, null) != null ?
@@ -352,7 +367,7 @@ locals {
   virtual_network_links    = merge(local.default_virtual_network_link, var.private_dns_zones.network_links)
   vnet_address_space       = length(var.vnet_definition.existing_byo_vnet) > 0 ? data.azurerm_virtual_network.ai_lz_vnet[0].address_space[0] : var.vnet_definition.address_space[0]
   vnet_diagnostic_settings = var.vnet_definition.enable_diagnostic_settings ? (length(var.vnet_definition.diagnostic_settings) > 0 ? var.vnet_definition.diagnostic_settings : local.vnet_diagnostic_settings_inner) : {}
-  vnet_diagnostic_settings_inner = ((try(var.law_definition.deploy, false) == true) ? {
+  vnet_diagnostic_settings_inner = (local.deploy_diagnostics_settings ? {
     sendToLogAnalytics = {
       name                                     = "sendToLogAnalytics-vnet-${random_string.name_suffix.result}"
       workspace_resource_id                    = local.log_analytics_workspace_id

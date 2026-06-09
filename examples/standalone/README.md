@@ -150,10 +150,6 @@ module "test" {
       }
     }
 
-    buildvm_definition = {
-      sku = module.vm_sku.sku
-    }
-
     cosmosdb_definition = {
       this = {
         consistency_level = "Session"
@@ -222,6 +218,9 @@ module "test" {
   }
   bastion_definition = {
   }
+  buildvm_definition = {
+    sku = module.vm_sku.sku
+  }
   container_app_environment_definition = {
     enable_diagnostic_settings = false
   }
@@ -245,6 +244,9 @@ module "test" {
     }
   }
   genai_storage_account_definition = {
+  }
+  jumpvm_definition = {
+    sku = module.vm_sku.sku
   }
   ks_ai_search_definition = {
     enable_diagnostic_settings = false

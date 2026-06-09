@@ -14,22 +14,25 @@ locals {
         (!var.flag_platform_landing_zone ? module.private_dns_zones.ai_foundry_cognitive_services_zone.resource_id : local.private_dns_zones_existing.ai_foundry_cognitive_services_zone.resource_id)
       ]
       private_endpoints_manage_dns_zone_group = var.private_dns_zones.azure_policy_pe_zone_linking_enabled ? false : var.ai_foundry_definition.ai_foundry.private_endpoints_manage_dns_zone_group
+      tags                                    = merge(local.tags, var.ai_foundry_definition.ai_foundry.tags != null ? var.ai_foundry_definition.ai_foundry.tags : {})
     }
   )
   foundry_ai_search_definition = { for key, value in var.ai_foundry_definition.ai_search_definition : key => merge(
     var.ai_foundry_definition.ai_search_definition[key], {
       private_dns_zone_resource_id            = var.private_dns_zones.azure_policy_pe_zone_linking_enabled ? null : (!var.flag_platform_landing_zone ? module.private_dns_zones.ai_search_zone.resource_id : local.private_dns_zones_existing.ai_search_zone.resource_id)
       private_endpoints_manage_dns_zone_group = var.private_dns_zones.azure_policy_pe_zone_linking_enabled ? false : var.ai_foundry_definition.ai_search_definition[key].private_endpoints_manage_dns_zone_group
+      tags                                    = merge(local.tags, value.tags != null ? value.tags : {})
     }
   ) }
   foundry_cosmosdb_definition = { for key, value in var.ai_foundry_definition.cosmosdb_definition : key => merge(
     var.ai_foundry_definition.cosmosdb_definition[key], {
       private_dns_zone_resource_id            = var.private_dns_zones.azure_policy_pe_zone_linking_enabled ? null : (!var.flag_platform_landing_zone ? module.private_dns_zones.cosmos_sql_zone.resource_id : local.private_dns_zones_existing.cosmos_sql_zone.resource_id)
       private_endpoints_manage_dns_zone_group = var.private_dns_zones.azure_policy_pe_zone_linking_enabled ? false : var.ai_foundry_definition.cosmosdb_definition[key].private_endpoints_manage_dns_zone_group
+      tags                                    = merge(local.tags, value.tags != null ? value.tags : {})
     }
   ) }
   foundry_diagnostic_settings = var.ai_foundry_definition.ai_foundry.enable_diagnostic_settings ? (length(var.ai_foundry_definition.ai_foundry.diagnostic_settings) > 0 ? var.ai_foundry_definition.ai_foundry.diagnostic_settings : local.foundry_diagnostic_settings_inner) : {}
-  foundry_diagnostic_settings_inner = ((try(var.law_definition.deploy, false) == true) ? {
+  foundry_diagnostic_settings_inner = (local.deploy_diagnostics_settings ? {
     sendToLogAnalytics = {
       name                                     = "sendToLogAnalytics-foundry-${random_string.name_suffix.result}"
       workspace_resource_id                    = local.log_analytics_workspace_id
@@ -47,6 +50,7 @@ locals {
     var.ai_foundry_definition.key_vault_definition[key], {
       private_dns_zone_resource_id            = var.private_dns_zones.azure_policy_pe_zone_linking_enabled ? null : (!var.flag_platform_landing_zone ? module.private_dns_zones.key_vault_zone.resource_id : local.private_dns_zones_existing.key_vault_zone.resource_id)
       private_endpoints_manage_dns_zone_group = var.private_dns_zones.azure_policy_pe_zone_linking_enabled ? false : var.ai_foundry_definition.key_vault_definition[key].private_endpoints_manage_dns_zone_group
+      tags                                    = merge(local.tags, value.tags != null ? value.tags : {})
     }
   ) }
   foundry_storage_account_definition = { for key, value in var.ai_foundry_definition.storage_account_definition : key => merge(
@@ -59,6 +63,7 @@ locals {
           type                                    = lower(ek)
         }
       }
+      tags = merge(local.tags, value.tags != null ? value.tags : {})
     }
   ) }
 }

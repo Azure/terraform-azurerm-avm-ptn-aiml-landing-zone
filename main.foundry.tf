@@ -28,7 +28,7 @@ resource "azapi_resource_action" "purge_ai_foundry" {
 
   method      = "DELETE"
   resource_id = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/providers/Microsoft.CognitiveServices/locations/${azurerm_resource_group.this.location}/resourceGroups/${azurerm_resource_group.this.name}/deletedAccounts/${local.ai_foundry_name}"
-  type        = "Microsoft.Resources/resourceGroups/deletedAccounts@2021-04-30"
+  type        = "Microsoft.CognitiveServices/locations/resourceGroups/deletedAccounts@2021-04-30"
   when        = "destroy"
 
   depends_on = [time_sleep.purge_ai_foundry_cooldown]

@@ -80,6 +80,22 @@ data "http" "ip" {
   }
 }
 
+module "vm_sku" {
+  source  = "Azure/avm-utl-sku-finder/azapi"
+  version = "0.3.0"
+
+  location      = local.location
+  cache_results = true
+  vm_filters = {
+    cpu_architecture_type          = "x64"
+    min_vcpus                      = 2
+    max_vcpus                      = 2
+    encryption_at_host_supported   = true
+    accelerated_networking_enabled = true
+    premium_io_supported           = true
+  }
+}
+
 # Add a vnet in a separate resource group
 
 resource "azurerm_resource_group" "vnet_rg" {
@@ -219,6 +235,9 @@ module "test" {
   }
   bastion_definition = {
   }
+  buildvm_definition = {
+    sku = module.vm_sku.sku
+  }
   container_app_environment_definition = {
     enable_diagnostic_settings = false
   }
@@ -242,6 +261,9 @@ module "test" {
     }
   }
   genai_storage_account_definition = {
+  }
+  jumpvm_definition = {
+    sku = module.vm_sku.sku
   }
   ks_ai_search_definition = {
     enable_diagnostic_settings = false
@@ -321,6 +343,12 @@ Version: 0.9.2
 Source: ../../
 
 Version:
+
+### <a name="module_vm_sku"></a> [vm\_sku](#module\_vm\_sku)
+
+Source: Azure/avm-utl-sku-finder/azapi
+
+Version: 0.3.0
 
 ### <a name="module_vnet"></a> [vnet](#module\_vnet)
 

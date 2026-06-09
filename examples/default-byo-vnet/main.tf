@@ -73,6 +73,22 @@ data "http" "ip" {
   }
 }
 
+module "vm_sku" {
+  source  = "Azure/avm-utl-sku-finder/azapi"
+  version = "0.3.0"
+
+  location      = local.location
+  cache_results = true
+  vm_filters = {
+    cpu_architecture_type          = "x64"
+    min_vcpus                      = 2
+    max_vcpus                      = 2
+    encryption_at_host_supported   = true
+    accelerated_networking_enabled = true
+    premium_io_supported           = true
+  }
+}
+
 # Add a vnet in a separate resource group
 resource "azurerm_resource_group" "vnet_rg" {
   location = local.location
@@ -90,8 +106,9 @@ module "example_hub" {
   vnet_definition = {
     address_space = "10.10.0.0/24"
   }
-  enable_telemetry = var.enable_telemetry
-  name_prefix      = "${module.naming.resource_group.name_unique}-hub"
+  enable_telemetry   = var.enable_telemetry
+  jump_vm_definition = { sku = module.vm_sku.sku }
+  name_prefix        = "${module.naming.resource_group.name_unique}-hub"
 }
 
 #create a BYO vnet and peer to the hub
@@ -242,6 +259,9 @@ module "test" {
   }
   bastion_definition = {
   }
+  buildvm_definition = {
+    sku = module.vm_sku.sku
+  }
   container_app_environment_definition = {
     enable_diagnostic_settings = false
   }
@@ -265,6 +285,9 @@ module "test" {
     }
   }
   genai_storage_account_definition = {
+  }
+  jumpvm_definition = {
+    sku = module.vm_sku.sku
   }
   ks_ai_search_definition = {
     enable_diagnostic_settings = false

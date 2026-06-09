@@ -15,7 +15,7 @@ variable "container_app_environment_definition" {
       event_hub_name                           = optional(string, null)
       marketplace_partner_resource_id          = optional(string, null)
     })), {})
-    tags                                = optional(map(string), {})
+    tags                                = optional(map(string))
     internal_load_balancer_enabled      = optional(bool, true)
     log_analytics_workspace_resource_id = optional(string)
     zone_redundancy_enabled             = optional(bool, true)

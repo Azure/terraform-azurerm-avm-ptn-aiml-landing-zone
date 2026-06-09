@@ -20,7 +20,7 @@ module "buildvm" {
   zone                = length(local.region_zones) > 0 ? random_integer.zone_index[0].result : null
   account_credentials = {
     key_vault_configuration = {
-      resource_id = module.avm_res_keyvault_vault.resource_id
+      resource_id = try(module.avm_res_keyvault_vault[0].resource_id, null)
       secret_configuration = {
         name = "azureuser-password"
       }
@@ -46,7 +46,7 @@ module "buildvm" {
     sku       = "20_04-lts-gen2"
     version   = "latest"
   }
-  tags = var.buildvm_definition.tags
+  tags = merge(local.tags, var.buildvm_definition.tags != null ? var.buildvm_definition.tags : {})
 
   depends_on = [module.avm_res_keyvault_vault, time_sleep.wait_for_kv_rbac]
 }
