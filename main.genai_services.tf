@@ -104,7 +104,6 @@ module "cosmosdb" {
   depends_on = [module.private_dns_zones, module.hub_vnet_peering]
 }
 
-
 #TODO:
 # Implement subservice passthrough in variables and here
 # removing for testing PE DNS zone strategy when platform flag is false
@@ -141,7 +140,6 @@ module "storage_account" {
   depends_on = [module.private_dns_zones, module.hub_vnet_peering]
 }
 
-
 module "containerregistry" {
   source  = "Azure/avm-res-containerregistry-registry/azurerm"
   version = "0.5.0"
@@ -166,7 +164,6 @@ module "containerregistry" {
   depends_on = [module.private_dns_zones, module.hub_vnet_peering]
 }
 
-
 module "app_configuration" {
   source  = "Azure/avm-res-appconfiguration-configurationstore/azure"
   version = "0.5.1"
@@ -190,4 +187,3 @@ module "app_configuration" {
   soft_delete_retention_days = var.genai_app_configuration_definition.soft_delete_retention_in_days
   tags                       = merge(local.tags, var.genai_app_configuration_definition.tags != null ? var.genai_app_configuration_definition.tags : {})
 }
-
