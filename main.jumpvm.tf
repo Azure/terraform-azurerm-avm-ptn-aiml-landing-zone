@@ -37,11 +37,8 @@ module "jumpvm" {
   depends_on = [module.avm_res_keyvault_vault, time_sleep.wait_for_kv_rbac]
 }
 
-
 #TODO
 # feature toggle if not required
 # credential to vault (ordering issues)
 ## Move the private endpoint for the vault outside the avm module ?
 # Consider adding options for different OS versions
-
-

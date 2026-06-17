@@ -1,5 +1,3 @@
-
-
 module "ai_lz_vnet" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
   version = "0.16.0"
@@ -38,10 +36,10 @@ module "byo_subnets" {
 
   # Direct VNet resource id (module not instantiated when BYO is null due to empty for_each)
   parent_id              = values(var.vnet_definition.existing_byo_vnet)[0].vnet_resource_id
-  address_prefixes       = each.value.ipam_pools == null ? each.value.address_prefixes : null
-  delegations            = try(each.value.delegations, try(each.value.delegation, null), null)
   ipam_pools             = each.value.ipam_pools
   name                   = each.value.name
+  address_prefixes       = each.value.ipam_pools == null ? each.value.address_prefixes : null
+  delegations            = try(each.value.delegations, try(each.value.delegation, null), null)
   network_security_group = try(each.value.network_security_group, null)
   route_table            = try(each.value.route_table, null)
 }
@@ -98,11 +96,11 @@ module "hub_vnet_peering" {
   count   = length(var.vnet_definition.existing_byo_vnet) == 0 && var.vnet_definition.vnet_peering_configuration != null ? 1 : 0
 
   parent_id                            = local.vnet_resource_id
+  name                                 = var.vnet_definition.vnet_peering_configuration.name != null ? var.vnet_definition.vnet_peering_configuration.name : "${local.vnet_name}-local-to-remote"
   allow_forwarded_traffic              = var.vnet_definition.vnet_peering_configuration.allow_forwarded_traffic
   allow_gateway_transit                = var.vnet_definition.vnet_peering_configuration.allow_gateway_transit
   allow_virtual_network_access         = var.vnet_definition.vnet_peering_configuration.allow_virtual_network_access
   create_reverse_peering               = var.vnet_definition.vnet_peering_configuration.create_reverse_peering
-  name                                 = var.vnet_definition.vnet_peering_configuration.name != null ? var.vnet_definition.vnet_peering_configuration.name : "${local.vnet_name}-local-to-remote"
   remote_virtual_network_id            = var.vnet_definition.vnet_peering_configuration.peer_vnet_resource_id
   reverse_allow_forwarded_traffic      = var.vnet_definition.vnet_peering_configuration.reverse_allow_forwarded_traffic
   reverse_allow_gateway_transit        = var.vnet_definition.vnet_peering_configuration.reverse_allow_gateway_transit
@@ -208,7 +206,6 @@ module "firewall_network_rule_collection_group" {
   firewall_policy_rule_collection_group_priority                = local.firewall_policy_rule_collection_group_priority
 }
 
-
 module "azure_bastion" {
   source  = "Azure/avm-res-network-bastionhost/azurerm"
   version = "0.7.2"
@@ -253,6 +250,7 @@ module "private_dns_zone_existing_vnet_links" {
 
   depends_on = [module.hub_vnet_peering]
 }
+
 moved {
   from = module.app_gateway_waf_policy
   to   = module.app_gateway_waf_policy[0]
@@ -271,7 +269,6 @@ module "app_gateway_waf_policy" {
   policy_settings     = var.waf_policy_definition.policy_settings
   tags                = merge(local.tags, var.waf_policy_definition.tags != null ? var.waf_policy_definition.tags : {})
 }
-
 
 module "application_gateway" {
   source  = "Azure/avm-res-network-applicationgateway/azurerm"
@@ -314,4 +311,3 @@ module "application_gateway" {
     azurerm_network_security_rule.this
   ]
 }
-

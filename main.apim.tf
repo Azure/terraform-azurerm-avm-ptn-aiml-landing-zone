@@ -1,5 +1,3 @@
-
-
 module "apim" {
   source  = "Azure/avm-res-apimanagement-service/azurerm"
   version = "0.0.5"
@@ -41,4 +39,3 @@ module "apim" {
     azurerm_network_security_rule.this
   ]
 }
-
