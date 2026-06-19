@@ -229,7 +229,7 @@ module "test" {
     consistency_level = "Session"
   }
   genai_key_vault_definition = {
-    #this is for AVM testing purposes only. Doing this as we don't have an easy for the test runner to be privately connected for testing.
+    #this is for AVM testing purposes only. Doing this as we don't have an easy way for the test runner to be privately connected for testing.
     public_network_access_enabled = true
     network_acls = {
       bypass   = "AzureServices"
