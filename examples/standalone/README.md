@@ -104,7 +104,7 @@ module "test" {
   #resource_group_name = "ai-lz-rg-default-ivrhi-3"
   vnet_definition = {
     name          = "ai-lz-vnet-standalone"
-    address_space = ["192.168.0.0/20"] # has to be out of 192.168.0.0/16 currently. Other RFC1918 not supported for foundry capabilityHost injection.
+    address_space = ["192.168.0.0/20"]
   }
   ai_foundry_definition = {
     purge_on_destroy = true
