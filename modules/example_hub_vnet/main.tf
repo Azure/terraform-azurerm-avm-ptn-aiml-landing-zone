@@ -161,7 +161,7 @@ module "private_resolver" {
 # Create the Private DNS zones and link to the hub VNet
 module "private_dns_zones" {
   source   = "Azure/avm-res-network-privatednszone/azurerm"
-  version  = "0.4.2"
+  version  = "0.5.0"
   for_each = local.private_dns_zones
 
   domain_name      = each.value.name
