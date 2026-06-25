@@ -225,7 +225,7 @@ module "azure_bastion" {
 
 module "private_dns_zones" {
   source   = "Azure/avm-res-network-privatednszone/azurerm"
-  version  = "0.4.2"
+  version  = "0.5.0"
   for_each = !var.flag_platform_landing_zone ? local.private_dns_zones : {}
 
   domain_name           = each.value.name
@@ -238,7 +238,7 @@ module "private_dns_zones" {
 
 module "private_dns_zone_existing_vnet_links" {
   source   = "Azure/avm-res-network-privatednszone/azurerm//modules/private_dns_virtual_network_link"
-  version  = "0.4.2"
+  version  = "0.5.0"
   for_each = local.private_dns_zones_existing_vnet_links
 
   parent_id                              = each.value.zone_resource_id
