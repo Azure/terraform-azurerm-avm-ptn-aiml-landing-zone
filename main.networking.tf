@@ -272,7 +272,7 @@ module "app_gateway_waf_policy" {
 
 module "application_gateway" {
   source  = "Azure/avm-res-network-applicationgateway/azurerm"
-  version = "0.4.2"
+  version = "0.5.2"
   count   = var.app_gateway_definition.deploy ? 1 : 0
 
   backend_address_pools = var.app_gateway_definition.backend_address_pools
