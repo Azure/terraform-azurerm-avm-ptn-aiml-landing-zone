@@ -110,7 +110,7 @@ module "cosmosdb" {
 
 module "storage_account" {
   source  = "Azure/avm-res-storage-storageaccount/azurerm"
-  version = "0.6.6"
+  version = "0.7.3"
   count   = var.genai_storage_account_definition.deploy ? 1 : 0
 
   location                            = azurerm_resource_group.this.location
@@ -142,7 +142,7 @@ module "storage_account" {
 
 module "containerregistry" {
   source  = "Azure/avm-res-containerregistry-registry/azurerm"
-  version = "0.5.0"
+  version = "0.5.1"
   count   = var.genai_container_registry_definition.deploy ? 1 : 0
 
   location            = azurerm_resource_group.this.location
