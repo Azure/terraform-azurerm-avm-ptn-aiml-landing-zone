@@ -42,7 +42,7 @@ data "azurerm_client_config" "current" {}
 # This allows us to randomize the region for the resource group.
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.9.2"
+  version = "0.12.0"
 }
 
 # This allows us to randomize the region for the resource group.
@@ -55,7 +55,7 @@ resource "random_integer" "region_index" {
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "0.4.2"
+  version = "0.4.3"
 }
 
 data "http" "ip" {
