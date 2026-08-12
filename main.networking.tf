@@ -211,16 +211,16 @@ module "azure_bastion" {
   version = "0.9.0"
   count   = !var.flag_platform_landing_zone && var.bastion_definition.deploy ? 1 : 0
 
-  location            = azurerm_resource_group.this.location
-  name                = local.bastion_name
-  resource_group_name = var.bastion_definition.resource_group_name != null ? var.bastion_definition.resource_group_name : azurerm_resource_group.this.name
-  enable_telemetry    = var.enable_telemetry
+  location         = azurerm_resource_group.this.location
+  name             = local.bastion_name
+  enable_telemetry = var.enable_telemetry
   ip_configuration = {
     subnet_id = local.subnet_ids["AzureBastionSubnet"]
   }
-  sku   = var.bastion_definition.sku
-  tags  = merge(local.tags, var.bastion_definition.tags != null ? var.bastion_definition.tags : {})
-  zones = var.bastion_definition.zones
+  sku                 = var.bastion_definition.sku
+  tags                = merge(local.tags, var.bastion_definition.tags != null ? var.bastion_definition.tags : {})
+  zones               = var.bastion_definition.zones
+  resource_group_name = var.bastion_definition.resource_group_name != null ? var.bastion_definition.resource_group_name : azurerm_resource_group.this.name
 }
 
 module "private_dns_zones" {
@@ -293,7 +293,6 @@ module "application_gateway" {
   enable_telemetry                   = var.enable_telemetry
   http2_enable                       = var.app_gateway_definition.http2_enable
   probe_configurations               = var.app_gateway_definition.probe_configurations
-  public_ip_name                     = "${local.application_gateway_name}-pip"
   redirect_configuration             = var.app_gateway_definition.redirect_configuration
   rewrite_rule_set                   = var.app_gateway_definition.rewrite_rule_set
   role_assignments                   = local.application_gateway_role_assignments
@@ -306,6 +305,7 @@ module "application_gateway" {
   trusted_root_certificate           = var.app_gateway_definition.trusted_root_certificate
   url_path_map_configurations        = var.app_gateway_definition.url_path_map_configurations
   zones                              = local.region_zones
+  public_ip_name                     = "${local.application_gateway_name}-pip"
 
   depends_on = [
     azurerm_network_security_rule.this

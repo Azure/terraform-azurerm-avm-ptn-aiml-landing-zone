@@ -10,8 +10,16 @@ module "jumpvm" {
   version = "0.21.0"
   count   = !var.flag_platform_landing_zone && var.jumpvm_definition.deploy ? 1 : 0
 
-  location = azurerm_resource_group.this.location
-  name     = local.jump_vm_name
+  location            = azurerm_resource_group.this.location
+  name                = local.jump_vm_name
+  resource_group_name = azurerm_resource_group.this.name
+  zone                = length(local.region_zones) > 0 ? random_integer.zone_index[0].result : null
+  account_credentials = {
+    key_vault_configuration = {
+      resource_id = try(module.avm_res_keyvault_vault[0].resource_id, null)
+    }
+  }
+  enable_telemetry = var.enable_telemetry
   network_interfaces = {
     network_interface_1 = {
       name = "${local.jump_vm_name}-nic1"
@@ -23,16 +31,8 @@ module "jumpvm" {
       }
     }
   }
-  resource_group_name = azurerm_resource_group.this.name
-  zone                = length(local.region_zones) > 0 ? random_integer.zone_index[0].result : null
-  account_credentials = {
-    key_vault_configuration = {
-      resource_id = try(module.avm_res_keyvault_vault[0].resource_id, null)
-    }
-  }
-  enable_telemetry = var.enable_telemetry
-  sku_size         = var.jumpvm_definition.sku
-  tags             = merge(local.tags, var.jumpvm_definition.tags != null ? var.jumpvm_definition.tags : {})
+  sku_size = var.jumpvm_definition.sku
+  tags     = merge(local.tags, var.jumpvm_definition.tags != null ? var.jumpvm_definition.tags : {})
 
   depends_on = [module.avm_res_keyvault_vault, time_sleep.wait_for_kv_rbac]
 }
