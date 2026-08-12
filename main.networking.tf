@@ -1,6 +1,6 @@
 module "ai_lz_vnet" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "0.16.0"
+  version = "0.20.0"
   count   = length(var.vnet_definition.existing_byo_vnet) > 0 ? 0 : 1
 
   location      = azurerm_resource_group.this.location
@@ -31,7 +31,7 @@ data "azurerm_virtual_network" "ai_lz_vnet" {
 
 module "byo_subnets" {
   source   = "Azure/avm-res-network-virtualnetwork/azurerm//modules/subnet"
-  version  = "0.16.0"
+  version  = "0.20.0"
   for_each = { for k, v in local.deployed_subnets : k => v if length(var.vnet_definition.existing_byo_vnet) > 0 }
 
   # Direct VNet resource id (module not instantiated when BYO is null due to empty for_each)
@@ -46,7 +46,7 @@ module "byo_subnets" {
 
 module "nsgs" {
   source  = "Azure/avm-res-network-networksecuritygroup/azurerm"
-  version = "0.5.0"
+  version = "0.5.1"
 
   location            = azurerm_resource_group.this.location
   name                = local.nsg_name
@@ -92,7 +92,7 @@ resource "azurerm_network_security_rule" "this" {
 #TODO: Add the platform landing zone flag as a secondary decision point for the hub vnet peering?
 module "hub_vnet_peering" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm//modules/peering"
-  version = "0.16.0"
+  version = "0.20.0"
   count   = length(var.vnet_definition.existing_byo_vnet) == 0 && var.vnet_definition.vnet_peering_configuration != null ? 1 : 0
 
   parent_id                            = local.vnet_resource_id
@@ -122,7 +122,7 @@ resource "azurerm_virtual_hub_connection" "this" {
 
 module "firewall_route_table" {
   source  = "Azure/avm-res-network-routetable/azurerm"
-  version = "0.4.1"
+  version = "0.5.0"
   count = ((!var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
   (!var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? 1 : 0
 
@@ -148,7 +148,7 @@ module "firewall_route_table" {
 
 module "fw_pip" {
   source  = "Azure/avm-res-network-publicipaddress/azurerm"
-  version = "0.2.0"
+  version = "0.2.1"
   count   = !var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0 ? 1 : 0
 
   location            = azurerm_resource_group.this.location
@@ -185,7 +185,7 @@ module "firewall" {
 
 module "firewall_policy" {
   source  = "Azure/avm-res-network-firewallpolicy/azurerm"
-  version = "0.3.3"
+  version = "0.3.4"
   count   = !var.flag_platform_landing_zone && var.firewall_definition.deploy && length(var.vnet_definition.existing_byo_vnet) == 0 ? 1 : 0
 
   location            = azurerm_resource_group.this.location
@@ -197,7 +197,7 @@ module "firewall_policy" {
 #TODO: add application rule collection support
 module "firewall_network_rule_collection_group" {
   source  = "Azure/avm-res-network-firewallpolicy/azurerm//modules/rule_collection_groups"
-  version = "0.3.3"
+  version = "0.3.4"
   count   = !var.flag_platform_landing_zone && var.firewall_definition.deploy && length(var.vnet_definition.existing_byo_vnet) == 0 ? 1 : 0
 
   firewall_policy_rule_collection_group_firewall_policy_id      = module.firewall_policy[0].resource_id
@@ -208,7 +208,7 @@ module "firewall_network_rule_collection_group" {
 
 module "azure_bastion" {
   source  = "Azure/avm-res-network-bastionhost/azurerm"
-  version = "0.7.2"
+  version = "0.9.0"
   count   = !var.flag_platform_landing_zone && var.bastion_definition.deploy ? 1 : 0
 
   location            = azurerm_resource_group.this.location
@@ -225,7 +225,7 @@ module "azure_bastion" {
 
 module "private_dns_zones" {
   source   = "Azure/avm-res-network-privatednszone/azurerm"
-  version  = "0.4.2"
+  version  = "0.5.0"
   for_each = !var.flag_platform_landing_zone ? local.private_dns_zones : {}
 
   domain_name           = each.value.name
@@ -238,7 +238,7 @@ module "private_dns_zones" {
 
 module "private_dns_zone_existing_vnet_links" {
   source   = "Azure/avm-res-network-privatednszone/azurerm//modules/private_dns_virtual_network_link"
-  version  = "0.4.2"
+  version  = "0.5.0"
   for_each = local.private_dns_zones_existing_vnet_links
 
   parent_id                              = each.value.zone_resource_id
@@ -272,7 +272,7 @@ module "app_gateway_waf_policy" {
 
 module "application_gateway" {
   source  = "Azure/avm-res-network-applicationgateway/azurerm"
-  version = "0.4.2"
+  version = "0.5.2"
   count   = var.app_gateway_definition.deploy ? 1 : 0
 
   backend_address_pools = var.app_gateway_definition.backend_address_pools
