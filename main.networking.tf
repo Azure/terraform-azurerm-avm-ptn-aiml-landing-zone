@@ -1,6 +1,6 @@
 module "ai_lz_vnet" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "0.16.0"
+  version = "0.22.1"
   count   = length(var.vnet_definition.existing_byo_vnet) > 0 ? 0 : 1
 
   location      = azurerm_resource_group.this.location
@@ -31,7 +31,7 @@ data "azurerm_virtual_network" "ai_lz_vnet" {
 
 module "byo_subnets" {
   source   = "Azure/avm-res-network-virtualnetwork/azurerm//modules/subnet"
-  version  = "0.16.0"
+  version  = "0.22.1"
   for_each = { for k, v in local.deployed_subnets : k => v if length(var.vnet_definition.existing_byo_vnet) > 0 }
 
   # Direct VNet resource id (module not instantiated when BYO is null due to empty for_each)
@@ -46,7 +46,7 @@ module "byo_subnets" {
 
 module "nsgs" {
   source  = "Azure/avm-res-network-networksecuritygroup/azurerm"
-  version = "0.5.0"
+  version = "0.5.1"
 
   location            = azurerm_resource_group.this.location
   name                = local.nsg_name
@@ -92,7 +92,7 @@ resource "azurerm_network_security_rule" "this" {
 #TODO: Add the platform landing zone flag as a secondary decision point for the hub vnet peering?
 module "hub_vnet_peering" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm//modules/peering"
-  version = "0.16.0"
+  version = "0.22.1"
   count   = length(var.vnet_definition.existing_byo_vnet) == 0 && var.vnet_definition.vnet_peering_configuration != null ? 1 : 0
 
   parent_id                            = local.vnet_resource_id
@@ -122,7 +122,7 @@ resource "azurerm_virtual_hub_connection" "this" {
 
 module "firewall_route_table" {
   source  = "Azure/avm-res-network-routetable/azurerm"
-  version = "0.4.1"
+  version = "0.5.0"
   count = ((!var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
   (!var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? 1 : 0
 
@@ -148,7 +148,7 @@ module "firewall_route_table" {
 
 module "fw_pip" {
   source  = "Azure/avm-res-network-publicipaddress/azurerm"
-  version = "0.2.0"
+  version = "0.2.1"
   count   = !var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0 ? 1 : 0
 
   location            = azurerm_resource_group.this.location
@@ -185,7 +185,7 @@ module "firewall" {
 
 module "firewall_policy" {
   source  = "Azure/avm-res-network-firewallpolicy/azurerm"
-  version = "0.3.3"
+  version = "0.3.4"
   count   = !var.flag_platform_landing_zone && var.firewall_definition.deploy && length(var.vnet_definition.existing_byo_vnet) == 0 ? 1 : 0
 
   location            = azurerm_resource_group.this.location
@@ -197,7 +197,7 @@ module "firewall_policy" {
 #TODO: add application rule collection support
 module "firewall_network_rule_collection_group" {
   source  = "Azure/avm-res-network-firewallpolicy/azurerm//modules/rule_collection_groups"
-  version = "0.3.3"
+  version = "0.3.4"
   count   = !var.flag_platform_landing_zone && var.firewall_definition.deploy && length(var.vnet_definition.existing_byo_vnet) == 0 ? 1 : 0
 
   firewall_policy_rule_collection_group_firewall_policy_id      = module.firewall_policy[0].resource_id
@@ -208,24 +208,24 @@ module "firewall_network_rule_collection_group" {
 
 module "azure_bastion" {
   source  = "Azure/avm-res-network-bastionhost/azurerm"
-  version = "0.7.2"
+  version = "0.9.0"
   count   = !var.flag_platform_landing_zone && var.bastion_definition.deploy ? 1 : 0
 
-  location            = azurerm_resource_group.this.location
-  name                = local.bastion_name
-  resource_group_name = var.bastion_definition.resource_group_name != null ? var.bastion_definition.resource_group_name : azurerm_resource_group.this.name
-  enable_telemetry    = var.enable_telemetry
+  location         = azurerm_resource_group.this.location
+  name             = local.bastion_name
+  enable_telemetry = var.enable_telemetry
   ip_configuration = {
     subnet_id = local.subnet_ids["AzureBastionSubnet"]
   }
-  sku   = var.bastion_definition.sku
-  tags  = merge(local.tags, var.bastion_definition.tags != null ? var.bastion_definition.tags : {})
-  zones = var.bastion_definition.zones
+  sku                 = var.bastion_definition.sku
+  tags                = merge(local.tags, var.bastion_definition.tags != null ? var.bastion_definition.tags : {})
+  zones               = var.bastion_definition.zones
+  resource_group_name = var.bastion_definition.resource_group_name != null ? var.bastion_definition.resource_group_name : azurerm_resource_group.this.name
 }
 
 module "private_dns_zones" {
   source   = "Azure/avm-res-network-privatednszone/azurerm"
-  version  = "0.4.2"
+  version  = "0.5.0"
   for_each = !var.flag_platform_landing_zone ? local.private_dns_zones : {}
 
   domain_name           = each.value.name
@@ -238,7 +238,7 @@ module "private_dns_zones" {
 
 module "private_dns_zone_existing_vnet_links" {
   source   = "Azure/avm-res-network-privatednszone/azurerm//modules/private_dns_virtual_network_link"
-  version  = "0.4.2"
+  version  = "0.5.0"
   for_each = local.private_dns_zones_existing_vnet_links
 
   parent_id                              = each.value.zone_resource_id
@@ -272,40 +272,40 @@ module "app_gateway_waf_policy" {
 
 module "application_gateway" {
   source  = "Azure/avm-res-network-applicationgateway/azurerm"
-  version = "0.4.2"
+  version = "0.5.3"
   count   = var.app_gateway_definition.deploy ? 1 : 0
 
-  backend_address_pools = var.app_gateway_definition.backend_address_pools
-  backend_http_settings = var.app_gateway_definition.backend_http_settings
-  frontend_ports        = var.app_gateway_definition.frontend_ports
+  location                = azurerm_resource_group.this.location
+  name                    = local.application_gateway_name
+  autoscale_configuration = var.app_gateway_definition.autoscale_configuration
+  backend_address_pools   = var.app_gateway_definition.backend_address_pools
+  diagnostic_settings     = local.app_gw_diagnostic_settings
+  enable_telemetry        = var.enable_telemetry
+  frontend_ports          = var.app_gateway_definition.frontend_ports
+  http_listeners          = var.app_gateway_definition.http_listeners
+  request_routing_rules   = var.app_gateway_definition.request_routing_rules
+  role_assignments        = local.application_gateway_role_assignments
+  sku                     = var.app_gateway_definition.sku
+  ssl_certificates        = var.app_gateway_definition.ssl_certificates
+  ssl_policy              = var.app_gateway_definition.ssl_policy
+  tags                    = merge(local.tags, var.app_gateway_definition.tags != null ? var.app_gateway_definition.tags : {})
+  zones                   = local.region_zones
+  backend_http_settings   = var.app_gateway_definition.backend_http_settings
   gateway_ip_configuration = {
     subnet_id = local.subnet_ids["AppGatewaySubnet"]
   }
-  http_listeners                     = var.app_gateway_definition.http_listeners
-  location                           = azurerm_resource_group.this.location
-  name                               = local.application_gateway_name
-  request_routing_rules              = var.app_gateway_definition.request_routing_rules
   resource_group_name                = azurerm_resource_group.this.name
   app_gateway_waf_policy_resource_id = one(module.app_gateway_waf_policy[*].resource_id)
   authentication_certificate         = var.app_gateway_definition.authentication_certificate
-  autoscale_configuration            = var.app_gateway_definition.autoscale_configuration
-  diagnostic_settings                = local.app_gw_diagnostic_settings
-  enable_telemetry                   = var.enable_telemetry
   http2_enable                       = var.app_gateway_definition.http2_enable
   probe_configurations               = var.app_gateway_definition.probe_configurations
   public_ip_name                     = "${local.application_gateway_name}-pip"
   redirect_configuration             = var.app_gateway_definition.redirect_configuration
   rewrite_rule_set                   = var.app_gateway_definition.rewrite_rule_set
-  role_assignments                   = local.application_gateway_role_assignments
-  sku                                = var.app_gateway_definition.sku
-  ssl_certificates                   = var.app_gateway_definition.ssl_certificates
-  ssl_policy                         = var.app_gateway_definition.ssl_policy
   ssl_profile                        = var.app_gateway_definition.ssl_profile
-  tags                               = merge(local.tags, var.app_gateway_definition.tags != null ? var.app_gateway_definition.tags : {})
   trusted_client_certificate         = var.app_gateway_definition.trusted_client_certificate
   trusted_root_certificate           = var.app_gateway_definition.trusted_root_certificate
   url_path_map_configurations        = var.app_gateway_definition.url_path_map_configurations
-  zones                              = local.region_zones
 
   depends_on = [
     azurerm_network_security_rule.this

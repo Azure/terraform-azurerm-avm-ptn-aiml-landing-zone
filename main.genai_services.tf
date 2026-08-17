@@ -1,6 +1,6 @@
 module "avm_res_keyvault_vault" {
   source  = "Azure/avm-res-keyvault-vault/azurerm"
-  version = "=0.10.2"
+  version = "0.11.0"
   count   = var.genai_key_vault_definition.deploy ? 1 : 0
 
   location                        = azurerm_resource_group.this.location
@@ -110,12 +110,11 @@ module "cosmosdb" {
 
 module "storage_account" {
   source  = "Azure/avm-res-storage-storageaccount/azurerm"
-  version = "0.6.6"
+  version = "0.8.1"
   count   = var.genai_storage_account_definition.deploy ? 1 : 0
 
   location                            = azurerm_resource_group.this.location
   name                                = local.genai_storage_account_name
-  resource_group_name                 = azurerm_resource_group.this.name
   access_tier                         = var.genai_storage_account_definition.access_tier
   account_kind                        = var.genai_storage_account_definition.account_kind
   account_replication_type            = var.genai_storage_account_definition.account_replication_type
@@ -136,13 +135,14 @@ module "storage_account" {
   role_assignments              = local.genai_storage_account_role_assignments
   shared_access_key_enabled     = var.genai_storage_account_definition.shared_access_key_enabled
   tags                          = merge(local.tags, var.genai_storage_account_definition.tags != null ? var.genai_storage_account_definition.tags : {})
+  resource_group_name           = azurerm_resource_group.this.name
 
   depends_on = [module.private_dns_zones, module.hub_vnet_peering]
 }
 
 module "containerregistry" {
   source  = "Azure/avm-res-containerregistry-registry/azurerm"
-  version = "0.5.0"
+  version = "0.8.0"
   count   = var.genai_container_registry_definition.deploy ? 1 : 0
 
   location            = azurerm_resource_group.this.location
