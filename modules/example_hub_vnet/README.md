@@ -11,7 +11,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 3.116, < 5.0)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 3.116, < 5.2)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 
@@ -159,25 +159,25 @@ The following Modules are called:
 
 Source: Azure/avm-res-network-virtualnetwork/azurerm
 
-Version: =0.16.0
+Version: 0.22.1
 
 ### <a name="module_avm_res_keyvault_vault"></a> [avm\_res\_keyvault\_vault](#module\_avm\_res\_keyvault\_vault)
 
 Source: Azure/avm-res-keyvault-vault/azurerm
 
-Version: =0.10.2
+Version: 0.11.0
 
 ### <a name="module_avm_utl_regions"></a> [avm\_utl\_regions](#module\_avm\_utl\_regions)
 
 Source: Azure/avm-utl-regions/azurerm
 
-Version: 0.9.2
+Version: 0.12.0
 
 ### <a name="module_bastion_pip"></a> [bastion\_pip](#module\_bastion\_pip)
 
 Source: Azure/avm-res-network-publicipaddress/azurerm
 
-Version: 0.2.0
+Version: 0.2.1
 
 ### <a name="module_firewall"></a> [firewall](#module\_firewall)
 
@@ -189,43 +189,43 @@ Version: 0.4.0
 
 Source: Azure/avm-res-network-firewallpolicy/azurerm//modules/rule_collection_groups
 
-Version: 0.3.3
+Version: 0.3.4
 
 ### <a name="module_firewall_policy"></a> [firewall\_policy](#module\_firewall\_policy)
 
 Source: Azure/avm-res-network-firewallpolicy/azurerm
 
-Version: 0.3.3
+Version: 0.3.4
 
 ### <a name="module_fw_pip"></a> [fw\_pip](#module\_fw\_pip)
 
 Source: Azure/avm-res-network-publicipaddress/azurerm
 
-Version: 0.2.0
+Version: 0.2.1
 
 ### <a name="module_jumpvm"></a> [jumpvm](#module\_jumpvm)
 
 Source: Azure/avm-res-compute-virtualmachine/azurerm
 
-Version: 0.20.0
+Version: 0.21.0
 
 ### <a name="module_log_analytics_workspace"></a> [log\_analytics\_workspace](#module\_log\_analytics\_workspace)
 
 Source: Azure/avm-res-operationalinsights-workspace/azurerm
 
-Version: 0.4.2
+Version: 0.5.1
 
 ### <a name="module_natgateway"></a> [natgateway](#module\_natgateway)
 
 Source: Azure/avm-res-network-natgateway/azurerm
 
-Version: 0.2.1
+Version: 0.3.2
 
 ### <a name="module_private_dns_zones"></a> [private\_dns\_zones](#module\_private\_dns\_zones)
 
 Source: Azure/avm-res-network-privatednszone/azurerm
 
-Version: 0.4.2
+Version: 0.5.0
 
 ### <a name="module_private_resolver"></a> [private\_resolver](#module\_private\_resolver)
 

@@ -47,7 +47,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.4)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 5.1)
 
 - <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (~> 0.3)
 
@@ -2409,13 +2409,13 @@ The following Modules are called:
 
 Source: Azure/avm-res-network-virtualnetwork/azurerm
 
-Version: 0.16.0
+Version: 0.22.1
 
 ### <a name="module_apim"></a> [apim](#module\_apim)
 
 Source: Azure/avm-res-apimanagement-service/azurerm
 
-Version: 0.0.5
+Version: 0.9.0
 
 ### <a name="module_app_configuration"></a> [app\_configuration](#module\_app\_configuration)
 
@@ -2433,49 +2433,49 @@ Version: 0.2.0
 
 Source: Azure/avm-res-network-applicationgateway/azurerm
 
-Version: 0.4.2
+Version: 0.5.3
 
 ### <a name="module_avm_res_keyvault_vault"></a> [avm\_res\_keyvault\_vault](#module\_avm\_res\_keyvault\_vault)
 
 Source: Azure/avm-res-keyvault-vault/azurerm
 
-Version: =0.10.2
+Version: 0.11.0
 
 ### <a name="module_avm_utl_regions"></a> [avm\_utl\_regions](#module\_avm\_utl\_regions)
 
 Source: Azure/avm-utl-regions/azurerm
 
-Version: 0.9.2
+Version: 0.12.0
 
 ### <a name="module_azure_bastion"></a> [azure\_bastion](#module\_azure\_bastion)
 
 Source: Azure/avm-res-network-bastionhost/azurerm
 
-Version: 0.7.2
+Version: 0.9.0
 
 ### <a name="module_buildvm"></a> [buildvm](#module\_buildvm)
 
 Source: Azure/avm-res-compute-virtualmachine/azurerm
 
-Version: 0.20.0
+Version: 0.21.0
 
 ### <a name="module_byo_subnets"></a> [byo\_subnets](#module\_byo\_subnets)
 
 Source: Azure/avm-res-network-virtualnetwork/azurerm//modules/subnet
 
-Version: 0.16.0
+Version: 0.22.1
 
 ### <a name="module_container_apps_managed_environment"></a> [container\_apps\_managed\_environment](#module\_container\_apps\_managed\_environment)
 
 Source: Azure/avm-res-app-managedenvironment/azurerm
 
-Version: 0.3.0
+Version: 0.5.0
 
 ### <a name="module_containerregistry"></a> [containerregistry](#module\_containerregistry)
 
 Source: Azure/avm-res-containerregistry-registry/azurerm
 
-Version: 0.5.0
+Version: 0.8.0
 
 ### <a name="module_cosmosdb"></a> [cosmosdb](#module\_cosmosdb)
 
@@ -2493,19 +2493,19 @@ Version: 0.4.0
 
 Source: Azure/avm-res-network-firewallpolicy/azurerm//modules/rule_collection_groups
 
-Version: 0.3.3
+Version: 0.3.4
 
 ### <a name="module_firewall_policy"></a> [firewall\_policy](#module\_firewall\_policy)
 
 Source: Azure/avm-res-network-firewallpolicy/azurerm
 
-Version: 0.3.3
+Version: 0.3.4
 
 ### <a name="module_firewall_route_table"></a> [firewall\_route\_table](#module\_firewall\_route\_table)
 
 Source: Azure/avm-res-network-routetable/azurerm
 
-Version: 0.4.1
+Version: 0.5.0
 
 ### <a name="module_foundry_ptn"></a> [foundry\_ptn](#module\_foundry\_ptn)
 
@@ -2517,55 +2517,55 @@ Version: 0.11.2
 
 Source: Azure/avm-res-network-publicipaddress/azurerm
 
-Version: 0.2.0
+Version: 0.2.1
 
 ### <a name="module_hub_vnet_peering"></a> [hub\_vnet\_peering](#module\_hub\_vnet\_peering)
 
 Source: Azure/avm-res-network-virtualnetwork/azurerm//modules/peering
 
-Version: 0.16.0
+Version: 0.22.1
 
 ### <a name="module_jumpvm"></a> [jumpvm](#module\_jumpvm)
 
 Source: Azure/avm-res-compute-virtualmachine/azurerm
 
-Version: 0.20.0
+Version: 0.21.0
 
 ### <a name="module_log_analytics_workspace"></a> [log\_analytics\_workspace](#module\_log\_analytics\_workspace)
 
 Source: Azure/avm-res-operationalinsights-workspace/azurerm
 
-Version: 0.4.2
+Version: 0.5.1
 
 ### <a name="module_nsgs"></a> [nsgs](#module\_nsgs)
 
 Source: Azure/avm-res-network-networksecuritygroup/azurerm
 
-Version: 0.5.0
+Version: 0.5.1
 
 ### <a name="module_private_dns_zone_existing_vnet_links"></a> [private\_dns\_zone\_existing\_vnet\_links](#module\_private\_dns\_zone\_existing\_vnet\_links)
 
 Source: Azure/avm-res-network-privatednszone/azurerm//modules/private_dns_virtual_network_link
 
-Version: 0.4.2
+Version: 0.5.0
 
 ### <a name="module_private_dns_zones"></a> [private\_dns\_zones](#module\_private\_dns\_zones)
 
 Source: Azure/avm-res-network-privatednszone/azurerm
 
-Version: 0.4.2
+Version: 0.5.0
 
 ### <a name="module_search_service"></a> [search\_service](#module\_search\_service)
 
 Source: Azure/avm-res-search-searchservice/azurerm
 
-Version: 0.2.0
+Version: 0.3.0
 
 ### <a name="module_storage_account"></a> [storage\_account](#module\_storage\_account)
 
 Source: Azure/avm-res-storage-storageaccount/azurerm
 
-Version: 0.6.6
+Version: 0.8.1
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

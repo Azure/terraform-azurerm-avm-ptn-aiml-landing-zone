@@ -15,7 +15,7 @@ terraform {
     }
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.21"
+      version = "~> 5.1"
     }
     http = {
       source  = "hashicorp/http"
@@ -53,7 +53,7 @@ data "azurerm_client_config" "current" {}
 # This allows us to randomize the region for the resource group.
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.9.2"
+  version = "0.12.0"
 }
 
 # This allows us to randomize the region for the resource group.
@@ -66,7 +66,7 @@ resource "random_integer" "region_index" {
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "0.4.2"
+  version = "0.4.3"
 }
 
 # Get the deployer IP address to allow for public write to the key vault. This is to make sure the tests run.
@@ -105,7 +105,7 @@ resource "azurerm_resource_group" "vnet_rg" {
 
 module "vnet" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "=0.16.0"
+  version = "0.22.1"
 
   location      = azurerm_resource_group.vnet_rg.location
   parent_id     = azurerm_resource_group.vnet_rg.id
@@ -283,7 +283,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.21)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 5.1)
 
 - <a name="requirement_http"></a> [http](#requirement\_http) (~> 3.4)
 
@@ -330,13 +330,13 @@ The following Modules are called:
 
 Source: Azure/naming/azurerm
 
-Version: 0.4.2
+Version: 0.4.3
 
 ### <a name="module_regions"></a> [regions](#module\_regions)
 
 Source: Azure/avm-utl-regions/azurerm
 
-Version: 0.9.2
+Version: 0.12.0
 
 ### <a name="module_test"></a> [test](#module\_test)
 
@@ -354,7 +354,7 @@ Version: 0.3.0
 
 Source: Azure/avm-res-network-virtualnetwork/azurerm
 
-Version: =0.16.0
+Version: 0.22.1
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection
