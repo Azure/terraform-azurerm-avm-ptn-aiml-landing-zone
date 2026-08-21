@@ -1,5 +1,5 @@
 locals {
-  genai_app_configuration_default_role_assignments = {}
+  genai_app_configuration_default_role_assignments = local.security_genai_app_configuration_role_assignments
   genai_app_configuration_diagnostic_settings      = var.genai_app_configuration_definition.enable_diagnostic_settings ? (length(var.genai_app_configuration_definition.diagnostic_settings) > 0 ? var.genai_app_configuration_definition.diagnostic_settings : local.genai_app_configuration_diagnostic_settings_inner) : {}
   genai_app_configuration_diagnostic_settings_inner = (local.deploy_diagnostics_settings ? {
     sendToLogAnalytics = {
@@ -20,7 +20,7 @@ locals {
     local.genai_app_configuration_default_role_assignments,
     var.genai_app_configuration_definition.role_assignments
   )
-  genai_container_registry_default_role_assignments = {}
+  genai_container_registry_default_role_assignments = local.security_genai_container_registry_role_assignments
   genai_container_registry_diagnostic_settings      = var.genai_container_registry_definition.enable_diagnostic_settings ? (length(var.genai_container_registry_definition.diagnostic_settings) > 0 ? var.genai_container_registry_definition.diagnostic_settings : local.genai_container_registry_diagnostic_settings_inner) : {}
   genai_container_registry_diagnostic_settings_inner = (local.deploy_diagnostics_settings ? {
     sendToLogAnalytics = {
@@ -75,9 +75,8 @@ locals {
       }
     ] : var.genai_cosmosdb_definition.secondary_regions
   )
-  genai_key_vault_default_role_assignments = {
-  }
-  genai_key_vault_diagnostic_settings = var.genai_key_vault_definition.enable_diagnostic_settings ? (length(var.genai_key_vault_definition.diagnostic_settings) > 0 ? var.genai_key_vault_definition.diagnostic_settings : local.genai_key_vault_diagnostic_settings_inner) : {}
+  genai_key_vault_default_role_assignments = local.security_genai_key_vault_role_assignments
+  genai_key_vault_diagnostic_settings      = var.genai_key_vault_definition.enable_diagnostic_settings ? (length(var.genai_key_vault_definition.diagnostic_settings) > 0 ? var.genai_key_vault_definition.diagnostic_settings : local.genai_key_vault_diagnostic_settings_inner) : {}
   genai_key_vault_diagnostic_settings_inner = (local.deploy_diagnostics_settings ? {
     sendToLogAnalytics = {
       name                                     = "sendToLogAnalytics-genai-kv-${random_string.name_suffix.result}"

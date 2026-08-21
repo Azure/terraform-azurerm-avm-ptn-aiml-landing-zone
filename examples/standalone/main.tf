@@ -94,6 +94,9 @@ module "test" {
 
   location            = local.location
   resource_group_name = "ai-lz-rg-standalone-${substr(module.naming.unique-seed, 0, 5)}"
+  security_definition = {
+    grant_deployment_principal_app_configuration_data_owner = true
+  }
   #resource_group_name = "ai-lz-rg-default-ivrhi-3"
   vnet_definition = {
     name          = "ai-lz-vnet-standalone"
