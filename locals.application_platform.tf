@@ -59,6 +59,7 @@ locals {
     DEPLOY_CONTAINER_ENV              = tostring(var.container_app_environment_definition.deploy)
     DEPLOY_CONTAINER_REGISTRY         = tostring(var.genai_container_registry_definition.deploy)
     DEPLOYMENT_MODE                   = local.application_platform_deployment_mode
+    DEPLOYMENT_TAGS                   = jsonencode(var.application_platform.deployment_tags)
     ENVIRONMENT_NAME                  = local.application_platform_environment_name
     LOCATION                          = azurerm_resource_group.this.location
     NETWORK_ISOLATION                 = "true"

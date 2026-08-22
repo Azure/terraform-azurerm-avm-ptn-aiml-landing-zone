@@ -2412,7 +2412,11 @@ Default: `{}`
 
 ### <a name="input_retry"></a> [retry](#input\_retry)
 
-Description: Retry configuration applied to Application Platform AzAPI resources.
+Description: Retry configuration applied to every Application Platform AzAPI resource declared by the module. Defaults to `null` (no custom retry).
+
+- `error_message_regex` - A list of regular expressions matching error messages that trigger a retry.
+- `interval_seconds` - Initial interval between retries in seconds.
+- `max_interval_seconds` - Maximum interval between retries in seconds.
 
 Type:
 
@@ -2421,8 +2425,6 @@ object({
     error_message_regex  = optional(list(string))
     interval_seconds     = optional(number)
     max_interval_seconds = optional(number)
-    multiplier           = optional(number)
-    randomization_factor = optional(number)
   })
 ```
 

@@ -10,10 +10,9 @@ resource "azapi_resource" "application_platform_container_app_identity" {
   delete_headers         = var.enable_telemetry ? { "User-Agent" = local.avm_azapi_header } : null
   ignore_body_changes    = length(var.ignore_body_changes.managedidentity_user_assigned_identities) > 0 ? var.ignore_body_changes.managedidentity_user_assigned_identities : null
   read_headers           = var.enable_telemetry ? { "User-Agent" = local.avm_azapi_header } : null
-  replace_triggers_refs  = []
   response_export_values = ["properties.clientId", "properties.principalId"]
   retry                  = var.retry
-  tags                   = merge(local.tags, var.application_platform.deployment_tags)
+  tags                   = var.tags
   update_headers         = var.enable_telemetry ? { "User-Agent" = local.avm_azapi_header } : null
 
   dynamic "timeouts" {
@@ -249,10 +248,9 @@ resource "azapi_resource" "application_platform_container_app" {
   delete_headers         = var.enable_telemetry ? { "User-Agent" = local.avm_azapi_header } : null
   ignore_body_changes    = length(var.ignore_body_changes.app_container_apps) > 0 ? var.ignore_body_changes.app_container_apps : null
   read_headers           = var.enable_telemetry ? { "User-Agent" = local.avm_azapi_header } : null
-  replace_triggers_refs  = []
   response_export_values = ["properties.configuration.ingress.fqdn", "properties.provisioningState"]
   retry                  = var.retry
-  tags                   = merge(local.tags, var.application_platform.deployment_tags)
+  tags                   = var.tags
   update_headers         = var.enable_telemetry ? { "User-Agent" = local.avm_azapi_header } : null
 
   identity {
@@ -299,7 +297,6 @@ resource "azapi_resource" "application_platform_app_configuration_key_value" {
   delete_headers         = var.enable_telemetry ? { "User-Agent" = local.avm_azapi_header } : null
   ignore_body_changes    = length(var.ignore_body_changes.appconfiguration_configuration_stores_key_values) > 0 ? var.ignore_body_changes.appconfiguration_configuration_stores_key_values : null
   read_headers           = var.enable_telemetry ? { "User-Agent" = local.avm_azapi_header } : null
-  replace_triggers_refs  = []
   response_export_values = []
   retry                  = var.retry
   update_headers         = var.enable_telemetry ? { "User-Agent" = local.avm_azapi_header } : null
@@ -335,9 +332,9 @@ resource "azapi_resource" "application_platform_acr_task_agent_pool" {
   delete_headers         = var.enable_telemetry ? { "User-Agent" = local.avm_azapi_header } : null
   ignore_body_changes    = length(var.ignore_body_changes.containerregistry_registries_agent_pools) > 0 ? var.ignore_body_changes.containerregistry_registries_agent_pools : null
   read_headers           = var.enable_telemetry ? { "User-Agent" = local.avm_azapi_header } : null
-  replace_triggers_refs  = []
   response_export_values = ["properties.provisioningState"]
   retry                  = var.retry
+  tags                   = var.tags
   update_headers         = var.enable_telemetry ? { "User-Agent" = local.avm_azapi_header } : null
 
   dynamic "timeouts" {
