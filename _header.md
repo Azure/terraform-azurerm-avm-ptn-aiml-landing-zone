@@ -35,3 +35,13 @@ provider "azurerm" {
 ```
 
 These settings are used across the examples to help deployments succeed in policy-restricted environments.
+
+## Application Platform handoff
+
+The optional `application_platform` input adds managed-identity Container App workloads, runtime configuration modes, non-secret App Configuration population, a private ACR Task agent pool, and Foundry IQ runtime handoff values without changing the existing landing-zone topology or defaults. Existing consumers do not need to migrate.
+
+The default runtime mode remains `appConfig`, while `populate_app_configuration` defaults to `false`. The module's existing topology is network isolated, so consumers normally populate the exported `application_platform_runtime_configuration` map from a post-provision runner with private connectivity. No secret values are accepted by this interface.
+
+`containerEnv` injects non-secret bootstrap configuration directly into each workload. `none` injects only the workload identity client ID. Every workload gets a user-assigned managed identity; private-registry and optional Key Vault permissions are assigned before the Container App resource is created.
+
+The `application_platform` output preserves the authorized handoff names inside one Terraform object. It records configured intent and resource handoffs only; it is not evidence of effective network isolation or cross-language scenario parity. Full CAF/legacy renaming of existing resources and Foundry IQ data-plane knowledge-base/source creation remain outside this additive change because either would require a separately reviewed migration or data-plane implementation.

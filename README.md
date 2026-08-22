@@ -38,6 +38,16 @@ provider "azurerm" {
 
 These settings are used across the examples to help deployments succeed in policy-restricted environments.
 
+## Application Platform handoff
+
+The optional `application_platform` input adds managed-identity Container App workloads, runtime configuration modes, non-secret App Configuration population, a private ACR Task agent pool, and Foundry IQ runtime handoff values without changing the existing landing-zone topology or defaults. Existing consumers do not need to migrate.
+
+The default runtime mode remains `appConfig`, while `populate_app_configuration` defaults to `false`. The module's existing topology is network isolated, so consumers normally populate the exported `application_platform_runtime_configuration` map from a post-provision runner with private connectivity. No secret values are accepted by this interface.
+
+`containerEnv` injects non-secret bootstrap configuration directly into each workload. `none` injects only the workload identity client ID. Every workload gets a user-assigned managed identity; private-registry and optional Key Vault permissions are assigned before the Container App resource is created.
+
+The `application_platform` output preserves the authorized handoff names inside one Terraform object. It records configured intent and resource handoffs only; it is not evidence of effective network isolation or cross-language scenario parity. Full CAF/legacy renaming of existing resources and Foundry IQ data-plane knowledge-base/source creation remain outside this additive change because either would require a separately reviewed migration or data-plane implementation.
+
 <!-- markdownlint-disable MD033 -->
 ## Requirements
 
@@ -45,7 +55,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
-- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.4)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.12)
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
 
@@ -64,6 +74,14 @@ The following resources are used by this module:
 - [azapi_resource.apim_api_operation_list_models](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.apim_api_policy_ai_foundry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.apim_backend_ai_foundry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.application_platform_acr_pull](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.application_platform_acr_task_agent_pool](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.application_platform_app_config_data_owner](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.application_platform_app_config_data_reader](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.application_platform_app_configuration_key_value](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.application_platform_container_app](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.application_platform_container_app_identity](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.application_platform_key_vault_secrets_user](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.bing_grounding](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource_action.purge_ai_foundry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action) (resource)
 - [azurerm_network_security_rule.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_security_rule) (resource)
@@ -1305,6 +1323,104 @@ object({
 
 Default: `null`
 
+### <a name="input_application_platform"></a> [application\_platform](#input\_application\_platform)
+
+Description: Additive Application Platform configuration aligned to the authorized Bicep parity handoff. Existing module behavior remains the default: the private topology, `name_prefix`, Container Apps Environment settings, and App Configuration deployment are unchanged.
+
+- `environment_name` - Deployment environment identifier. Defaults to `resource_group_name`.
+- `cosmos_location` - Runtime metadata for the Cosmos DB location. Defaults to `location`; it does not move existing resources.
+- `deployment_mode` - Optional deployment intent: `standalone` or `ailz-integrated`. When unset it is derived from `flag_platform_landing_zone`.
+- `deployment_tags` - Additional deployment metadata tags included in runtime configuration.
+- `release` - Release metadata surfaced to workloads. Defaults to `unreleased` and does not claim a published release.
+- `resource_token` - Stable consumer token. Defaults to the module's existing persisted random suffix.
+- `app_config_label` - Label for optional App Configuration key-values.
+- `app_runtime_configuration_mode` - Runtime configuration mode: `appConfig`, `containerEnv`, or `none`. The default preserves the existing App Configuration mode.
+- `populate_app_configuration` - Opts into deploying non-secret runtime key-values. Defaults to false because this module's network-isolated topology normally requires post-provision population from a connected runner.
+- `deploy_software` - Compatibility handoff flag surfaced in outputs. It does not install software.
+- `use_zone_redundancy` - Optional override for the existing Container Apps Environment and Container Registry zone-redundancy settings. Null preserves their current defaults.
+- `additional_app_configuration_settings` - Non-secret passthrough settings. Map keys are App Configuration keys.
+- `acr_task_agent_pool` - Optional private ACR Task agent pool configuration. Disabled by default.
+- `container_apps` - Optional workload map. Each workload receives a user-assigned managed identity. Private-registry workloads receive AcrPull before the app is created; appConfig workloads receive App Configuration Data Reader; Key Vault access is opt-in.
+- `foundry_iq` - Runtime-only Foundry IQ handoff values. This change does not create Foundry IQ data-plane knowledge bases or sources.
+
+Type:
+
+```hcl
+object({
+    environment_name               = optional(string)
+    cosmos_location                = optional(string)
+    deployment_mode                = optional(string)
+    deployment_tags                = optional(map(string), {})
+    release                        = optional(string, "unreleased")
+    resource_token                 = optional(string)
+    app_config_label               = optional(string, "ai-lz")
+    app_runtime_configuration_mode = optional(string, "appConfig")
+    populate_app_configuration     = optional(bool, false)
+    deploy_software                = optional(bool, true)
+    use_zone_redundancy            = optional(bool)
+    additional_app_configuration_settings = optional(map(object({
+      value        = string
+      label        = optional(string)
+      content_type = optional(string, "text/plain")
+    })), {})
+    acr_task_agent_pool = optional(object({
+      enabled = optional(bool, false)
+      name    = optional(string, "build-pool")
+      tier    = optional(string, "S1")
+      count   = optional(number, 1)
+    }), {})
+    container_apps = optional(map(object({
+      name                         = optional(string)
+      image                        = string
+      target_port                  = optional(number, 80)
+      external_ingress_enabled     = optional(bool, false)
+      transport                    = optional(string, "auto")
+      min_replicas                 = optional(number, 0)
+      max_replicas                 = optional(number, 1)
+      cpu                          = optional(number, 0.5)
+      memory                       = optional(string, "1Gi")
+      env                          = optional(map(string), {})
+      use_private_registry         = optional(bool, false)
+      grant_key_vault_secrets_user = optional(bool, false)
+      dapr = optional(object({
+        enabled      = optional(bool, true)
+        app_id       = optional(string)
+        app_port     = optional(number)
+        app_protocol = optional(string, "http")
+      }))
+    })), {})
+    foundry_iq = optional(object({
+      enable_agentic_retrieval         = optional(bool, false)
+      retrieval_backend                = optional(string, "foundry_iq")
+      pattern                          = optional(string, "azureBlob")
+      api_version                      = optional(string, "2026-05-01-preview")
+      knowledge_retrieval_billing_plan = optional(string, "free")
+      knowledge_base_name              = optional(string)
+      knowledge_base_connection_name   = optional(string)
+      knowledge_base_connection_id     = optional(string, "")
+      knowledge_base_endpoint          = optional(string, "")
+      knowledge_source_name            = optional(string)
+      knowledge_source_kind            = optional(string, "")
+      storage_container_name           = optional(string, "documents")
+      storage_folder_path              = optional(string, "")
+      is_adls_gen2                     = optional(bool, false)
+      content_extraction_mode          = optional(string, "standard")
+      ai_services_endpoint             = optional(string, "")
+      ingestion_permission_options     = optional(list(string), ["rbacScope"])
+      search_index_name                = optional(string, "gpt-rag-index")
+      semantic_configuration_name      = optional(string, "default")
+      source_data_fields               = optional(list(string), ["id", "title", "filepath", "url", "content"])
+      search_fields                    = optional(list(string), ["content"])
+      base_filter                      = optional(string, "")
+      filter_add_on_enabled            = optional(bool, true)
+      security_field_name              = optional(string, "metadata_security_id")
+      max_output_documents             = optional(string, "")
+    }), {})
+  })
+```
+
+Default: `{}`
+
 ### <a name="input_bastion_definition"></a> [bastion\_definition](#input\_bastion\_definition)
 
 Description: Configuration object for the Azure Bastion service to be deployed.
@@ -2004,6 +2120,24 @@ object({
 
 Default: `{}`
 
+### <a name="input_ignore_body_changes"></a> [ignore\_body\_changes](#input\_ignore\_body\_changes)
+
+Description: Body-relative paths ignored on Application Platform AzAPI resources. Paths use dot notation; changes take effect only after apply, and configuration for an ignored path is not sent to Azure until the path is removed.
+
+Type:
+
+```hcl
+object({
+    app_container_apps                               = optional(list(string), [])
+    appconfiguration_configuration_stores_key_values = optional(list(string), [])
+    authorization_role_assignments                   = optional(list(string), [])
+    containerregistry_registries_agent_pools         = optional(list(string), [])
+    managedidentity_user_assigned_identities         = optional(list(string), [])
+  })
+```
+
+Default: `{}`
+
 ### <a name="input_jumpvm_definition"></a> [jumpvm\_definition](#input\_jumpvm\_definition)
 
 Description: Configuration object for the Jump VM to be created for managing the implementation services.
@@ -2258,6 +2392,44 @@ object({
 
 Default: `{}`
 
+### <a name="input_resource_types"></a> [resource\_types](#input\_resource\_types)
+
+Description: AzAPI resource types and API versions used by the additive Application Platform resources.
+
+Type:
+
+```hcl
+object({
+    app_container_apps                               = optional(string, "Microsoft.App/containerApps@2025-01-01")
+    appconfiguration_configuration_stores_key_values = optional(string, "Microsoft.AppConfiguration/configurationStores/keyValues@2024-05-01")
+    authorization_role_assignments                   = optional(string, "Microsoft.Authorization/roleAssignments@2022-04-01")
+    containerregistry_registries_agent_pools         = optional(string, "Microsoft.ContainerRegistry/registries/agentPools@2025-03-01-preview")
+    managedidentity_user_assigned_identities         = optional(string, "Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31")
+  })
+```
+
+Default: `{}`
+
+### <a name="input_retry"></a> [retry](#input\_retry)
+
+Description: Retry configuration applied to every Application Platform AzAPI resource declared by the module. Defaults to `null` (no custom retry).
+
+- `error_message_regex` - A list of regular expressions matching error messages that trigger a retry.
+- `interval_seconds` - Initial interval between retries in seconds.
+- `max_interval_seconds` - Maximum interval between retries in seconds.
+
+Type:
+
+```hcl
+object({
+    error_message_regex  = optional(list(string))
+    interval_seconds     = optional(number)
+    max_interval_seconds = optional(number)
+  })
+```
+
+Default: `null`
+
 ### <a name="input_tags"></a> [tags](#input\_tags)
 
 Description: Map of tags to be assigned to all resources created by this module.
@@ -2265,6 +2437,23 @@ Description: Map of tags to be assigned to all resources created by this module.
 Tags are key-value pairs that help organize and manage Azure resources. These tags will be applied to all resources created by the module, enabling consistent resource governance, cost tracking, and operational management across the AI/ML landing zone infrastructure.
 
 Type: `map(string)`
+
+Default: `null`
+
+### <a name="input_timeouts"></a> [timeouts](#input\_timeouts)
+
+Description: Timeout configuration applied to Application Platform AzAPI resources.
+
+Type:
+
+```hcl
+object({
+    create = optional(string)
+    read   = optional(string)
+    update = optional(string)
+    delete = optional(string)
+  })
+```
 
 Default: `null`
 
@@ -2384,6 +2573,18 @@ The following outputs are exported:
 ### <a name="output_apim"></a> [apim](#output\_apim)
 
 Description: Details of the deployed APIM instance.
+
+### <a name="output_application_platform"></a> [application\_platform](#output\_application\_platform)
+
+Description: Application Platform deployment and runtime handoff values. These outputs are evidence of configured intent only and do not claim scenario parity.
+
+### <a name="output_application_platform_container_apps"></a> [application\_platform\_container\_apps](#output\_application\_platform\_container\_apps)
+
+Description: Container App workload resource IDs, managed identity IDs, principal IDs, and FQDNs.
+
+### <a name="output_application_platform_runtime_configuration"></a> [application\_platform\_runtime\_configuration](#output\_application\_platform\_runtime\_configuration)
+
+Description: Non-secret runtime configuration for post-provision population or accelerator consumption.
 
 ### <a name="output_log_analytics_workspace_id"></a> [log\_analytics\_workspace\_id](#output\_log\_analytics\_workspace\_id)
 

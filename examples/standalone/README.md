@@ -221,6 +221,17 @@ module "test" {
   buildvm_definition = {
     sku = module.vm_sku.sku
   }
+  application_platform = {
+    environment_name               = "standalone-example"
+    app_runtime_configuration_mode = "containerEnv"
+    container_apps = {
+      hello = {
+        image                    = "mcr.microsoft.com/azuredocs/containerapps-helloworld:latest"
+        external_ingress_enabled = true
+        target_port              = 80
+      }
+    }
+  }
   container_app_environment_definition = {
     enable_diagnostic_settings = false
   }

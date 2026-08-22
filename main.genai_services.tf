@@ -159,7 +159,7 @@ module "containerregistry" {
   public_network_access_enabled = var.genai_container_registry_definition.public_network_access_enabled
   role_assignments              = local.genai_container_registry_role_assignments
   tags                          = merge(local.tags, var.genai_container_registry_definition.tags != null ? var.genai_container_registry_definition.tags : {})
-  zone_redundancy_enabled       = length(local.region_zones) > 1 ? var.genai_container_registry_definition.zone_redundancy_enabled : false
+  zone_redundancy_enabled       = length(local.region_zones) > 1 ? coalesce(local.application_platform_use_zone_redundancy, var.genai_container_registry_definition.zone_redundancy_enabled) : false
 
   depends_on = [module.private_dns_zones, module.hub_vnet_peering]
 }
