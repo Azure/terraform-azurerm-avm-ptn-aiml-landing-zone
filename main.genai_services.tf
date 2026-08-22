@@ -77,19 +77,15 @@ module "cosmosdb" {
     max_interval_in_seconds = var.genai_cosmosdb_definition.consistency_policy.max_interval_in_seconds
     max_staleness_prefix    = var.genai_cosmosdb_definition.consistency_policy.max_staleness_prefix
   }
-  cors_rule           = var.genai_cosmosdb_definition.cors_rule
-  diagnostic_settings = local.genai_cosmosdb_diagnostic_settings
-  enable_telemetry    = var.enable_telemetry
-  geo_locations       = local.genai_cosmosdb_secondary_regions
-  ip_range_filter = [
-    "168.125.123.255",
-    "170.0.0.0/24",                                                                 #TODO: check 0.0.0.0 for validity
-    "0.0.0.0",                                                                      #Accept connections from within public Azure datacenters. https://learn.microsoft.com/en-us/azure/cosmos-db/how-to-configure-firewall#allow-requests-from-the-azure-portal
-    "104.42.195.92", "40.76.54.131", "52.176.6.30", "52.169.50.45", "52.187.184.26" #Allow access from the Azure portal. https://learn.microsoft.com/en-us/azure/cosmos-db/how-to-configure-firewall#allow-requests-from-global-azure-datacenters-or-other-sources-within-azure
-  ]
+  cors_rule                             = var.genai_cosmosdb_definition.cors_rule
+  diagnostic_settings                   = local.genai_cosmosdb_diagnostic_settings
+  enable_telemetry                      = var.enable_telemetry
+  geo_locations                         = local.genai_cosmosdb_secondary_regions
+  ip_range_filter                       = var.genai_cosmosdb_definition.ip_range_filter
   local_authentication_disabled         = var.genai_cosmosdb_definition.local_authentication_disabled
   multiple_write_locations_enabled      = var.genai_cosmosdb_definition.multiple_write_locations_enabled
-  network_acl_bypass_for_azure_services = true
+  network_acl_bypass_for_azure_services = var.genai_cosmosdb_definition.network_acl_bypass_for_azure_services
+  network_acl_bypass_resource_ids       = var.genai_cosmosdb_definition.network_acl_bypass_resource_ids
   partition_merge_enabled               = var.genai_cosmosdb_definition.partition_merge_enabled
   private_endpoints = {
     "sql" = {
@@ -100,6 +96,7 @@ module "cosmosdb" {
   }
   public_network_access_enabled = var.genai_cosmosdb_definition.public_network_access_enabled
   tags                          = merge(local.tags, var.genai_cosmosdb_definition.tags != null ? var.genai_cosmosdb_definition.tags : {})
+  virtual_network_rules         = var.genai_cosmosdb_definition.virtual_network_rules
 
   depends_on = [module.private_dns_zones, module.hub_vnet_peering]
 }
@@ -123,6 +120,7 @@ module "storage_account" {
   diagnostic_settings_storage_account = local.genai_storage_account_diagnostic_settings
   enable_telemetry                    = var.enable_telemetry
   local_user_enabled                  = false
+  network_rules                       = var.genai_storage_account_definition.network_rules
   private_endpoints = {
     for endpoint in var.genai_storage_account_definition.endpoint_types :
     endpoint => {
@@ -145,11 +143,13 @@ module "containerregistry" {
   version = "0.5.0"
   count   = var.genai_container_registry_definition.deploy ? 1 : 0
 
-  location            = azurerm_resource_group.this.location
-  name                = local.genai_container_registry_name
-  resource_group_name = azurerm_resource_group.this.name
-  diagnostic_settings = local.genai_container_registry_diagnostic_settings
-  enable_telemetry    = var.enable_telemetry
+  location                   = azurerm_resource_group.this.location
+  name                       = local.genai_container_registry_name
+  resource_group_name        = azurerm_resource_group.this.name
+  diagnostic_settings        = local.genai_container_registry_diagnostic_settings
+  enable_telemetry           = var.enable_telemetry
+  network_rule_bypass_option = var.genai_container_registry_definition.network_rule_bypass_option
+  network_rule_set           = var.genai_container_registry_definition.network_rule_set
   private_endpoints = {
     container_registry = {
       private_dns_zone_resource_ids = var.private_dns_zones.azure_policy_pe_zone_linking_enabled ? null : (!var.flag_platform_landing_zone ? [module.private_dns_zones.container_registry_zone.resource_id] : [local.private_dns_zones_existing.container_registry_zone.resource_id])
@@ -182,8 +182,9 @@ module "app_configuration" {
       subnet_resource_id            = local.subnet_ids["PrivateEndpointSubnet"]
     }
   }
-  role_assignments           = local.genai_app_configuration_role_assignments
-  sku                        = var.genai_app_configuration_definition.sku
-  soft_delete_retention_days = var.genai_app_configuration_definition.soft_delete_retention_in_days
-  tags                       = merge(local.tags, var.genai_app_configuration_definition.tags != null ? var.genai_app_configuration_definition.tags : {})
+  public_network_access_enabled = var.genai_app_configuration_definition.public_network_access_enabled
+  role_assignments              = local.genai_app_configuration_role_assignments
+  sku                           = var.genai_app_configuration_definition.sku
+  soft_delete_retention_days    = var.genai_app_configuration_definition.soft_delete_retention_in_days
+  tags                          = merge(local.tags, var.genai_app_configuration_definition.tags != null ? var.genai_app_configuration_definition.tags : {})
 }

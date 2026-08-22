@@ -26,8 +26,18 @@ variable "ai_foundry_definition" {
       #network_injections is statically set to vnet/subnet created in the module.
       private_dns_zone_resource_ids           = optional(list(string), [])
       private_endpoints_manage_dns_zone_group = optional(bool, true)
-      sku                                     = optional(string, "S0")
-      tags                                    = optional(map(string))
+      public_network_access_enabled           = optional(bool, null)
+      network_acls = optional(object({
+        default_action = optional(string, "Allow")
+        bypass         = optional(string, null)
+        ip_rules       = optional(list(string), [])
+        virtual_network_rules = optional(list(object({
+          subnet_resource_id                   = string
+          ignore_missing_vnet_service_endpoint = optional(bool, false)
+        })), [])
+      }), null)
+      sku  = optional(string, "S0")
+      tags = optional(map(string))
       role_assignments = optional(map(object({
         role_definition_id_or_name             = string
         principal_id                           = string
@@ -100,14 +110,19 @@ variable "ai_foundry_definition" {
         event_hub_name                           = optional(string, null)
         marketplace_partner_resource_id          = optional(string, null)
       })), {})
-      sku                          = optional(string, "standard")
-      local_authentication_enabled = optional(bool, true)
-      partition_count              = optional(number, 1)
-      replica_count                = optional(number, 2)
-      semantic_search_sku          = optional(string, "standard")
-      semantic_search_enabled      = optional(bool, false)
-      hosting_mode                 = optional(string, "default")
-      tags                         = optional(map(string))
+      sku                           = optional(string, "standard")
+      local_authentication_enabled  = optional(bool, true)
+      partition_count               = optional(number, 1)
+      replica_count                 = optional(number, 2)
+      semantic_search_sku           = optional(string, "standard")
+      semantic_search_enabled       = optional(bool, false)
+      hosting_mode                  = optional(string, "default")
+      public_network_access_enabled = optional(bool, null)
+      network_rule_set = optional(object({
+        bypass   = optional(string, "None")
+        ip_rules = optional(list(string), [])
+      }), {})
+      tags = optional(map(string))
       role_assignments = optional(map(object({
         role_definition_id_or_name             = string
         principal_id                           = string
@@ -149,6 +164,18 @@ variable "ai_foundry_definition" {
       local_authentication_disabled    = optional(bool, true)
       partition_merge_enabled          = optional(bool, false)
       multiple_write_locations_enabled = optional(bool, false)
+      # Default allowlist is the Azure portal plus global Azure datacenter source IPs: https://learn.microsoft.com/azure/cosmos-db/how-to-configure-firewall
+      ip_range_filter = optional(set(string), [
+        "168.125.123.255",
+        "170.0.0.0/24",
+        "0.0.0.0",
+        "104.42.195.92", "40.76.54.131", "52.176.6.30", "52.169.50.45", "52.187.184.26"
+      ])
+      network_acl_bypass_for_azure_services = optional(bool, true)
+      network_acl_bypass_resource_ids       = optional(set(string), [])
+      virtual_network_rules = optional(set(object({
+        subnet_id = string
+      })), [])
       analytical_storage_config = optional(object({
         schema_type = string
       }), null)
@@ -207,8 +234,15 @@ variable "ai_foundry_definition" {
         event_hub_name                           = optional(string, null)
         marketplace_partner_resource_id          = optional(string, null)
       })), {})
-      sku       = optional(string, "standard")
-      tenant_id = optional(string)
+      sku                           = optional(string, "standard")
+      tenant_id                     = optional(string)
+      public_network_access_enabled = optional(bool, null)
+      network_acls = optional(object({
+        bypass                     = optional(string, "AzureServices")
+        default_action             = optional(string, "Allow")
+        ip_rules                   = optional(list(string), [])
+        virtual_network_subnet_ids = optional(list(string), [])
+      }), {})
       role_assignments = optional(map(object({
         role_definition_id_or_name             = string
         principal_id                           = string
@@ -249,8 +283,19 @@ variable "ai_foundry_definition" {
           type = "blob"
         }
       })
-      access_tier               = optional(string, "Hot")
-      shared_access_key_enabled = optional(bool, false)
+      access_tier                   = optional(string, "Hot")
+      shared_access_key_enabled     = optional(bool, false)
+      public_network_access_enabled = optional(bool, null)
+      network_rules = optional(object({
+        bypass                     = optional(set(string), ["AzureServices"])
+        default_action             = optional(string, "Deny")
+        ip_rules                   = optional(set(string), [])
+        virtual_network_subnet_ids = optional(set(string), [])
+        private_link_access = optional(list(object({
+          endpoint_resource_id = string
+          endpoint_tenant_id   = optional(string)
+        })), null)
+      }), null)
       role_assignments = optional(map(object({
         role_definition_id_or_name             = string
         principal_id                           = string
@@ -288,6 +333,14 @@ Configuration object for the Azure AI Foundry deployment (hub, projects, and Bri
   - `allow_project_management` - (Optional) Whether project management is allowed from the hub. Default is true.
   - `create_ai_agent_service` - (Optional) Whether to create the AI Agent service in the hub. Default is false.
   - `private_dns_zone_resource_ids` - (Optional) List of private DNS zone resource IDs for hub endpoints. Default is [].
+  - `public_network_access_enabled` - (Optional) Overrides public network access on the hub account. Default is null, which lets the upstream module derive the value from the private endpoint configuration (public access disabled).
+  - `network_acls` - (Optional) Network access control list applied to the hub account. Default is null, which allows traffic from all networks. The rules only take effect when `public_network_access_enabled` is true.
+    - `default_action` - (Optional) Action taken when no rule matches. Possible values are "Allow" and "Deny". Default is "Allow".
+    - `bypass` - (Optional) Set to "AzureServices" to let trusted Azure services bypass the rules. Default is null.
+    - `ip_rules` - (Optional) List of IPv4 addresses or CIDR ranges allowed inbound access. Default is [].
+    - `virtual_network_rules` - (Optional) List of subnets allowed inbound access. Default is [].
+      - `subnet_resource_id` - The resource ID of the subnet to allow.
+      - `ignore_missing_vnet_service_endpoint` - (Optional) Whether to ignore a missing virtual network service endpoint on the subnet. Default is false.
   - `sku` - (Optional) The SKU for the hub. Default is "S0".
   - `tags` - (Optional) Map of tags to assign to the AI Foundry hub.
   - `role_assignments` - (Optional) Map of role assignments on the hub. The map key is deliberately arbitrary to avoid plan-time unknown key issues.
@@ -358,6 +411,10 @@ Configuration object for the Azure AI Foundry deployment (hub, projects, and Bri
     - `semantic_search_sku` - (Optional) Semantic search SKU. Default is "standard".
     - `semantic_search_enabled` - (Optional) Whether semantic search is enabled. Default is false.
     - `hosting_mode` - (Optional) Hosting mode. Default is "default".
+    - `public_network_access_enabled` - (Optional) Overrides public network access on the search service. Default is null, which lets the upstream module derive the value from the private endpoint configuration (public access disabled).
+    - `network_rule_set` - (Optional) Inbound network rules applied to the search service. Only takes effect when public network access is enabled.
+      - `bypass` - (Optional) Whether trusted Azure services may bypass the rules. Possible values are "None" and "AzureServices". Default is "None".
+      - `ip_rules` - (Optional) List of IPv4 addresses or CIDR ranges allowed inbound access. Default is [].
     - `tags` - (Optional) Map of tags for the service.
     - `role_assignments` - (Optional) Map of role assignments on the service.
       - `role_definition_id_or_name` - Role definition ID or name to assign.
@@ -396,6 +453,11 @@ Configuration object for the Azure AI Foundry deployment (hub, projects, and Bri
     - `local_authentication_disabled` - (Optional) Whether local authentication is disabled. Default is true.
     - `partition_merge_enabled` - (Optional) Whether partition merge is enabled. Default is false.
     - `multiple_write_locations_enabled` - (Optional) Whether multiple write locations are enabled. Default is false.
+    - `ip_range_filter` - (Optional) Set of IP addresses or CIDR ranges allowed to reach the Cosmos DB account. Defaults to the Azure portal and global Azure datacenter source IPs documented at https://learn.microsoft.com/azure/cosmos-db/how-to-configure-firewall. Set to `[]` to remove the allowlist.
+    - `network_acl_bypass_for_azure_services` - (Optional) Whether Azure services can bypass the network ACLs. Default is true.
+    - `network_acl_bypass_resource_ids` - (Optional) Set of resource IDs allowed to bypass the network ACLs. Default is [].
+    - `virtual_network_rules` - (Optional) Set of subnets allowed to reach the Cosmos DB account. Default is [].
+      - `subnet_id` - The resource ID of the subnet to allow.
     - `analytical_storage_config` - (Optional) Analytical storage configuration. Default is null.
       - `schema_type` - Schema type for analytical storage.
     - `consistency_policy` - (Optional) Consistency policy configuration.
@@ -447,6 +509,12 @@ Configuration object for the Azure AI Foundry deployment (hub, projects, and Bri
         - `marketplace_partner_resource_id` - (Optional) The full ARM resource ID of the Marketplace resource to which you would like to send Diagnostic Logs.
     - `sku` - (Optional) Vault SKU. Default is "standard".
     - `tenant_id` - (Optional) Tenant ID for the Key Vault.
+    - `public_network_access_enabled` - (Optional) Overrides public network access on the Key Vault. Default is null, which lets the upstream module derive the value from the private endpoint configuration (public access disabled).
+    - `network_acls` - (Optional) Network access control list applied to the Key Vault. Defaults to allowing all networks with an `AzureServices` bypass.
+      - `bypass` - (Optional) Traffic permitted to bypass the rules. Possible values are "AzureServices" and "None". Default is "AzureServices".
+      - `default_action` - (Optional) Action taken when no rule matches. Possible values are "Allow" and "Deny". Default is "Allow".
+      - `ip_rules` - (Optional) List of IPv4 addresses or CIDR ranges allowed access. Default is [].
+      - `virtual_network_subnet_ids` - (Optional) List of subnet resource IDs allowed access. Default is [].
     - `role_assignments` - (Optional) Map of role assignments on the vault.
       - `role_definition_id_or_name` - Role definition ID or name to assign.
       - `principal_id` - Principal ID for the assignment.
@@ -482,6 +550,15 @@ Configuration object for the Azure AI Foundry deployment (hub, projects, and Bri
       - `private_endpoints_manage_dns_zone_group` - (Optional) Whether to manage private DNS zone groups with this module. If set to false, you must manage private DNS zone groups externally, e.g. using Azure Policy. Default is true.
     - `access_tier` - (Optional) Access tier for the account. Default is "Hot".
     - `shared_access_key_enabled` - (Optional) Whether shared access keys are enabled. Default is false.
+    - `public_network_access_enabled` - (Optional) Overrides public network access on the storage account. Default is null, which lets the upstream module derive the value from the private endpoint configuration (public access disabled).
+    - `network_rules` - (Optional) Storage account firewall configuration. Default is null, in which case the upstream module applies deny-by-default with an `AzureServices` bypass, matching the private endpoint topology this module deploys.
+      - `bypass` - (Optional) Traffic permitted to bypass the rules. Any combination of "Logging", "Metrics", "AzureServices" or "None". Default is ["AzureServices"].
+      - `default_action` - (Optional) Action taken when no rule matches. Possible values are "Allow" and "Deny". Default is "Deny".
+      - `ip_rules` - (Optional) Set of public IPv4 addresses or CIDR ranges allowed access. RFC 1918 private ranges are not permitted by Azure. Default is [].
+      - `virtual_network_subnet_ids` - (Optional) Set of subnet resource IDs allowed access. Default is [].
+      - `private_link_access` - (Optional) List of resource access rules granting private link access. Default is null.
+        - `endpoint_resource_id` - The resource ID granted access.
+        - `endpoint_tenant_id` - (Optional) The tenant ID of the resource. Defaults to the current tenant.
     - `role_assignments` - (Optional) Map of role assignments on the storage account.
       - `role_definition_id_or_name` - Role definition ID or name to assign.
       - `principal_id` - Principal ID for the assignment.
@@ -495,4 +572,13 @@ Configuration object for the Azure AI Foundry deployment (hub, projects, and Bri
 
 This object supports both creating new resources and connecting to existing ones, enabling flexible deployment scenarios across the hub, projects, and dependent services.
 DESCRIPTION
+
+  validation {
+    condition     = try(var.ai_foundry_definition.ai_foundry.network_acls, null) == null ? true : contains(["Allow", "Deny"], var.ai_foundry_definition.ai_foundry.network_acls.default_action)
+    error_message = "The ai_foundry.network_acls.default_action must be one of: 'Allow', 'Deny'."
+  }
+  validation {
+    condition     = try(var.ai_foundry_definition.ai_foundry.network_acls.bypass, null) == null ? true : var.ai_foundry_definition.ai_foundry.network_acls.bypass == "AzureServices"
+    error_message = "The ai_foundry.network_acls.bypass must be 'AzureServices' or null."
+  }
 }
