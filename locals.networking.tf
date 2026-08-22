@@ -40,8 +40,17 @@ locals {
       resolution_policy = var.private_dns_zones.allow_internet_resolution_fallback == false ? "Default" : "NxDomainRedirect"
     }
   }
-  deployed_subnets = { for subnet_name, subnet in local.subnets : subnet_name => subnet if subnet.enabled }
-  firewall_name    = try(var.firewall_definition.name, null) != null ? var.firewall_definition.name : (var.name_prefix != null ? "${var.name_prefix}-fw" : "ai-alz-fw")
+  deployed_subnets = {
+    for subnet_name, subnet in local.subnets : subnet_name => merge(
+      subnet,
+      local.nat_gateway_resource_id != null && contains(var.nat_gateway_definition.subnet_keys, subnet_name) ? {
+        nat_gateway = {
+          id = local.nat_gateway_resource_id
+        }
+      } : {}
+    ) if subnet.enabled
+  }
+  firewall_name = try(var.firewall_definition.name, null) != null ? var.firewall_definition.name : (var.name_prefix != null ? "${var.name_prefix}-fw" : "ai-alz-fw")
   private_dns_zone_map = {
     key_vault_zone = {
       name = "privatelink.vaultcore.azure.net"
@@ -107,12 +116,22 @@ locals {
       name = "privatelink.cognitiveservices.azure.com"
     }
   }
-  private_dns_zones = var.flag_platform_landing_zone == false ? local.private_dns_zone_map : {}
-  private_dns_zones_existing = var.flag_platform_landing_zone == true ? { for key, value in local.private_dns_zone_map : key => {
-    name        = value.name
-    resource_id = "${coalesce(var.private_dns_zones.existing_zones_resource_group_resource_id, "notused")}/providers/Microsoft.Network/privateDnsZones/${value.name}" #TODO: determine if there is a more elegant way to do this while avoiding errors
-    }
+  private_dns_zones = var.flag_platform_landing_zone == false ? {
+    for key, value in local.private_dns_zone_map : key => value
+    if !contains(keys(var.private_dns_zones.existing_zone_resource_ids), key)
   } : {}
+  private_dns_zones_existing = { for key, value in local.private_dns_zone_map : key => {
+    name        = value.name
+    resource_id = lookup(var.private_dns_zones.existing_zone_resource_ids, key, "${coalesce(var.private_dns_zones.existing_zones_resource_group_resource_id, "notused")}/providers/Microsoft.Network/privateDnsZones/${value.name}")
+    }
+    if var.flag_platform_landing_zone || contains(keys(var.private_dns_zones.existing_zone_resource_ids), key)
+  }
+  private_dns_zone_resource_ids = {
+    for key, value in local.private_dns_zone_map : key => (
+      contains(keys(var.private_dns_zones.existing_zone_resource_ids), key) ? var.private_dns_zones.existing_zone_resource_ids[key] :
+      var.flag_platform_landing_zone ? local.private_dns_zones_existing[key].resource_id : module.private_dns_zones[key].resource_id
+    )
+  }
   # Build the for_each map using only the (statically known) keys of the source maps so the
   # resulting map keys are known at plan time. Apply-time values (e.g. zone resource IDs derived
   # from an existing resource group) are placed in the map values only.
@@ -128,6 +147,16 @@ locals {
       private_dns_zone_supports_private_link = startswith(local.private_dns_zones_existing[pair[0]].name, "privatelink.")
     }
   } : {}
+  firewall_route_table_resource_id = !var.flag_platform_landing_zone ? (
+    var.firewall_definition.route_table_resource_id != null ? var.firewall_definition.route_table_resource_id : try(module.firewall_route_table[0].resource_id, null)
+  ) : null
+  firewall_route_table = local.firewall_route_table_resource_id != null ? {
+    id = local.firewall_route_table_resource_id
+  } : null
+  nat_gateway_name = var.nat_gateway_definition.name != null ? var.nat_gateway_definition.name : (var.name_prefix != null ? "${var.name_prefix}-natgw" : "ai-alz-natgw")
+  nat_gateway_resource_id = !var.flag_platform_landing_zone ? (
+    var.nat_gateway_definition.resource_id != null ? var.nat_gateway_definition.resource_id : try(module.nat_gateway[0].resource_id, null)
+  ) : null
   route_table_name = "${local.vnet_name}-firewall-route-table"
   subnet_ids       = length(var.vnet_definition.existing_byo_vnet) > 0 ? { for key, m in module.byo_subnets : key => try(m.resource_id, m.id) } : { for key, s in module.ai_lz_vnet[0].subnets : key => s.resource_id }
   subnets = {
@@ -186,10 +215,7 @@ locals {
           prefix_length = var.vnet_definition.ipam_pools[0].prefix_length + 4
         }]
       : null)
-      route_table = ((!var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
-        (!var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? {
-        id = module.firewall_route_table[0].resource_id
-      } : null
+      route_table = local.firewall_route_table
       network_security_group = {
         id = module.nsgs.resource_id
       }
@@ -210,10 +236,7 @@ locals {
           prefix_length = var.vnet_definition.ipam_pools[0].prefix_length + 4
         }]
       : null)
-      route_table = ((!var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
-        (!var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? {
-        id = module.firewall_route_table[0].resource_id
-      } : null
+      route_table = local.firewall_route_table
       network_security_group = {
         id = module.nsgs.resource_id
       }
@@ -240,11 +263,7 @@ locals {
           prefix_length = var.vnet_definition.ipam_pools[0].prefix_length + 4
         }]
       : null)
-      route_table = (var.apim_definition.virtual_network_type == "None" &&
-        ((!var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
-        (!var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null))) ? {
-        id = module.firewall_route_table[0].resource_id
-      } : null
+      route_table = var.apim_definition.virtual_network_type == "None" ? local.firewall_route_table : null
       network_security_group = {
         id = module.nsgs.resource_id
       }
@@ -272,10 +291,7 @@ locals {
           prefix_length = var.vnet_definition.ipam_pools[0].prefix_length + 4
         }]
       : null)
-      route_table = ((!var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
-        (!var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? {
-        id = module.firewall_route_table[0].resource_id
-      } : null
+      route_table = local.firewall_route_table
       network_security_group = {
         id = module.nsgs.resource_id
       }
@@ -303,10 +319,7 @@ locals {
           prefix_length = var.vnet_definition.ipam_pools[0].prefix_length + 4
         }]
       : null)
-      route_table = ((!var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
-        (!var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? {
-        id = module.firewall_route_table[0].resource_id
-      } : null
+      route_table = local.firewall_route_table
       network_security_group = {
         id = module.nsgs.resource_id
       }
@@ -333,10 +346,7 @@ locals {
           prefix_length = var.vnet_definition.ipam_pools[0].prefix_length + 4
         }]
       : null)
-      route_table = ((!var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
-        (!var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? {
-        id = module.firewall_route_table[0].resource_id
-      } : null
+      route_table = local.firewall_route_table
     }
     PrivateEndpointSubnet = {
       enabled = try(local.subnets_definition["PrivateEndpointSubnet"].enabled, true)
@@ -354,10 +364,8 @@ locals {
           prefix_length = var.vnet_definition.ipam_pools[0].prefix_length + 4
         }]
       : null)
-      route_table = ((!var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
-        (!var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? {
-        id = module.firewall_route_table[0].resource_id
-      } : null
+      route_table                       = local.firewall_route_table
+      private_endpoint_network_policies = try(local.subnets_definition["PrivateEndpointSubnet"].private_endpoint_network_policies, "Enabled")
       network_security_group = {
         id = module.nsgs.resource_id
       }
