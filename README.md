@@ -38,6 +38,14 @@ provider "azurerm" {
 
 These settings are used across the examples to help deployments succeed in policy-restricted environments.
 
+## Microsoft Foundry contracts
+
+The module exposes account, project, model deployment, and Bring Your Own Resource IDs through `ai_foundry_account`, `ai_foundry_projects`, `ai_foundry_model_deployment_ids`, and `ai_foundry_byor_resource_ids`. Existing `ai_foundry_definition` defaults remain unchanged: local authentication is not disabled by default and AI Agent Service creation remains opt-in.
+
+`hosted_agent_definition` adds an opt-in infrastructure handoff for downstream `azure.ai.agent` deployment. The module validates immutable image digests, selects a configured Foundry project, prepares `AcrPull` for the project managed identity when using the module-managed registry, and returns network and private-build inputs. The landing zone does not create the downstream data-plane agent identity or agent version.
+
+This handoff currently supports only the standalone network-isolated topology. Public standalone Foundry, hub-spoke, Bing connections, automatic Cosmos DB data-plane role assignments, existing-registry role creation, and ACR Task agent-pool deployment are not implemented. Consumers remain responsible for private endpoint, DNS, and VNet-internal build connectivity when supplying an existing registry.
+
 <!-- markdownlint-disable MD033 -->
 ## Requirements
 
@@ -2004,6 +2012,63 @@ object({
 
 Default: `{}`
 
+### <a name="input_hosted_agent_definition"></a> [hosted\_agent\_definition](#input\_hosted\_agent\_definition)
+
+Description: Configuration for the Microsoft Foundry hosted-agent deployment handoff. This module prepares infrastructure and returns a typed handoff; it does not create the downstream data-plane agent identity or agent version.
+
+- `prepare` - (Optional) Prepare hosted-agent prerequisites without requesting downstream deployment. Default is false.
+- `deploy` - (Optional) Request downstream hosted-agent deployment in the returned handoff. Implies `prepare`. Default is false.
+- `project_key` - (Optional) Key of the project in `ai_foundry_definition.ai_projects`. Required when prerequisites are enabled and more than one project is configured.
+- `agent` - (Optional) Downstream `azure.ai.agent` service contract.
+  - `name` - Stable agent name.
+  - `image` - Repository path inside the selected registry, without a tag or digest.
+  - `version` - Immutable OCI digest in `sha256:<64 lowercase hexadecimal characters>` form.
+  - `startup_command` - Optional command that starts the agent server.
+  - `runtime` - Container CPU and memory settings.
+    - `cpu` - CPU allocation from 0.25 through 4. Default is "1".
+    - `memory` - Memory allocation from 0.5Gi through 8Gi. Default is "1Gi".
+  - `protocols` - Invocation protocols implemented by the agent. Default is the responses protocol version 2.0.0.
+- `container_registry` - (Optional) Existing registry contract used when `genai_container_registry_definition.deploy` is false.
+  - `existing_resource_id` - Resource ID of an existing Azure Container Registry.
+  - `existing_endpoint` - Login endpoint of the existing registry, for example `contoso.azurecr.io`.
+  - `role_assignment_mode` - Registry permissions mode. Allowed values are `rbac` and `rbac-abac`. Default is `rbac`.
+
+The supported hosted-agent scenario is standalone with network isolation. Hub-spoke and public standalone Foundry topologies are intentionally excluded. The selected Foundry account must enable AI Agent Service, and the selected project must enable project connections.
+
+Type:
+
+```hcl
+object({
+    prepare     = optional(bool, false)
+    deploy      = optional(bool, false)
+    project_key = optional(string)
+    agent = optional(object({
+      name            = optional(string, "")
+      image           = optional(string, "")
+      version         = optional(string, "")
+      startup_command = optional(string, "")
+      runtime = optional(object({
+        cpu    = optional(string, "1")
+        memory = optional(string, "1Gi")
+      }), {})
+      protocols = optional(list(object({
+        protocol = string
+        version  = optional(string)
+        })), [{
+        protocol = "responses"
+        version  = "2.0.0"
+      }])
+    }), {})
+    container_registry = optional(object({
+      existing_resource_id = optional(string)
+      existing_endpoint    = optional(string)
+      role_assignment_mode = optional(string, "rbac")
+    }), {})
+  })
+```
+
+Default: `{}`
+
 ### <a name="input_jumpvm_definition"></a> [jumpvm\_definition](#input\_jumpvm\_definition)
 
 Description: Configuration object for the Jump VM to be created for managing the implementation services.
@@ -2381,9 +2446,37 @@ Default: `{}`
 
 The following outputs are exported:
 
+### <a name="output_ai_foundry_account"></a> [ai\_foundry\_account](#output\_ai\_foundry\_account)
+
+Description: Core details of the deployed Microsoft Foundry account, including authentication posture and service endpoints.
+
+### <a name="output_ai_foundry_byor_resource_ids"></a> [ai\_foundry\_byor\_resource\_ids](#output\_ai\_foundry\_byor\_resource\_ids)
+
+Description: Resource IDs for Microsoft Foundry Bring Your Own Resource dependencies, including existing resources.
+
+### <a name="output_ai_foundry_model_deployment_ids"></a> [ai\_foundry\_model\_deployment\_ids](#output\_ai\_foundry\_model\_deployment\_ids)
+
+Description: Map of Microsoft Foundry model deployment resource IDs.
+
+### <a name="output_ai_foundry_projects"></a> [ai\_foundry\_projects](#output\_ai\_foundry\_projects)
+
+Description: Map of Microsoft Foundry project details keyed by ai\_foundry\_definition.ai\_projects.
+
 ### <a name="output_apim"></a> [apim](#output\_apim)
 
 Description: Details of the deployed APIM instance.
+
+### <a name="output_deploy_hosted_agent"></a> [deploy\_hosted\_agent](#output\_deploy\_hosted\_agent)
+
+Description: Whether the returned handoff requests downstream Microsoft Foundry hosted-agent deployment.
+
+### <a name="output_hosted_agent_deployment"></a> [hosted\_agent\_deployment](#output\_hosted\_agent\_deployment)
+
+Description: Typed infrastructure handoff for a downstream Microsoft Foundry hosted-agent deployment. No data-plane agent identity or version is created by this module.
+
+### <a name="output_hosted_agent_prepared"></a> [hosted\_agent\_prepared](#output\_hosted\_agent\_prepared)
+
+Description: Whether hosted-agent prerequisites were selected. This does not indicate that a hosted-agent version exists.
 
 ### <a name="output_log_analytics_workspace_id"></a> [log\_analytics\_workspace\_id](#output\_log\_analytics\_workspace\_id)
 

@@ -35,3 +35,11 @@ provider "azurerm" {
 ```
 
 These settings are used across the examples to help deployments succeed in policy-restricted environments.
+
+## Microsoft Foundry contracts
+
+The module exposes account, project, model deployment, and Bring Your Own Resource IDs through `ai_foundry_account`, `ai_foundry_projects`, `ai_foundry_model_deployment_ids`, and `ai_foundry_byor_resource_ids`. Existing `ai_foundry_definition` defaults remain unchanged: local authentication is not disabled by default and AI Agent Service creation remains opt-in.
+
+`hosted_agent_definition` adds an opt-in infrastructure handoff for downstream `azure.ai.agent` deployment. The module validates immutable image digests, selects a configured Foundry project, prepares `AcrPull` for the project managed identity when using the module-managed registry, and returns network and private-build inputs. The landing zone does not create the downstream data-plane agent identity or agent version.
+
+This handoff currently supports only the standalone network-isolated topology. Public standalone Foundry, hub-spoke, Bing connections, automatic Cosmos DB data-plane role assignments, existing-registry role creation, and ACR Task agent-pool deployment are not implemented. Consumers remain responsible for private endpoint, DNS, and VNet-internal build connectivity when supplying an existing registry.
