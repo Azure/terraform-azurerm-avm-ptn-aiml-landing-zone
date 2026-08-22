@@ -6,6 +6,7 @@ module "search_service" {
   location                     = azurerm_resource_group.this.location
   name                         = local.ks_ai_search_name
   resource_group_name          = azurerm_resource_group.this.name
+  allowed_ips                  = var.ks_ai_search_definition.allowed_ips
   diagnostic_settings          = local.ks_ai_search_diagnostic_settings
   enable_telemetry             = var.enable_telemetry # see variables.tf
   local_authentication_enabled = var.ks_ai_search_definition.local_authentication_enabled

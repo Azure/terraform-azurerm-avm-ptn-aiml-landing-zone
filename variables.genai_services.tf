@@ -8,6 +8,7 @@ variable "genai_app_configuration_definition" {
     deploy                        = optional(bool, true)
     name                          = optional(string)
     local_auth_enabled            = optional(bool, false)
+    public_network_access_enabled = optional(bool, false)
     purge_protection_enabled      = optional(bool, true)
     sku                           = optional(string, "standard")
     soft_delete_retention_in_days = optional(number, 7)
@@ -46,6 +47,7 @@ Configuration object for the Azure App Configuration service to be created for G
 - `deploy` - (Optional) Whether to deploy the App Configuration store. Default is true.
 - `name` - (Optional) The name of the App Configuration store. If not provided, a name will be generated.
 - `local_auth_enabled` - (Optional) Whether local authentication is enabled. Default is false.
+- `public_network_access_enabled` - (Optional) Whether public network access is enabled. Default is false. Azure App Configuration exposes no IP-based network ACLs, so access is restricted through the private endpoint this module creates.
 - `purge_protection_enabled` - (Optional) Whether purge protection is enabled. Default is true.
 - `sku` - (Optional) The SKU of the App Configuration store. Default is "standard".
 - `soft_delete_retention_in_days` - (Optional) The retention period in days for soft delete. Default is 7.
@@ -83,7 +85,15 @@ variable "genai_container_registry_definition" {
     sku                           = optional(string, "Premium")
     zone_redundancy_enabled       = optional(bool, true)
     public_network_access_enabled = optional(bool, false)
-    enable_diagnostic_settings    = optional(bool, true)
+    network_rule_bypass_option    = optional(string, "None")
+    network_rule_set = optional(object({
+      default_action = optional(string, "Deny")
+      ip_rule = optional(list(object({
+        action   = optional(string, "Allow")
+        ip_range = string
+      })), [])
+    }), null)
+    enable_diagnostic_settings = optional(bool, true)
     diagnostic_settings = optional(map(object({
       name                                     = optional(string, null)
       log_categories                           = optional(set(string), [])
@@ -117,6 +127,12 @@ Configuration object for the Azure Container Registry to be created for GenAI se
 - `sku` - (Optional) The SKU of the Container Registry. Default is "Premium".
 - `zone_redundancy_enabled` - (Optional) Whether zone redundancy is enabled. Default is true.
 - `public_network_access_enabled` - (Optional) Whether public network access is enabled. Default is false.
+- `network_rule_bypass_option` - (Optional) Whether trusted Azure services can access a network restricted Container Registry. Possible values are "None" and "AzureServices". Default is "None".
+- `network_rule_set` - (Optional) IP allowlist applied to the Container Registry. Requires the Premium SKU. Default is null, which leaves the registry firewall unconfigured.
+  - `default_action` - (Optional) Action taken when no rule matches. Possible values are "Allow" and "Deny". Default is "Deny".
+  - `ip_rule` - (Optional) List of allowed IP ranges. Default is [].
+    - `action` - (Optional) The rule action. Azure only permits "Allow". Default is "Allow".
+    - `ip_range` - The CIDR block allowed inbound access.
 - `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
 - `diagnostic_settings` - (Optional) Map of diagnostic settings configurations for the Container Registry. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
   - `name` - (Optional) The name of the diagnostic setting.
@@ -140,6 +156,15 @@ Configuration object for the Azure Container Registry to be created for GenAI se
   - `delegated_managed_identity_resource_id` - (Optional) Resource ID of the delegated managed identity.
   - `principal_type` - (Optional) Type of the principal (User, Group, ServicePrincipal).
 DESCRIPTION
+
+  validation {
+    condition     = contains(["None", "AzureServices"], var.genai_container_registry_definition.network_rule_bypass_option)
+    error_message = "The network_rule_bypass_option must be one of: 'None', 'AzureServices'."
+  }
+  validation {
+    condition     = var.genai_container_registry_definition.network_rule_set == null ? true : contains(["Allow", "Deny"], var.genai_container_registry_definition.network_rule_set.default_action)
+    error_message = "The network_rule_set.default_action must be one of: 'Allow', 'Deny'."
+  }
 }
 
 variable "genai_cosmosdb_definition" {
@@ -170,6 +195,18 @@ variable "genai_cosmosdb_definition" {
     local_authentication_disabled    = optional(bool, true)
     partition_merge_enabled          = optional(bool, false)
     multiple_write_locations_enabled = optional(bool, false)
+    # Default allowlist is the Azure portal plus global Azure datacenter source IPs: https://learn.microsoft.com/azure/cosmos-db/how-to-configure-firewall
+    ip_range_filter = optional(set(string), [
+      "168.125.123.255",
+      "170.0.0.0/24",
+      "0.0.0.0",
+      "104.42.195.92", "40.76.54.131", "52.176.6.30", "52.169.50.45", "52.187.184.26"
+    ])
+    network_acl_bypass_for_azure_services = optional(bool, true)
+    network_acl_bypass_resource_ids       = optional(set(string), [])
+    virtual_network_rules = optional(set(object({
+      subnet_id = string
+    })), [])
     analytical_storage_config = optional(object({
       schema_type = string
     }), null)
@@ -228,6 +265,11 @@ Configuration object for the Azure Cosmos DB account to be created for GenAI ser
 - `local_authentication_disabled` - (Optional) Whether local authentication is disabled. Default is true.
 - `partition_merge_enabled` - (Optional) Whether partition merge is enabled. Default is false.
 - `multiple_write_locations_enabled` - (Optional) Whether multiple write locations are enabled. Default is false.
+- `ip_range_filter` - (Optional) Set of IP addresses or CIDR ranges allowed to reach the Cosmos DB account. Defaults to the Azure portal and global Azure datacenter source IPs documented at https://learn.microsoft.com/azure/cosmos-db/how-to-configure-firewall. Set to `[]` to remove the allowlist.
+- `network_acl_bypass_for_azure_services` - (Optional) Whether Azure services can bypass the network ACLs. Default is true.
+- `network_acl_bypass_resource_ids` - (Optional) Set of resource IDs allowed to bypass the network ACLs. Default is [].
+- `virtual_network_rules` - (Optional) Set of subnets allowed to reach the Cosmos DB account. Default is [].
+  - `subnet_id` - The resource ID of the subnet to allow.
 - `analytical_storage_config` - (Optional) Analytical storage configuration.
   - `schema_type` - The schema type for analytical storage.
 - `consistency_policy` - (Optional) Consistency policy configuration.
@@ -355,6 +397,16 @@ variable "genai_storage_account_definition" {
     access_tier                   = optional(string, "Hot")
     public_network_access_enabled = optional(bool, false)
     shared_access_key_enabled     = optional(bool, true)
+    network_rules = optional(object({
+      bypass                     = optional(set(string), ["AzureServices"])
+      default_action             = optional(string, "Deny")
+      ip_rules                   = optional(set(string), [])
+      virtual_network_subnet_ids = optional(set(string), [])
+      private_link_access = optional(list(object({
+        endpoint_resource_id = string
+        endpoint_tenant_id   = optional(string)
+      })), null)
+    }), {})
     role_assignments = optional(map(object({
       role_definition_id_or_name             = string
       principal_id                           = string
@@ -395,6 +447,14 @@ Configuration object for the Azure Storage Account to be created for GenAI servi
 - `access_tier` - (Optional) The access tier for the storage account. Default is "Hot".
 - `public_network_access_enabled` - (Optional) Whether public network access is enabled. Default is false.
 - `shared_access_key_enabled` - (Optional) Whether shared access keys are enabled. Default is true.
+- `network_rules` - (Optional) Storage account firewall configuration. Defaults to `{}`, which denies public traffic while still allowing trusted Azure services. Set to `null` to remove all network rules, which leaves the account reachable from any public network.
+  - `bypass` - (Optional) Traffic permitted to bypass the rules. Any combination of "Logging", "Metrics", "AzureServices" or "None". Default is ["AzureServices"].
+  - `default_action` - (Optional) Action taken when no rule matches. Possible values are "Allow" and "Deny". Default is "Deny".
+  - `ip_rules` - (Optional) Set of public IPv4 addresses or CIDR ranges allowed access. RFC 1918 private ranges are not permitted by Azure. Default is [].
+  - `virtual_network_subnet_ids` - (Optional) Set of subnet resource IDs allowed access. Default is [].
+  - `private_link_access` - (Optional) List of resource access rules granting private link access. Default is null.
+    - `endpoint_resource_id` - The resource ID granted access.
+    - `endpoint_tenant_id` - (Optional) The tenant ID of the resource. Defaults to the current tenant.
 - `role_assignments` - (Optional) Map of role assignments to create on the Storage Account. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
   - `role_definition_id_or_name` - The role definition ID or name to assign.
   - `principal_id` - The principal ID to assign the role to.
@@ -406,4 +466,13 @@ Configuration object for the Azure Storage Account to be created for GenAI servi
   - `principal_type` - (Optional) Type of the principal (User, Group, ServicePrincipal).
 - `tags` - (Optional) Map of tags to assign to the Storage Account.
 DESCRIPTION
+
+  validation {
+    condition     = var.genai_storage_account_definition.network_rules == null ? true : contains(["Allow", "Deny"], var.genai_storage_account_definition.network_rules.default_action)
+    error_message = "The network_rules.default_action must be one of: 'Allow', 'Deny'."
+  }
+  validation {
+    condition     = var.genai_storage_account_definition.network_rules == null ? true : length(setsubtract(var.genai_storage_account_definition.network_rules.bypass, ["Logging", "Metrics", "AzureServices", "None"])) == 0
+    error_message = "Each network_rules.bypass entry must be one of: 'Logging', 'Metrics', 'AzureServices', 'None'."
+  }
 }

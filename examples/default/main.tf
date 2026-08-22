@@ -248,11 +248,18 @@ module "test" {
     }
   }
   genai_storage_account_definition = {
+    # Rules are stored but only enforced once public_network_access_enabled is true.
+    network_rules = {
+      bypass         = ["AzureServices"]
+      default_action = "Deny"
+      ip_rules       = [data.http.ip.response_body]
+    }
   }
   jumpvm_definition = {
     sku = module.vm_sku.sku
   }
   ks_ai_search_definition = {
+    allowed_ips                = [data.http.ip.response_body]
     enable_diagnostic_settings = false
   }
   private_dns_zones = {
