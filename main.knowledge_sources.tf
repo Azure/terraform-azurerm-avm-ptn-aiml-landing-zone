@@ -16,6 +16,7 @@ module "search_service" {
       private_dns_zone_resource_ids = var.private_dns_zones.azure_policy_pe_zone_linking_enabled ? null : (!var.flag_platform_landing_zone ? [module.private_dns_zones.ai_search_zone.resource_id] : [local.private_dns_zones_existing.ai_search_zone.resource_id])
       subnet_resource_id            = local.subnet_ids["PrivateEndpointSubnet"]
     }
+
   }
   public_network_access_enabled = var.ks_ai_search_definition.public_network_access_enabled
   replica_count                 = var.ks_ai_search_definition.replica_count
@@ -23,6 +24,36 @@ module "search_service" {
   semantic_search_sku           = var.ks_ai_search_definition.semantic_search_sku
   sku                           = var.ks_ai_search_definition.sku
   tags                          = merge(local.tags, var.ks_ai_search_definition.tags != null ? var.ks_ai_search_definition.tags : {})
+
+  depends_on = [module.private_dns_zones, module.hub_vnet_peering]
+}
+
+module "speech_service" {
+  source  = "Azure/avm-res-cognitiveservices-account/azurerm"
+  version = "0.11.1"
+  count   = var.ks_speech_service_definition.deploy ? 1 : 0
+
+  kind                  = "SpeechServices"
+  location              = local.ks_speech_service_location
+  name                  = local.ks_speech_service_name
+  parent_id             = azurerm_resource_group.this.id
+  sku_name              = var.ks_speech_service_definition.sku
+  custom_subdomain_name = local.ks_speech_service_name
+  diagnostic_settings   = local.ks_speech_diagnostic_settings
+  enable_telemetry      = var.enable_telemetry
+  local_auth_enabled    = var.ks_speech_service_definition.local_authentication_enabled
+  managed_identities    = { system_assigned = true }
+  network_acls          = { default_action = "Deny", bypass = "AzureServices" }
+  private_endpoints = {
+    primary = {
+      private_dns_zone_resource_ids = var.private_dns_zones.azure_policy_pe_zone_linking_enabled ? [] : [!var.flag_platform_landing_zone ? module.private_dns_zones.ai_foundry_cognitive_services_zone.resource_id : local.private_dns_zones_existing.ai_foundry_cognitive_services_zone.resource_id]
+      subnet_resource_id            = local.subnet_ids["PrivateEndpointSubnet"]
+    }
+  }
+  private_endpoints_manage_dns_zone_group = !var.private_dns_zones.azure_policy_pe_zone_linking_enabled
+  public_network_access_enabled           = var.ks_speech_service_definition.public_network_access_enabled
+  role_assignments                        = local.ks_speech_role_assignments
+  tags                                    = merge(local.tags, var.ks_speech_service_definition.tags != null ? var.ks_speech_service_definition.tags : {})
 
   depends_on = [module.private_dns_zones, module.hub_vnet_peering]
 }

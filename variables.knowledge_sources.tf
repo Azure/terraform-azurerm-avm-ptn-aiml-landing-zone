@@ -96,3 +96,61 @@ Configuration object for the Bing Grounding service to be created as part of the
 - `tags` - (Optional) Map of tags to assign to the Bing Grounding service.
 DESCRIPTION
 }
+
+variable "ks_speech_service_definition" {
+  type = object({
+    deploy                           = optional(bool, false)
+    name                             = optional(string)
+    location                         = optional(string)
+    sku                              = optional(string, "S0")
+    public_network_access_enabled    = optional(bool, false)
+    local_authentication_enabled     = optional(bool, false)
+    assign_deployment_principal_rbac = optional(bool, true)
+    enable_diagnostic_settings       = optional(bool, true)
+    diagnostic_settings = optional(map(object({
+      name                                     = optional(string, null)
+      log_categories                           = optional(set(string), [])
+      log_groups                               = optional(set(string), ["allLogs"])
+      metric_categories                        = optional(set(string), ["AllMetrics"])
+      log_analytics_destination_type           = optional(string, "Dedicated")
+      workspace_resource_id                    = optional(string, null)
+      storage_account_resource_id              = optional(string, null)
+      event_hub_authorization_rule_resource_id = optional(string, null)
+      event_hub_name                           = optional(string, null)
+      marketplace_partner_resource_id          = optional(string, null)
+    })), {})
+    role_assignments = optional(map(object({
+      role_definition_id_or_name             = string
+      principal_id                           = string
+      description                            = optional(string, null)
+      skip_service_principal_aad_check       = optional(bool, false)
+      condition                              = optional(string, null)
+      condition_version                      = optional(string, null)
+      delegated_managed_identity_resource_id = optional(string, null)
+      principal_type                         = optional(string, null)
+    })), {})
+    tags = optional(map(string))
+  })
+  default     = {}
+  description = <<DESCRIPTION
+Configuration for an optional Azure AI Speech account.
+
+- `deploy` - (Optional) Deploy Speech. Default is false.
+- `name` - (Optional) Account and custom subdomain name.
+- `location` - (Optional) Azure region. Defaults to the landing-zone region.
+- `sku` - (Optional) Speech SKU. The network-isolated configuration requires "S0", which is the default.
+- `public_network_access_enabled` - (Optional) Enable public network access. Default is false.
+- `local_authentication_enabled` - (Optional) Enable key-based local authentication. Default is false.
+- `assign_deployment_principal_rbac` - (Optional) Assign Cognitive Services Contributor and Cognitive Services User to the deployment principal. Default is true.
+- `enable_diagnostic_settings` - (Optional) Enable automatic diagnostics to the effective Log Analytics workspace. Default is true.
+- `diagnostic_settings` - (Optional) Explicit diagnostic settings, which take precedence over the automatic setting.
+- `role_assignments` - (Optional) Additional account-scoped role assignments for workload identities.
+- `tags` - (Optional) Account tags.
+DESCRIPTION
+  nullable    = false
+
+  validation {
+    condition     = var.ks_speech_service_definition.sku == "S0"
+    error_message = "`ks_speech_service_definition.sku` must be \"S0\" because Azure AI Speech private endpoints do not support the F0 tier."
+  }
+}
