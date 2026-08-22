@@ -182,6 +182,10 @@ module "test" {
       }
     }
   }
+  hosted_agent_definition = {
+    prepare     = true
+    project_key = "project_1"
+  }
   apim_definition = {
     publisher_email = "DoNotReply@exampleEmail.com"
     publisher_name  = "Azure API Management"
