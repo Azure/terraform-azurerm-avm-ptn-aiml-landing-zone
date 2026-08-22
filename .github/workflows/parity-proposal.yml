@@ -1,0 +1,51 @@
+name: Parity proposal
+
+on:
+  repository_dispatch:
+    types:
+      - parity-proposal-requested
+
+permissions:
+  contents: read
+
+concurrency:
+  group: parity-proposal-${{ github.event.client_payload.handoffId }}
+  cancel-in-progress: false
+
+jobs:
+  prepare-proposal:
+    name: Validate handoff and reconcile proposal
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: read
+      copilot-requests: write
+    steps:
+      - name: Check out trusted receiver
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Validate handoff and reconcile proposal
+        id: proposal
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          python .github/scripts/parity_proposal.py receive
+          --event "$GITHUB_EVENT_PATH"
+          --repository "$GITHUB_REPOSITORY"
+          --output "$GITHUB_OUTPUT"
+          --summary "$GITHUB_STEP_SUMMARY"
+
+      - name: Report proposal
+        env:
+          PROPOSAL_URL: ${{ steps.proposal.outputs.proposal_url }}
+          TRACKER_URL: ${{ steps.proposal.outputs.tracker_url }}
+        run: |
+          if [[ -n "$PROPOSAL_URL" ]]; then
+            echo "Proposal: $PROPOSAL_URL"
+          else
+            echo "Proposal request: $TRACKER_URL"
+          fi
