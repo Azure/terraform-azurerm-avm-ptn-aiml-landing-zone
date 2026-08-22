@@ -198,6 +198,97 @@ variable "genai_cosmosdb_definition" {
       exposed_headers    = set(string)
       max_age_in_seconds = optional(number, null)
     }), null)
+    sql_databases = optional(map(object({
+      name       = string
+      throughput = optional(number, null)
+      autoscale_settings = optional(object({
+        max_throughput = number
+      }), null)
+      containers = optional(map(object({
+        name                   = string
+        partition_key_paths    = list(string)
+        partition_key_version  = optional(number, 2)
+        throughput             = optional(number, null)
+        default_ttl            = optional(number, null)
+        analytical_storage_ttl = optional(number, null)
+        unique_keys = optional(list(object({
+          paths = set(string)
+        })), [])
+        autoscale_settings = optional(object({
+          max_throughput = number
+        }), null)
+        conflict_resolution_policy = optional(object({
+          mode                          = string
+          conflict_resolution_path      = optional(string, null)
+          conflict_resolution_procedure = optional(string, null)
+        }), null)
+        indexing_policy = optional(object({
+          indexing_mode = string
+          included_paths = optional(set(object({
+            path = string
+          })), [])
+          excluded_paths = optional(set(object({
+            path = string
+          })), [])
+          composite_indexes = optional(set(object({
+            indexes = set(object({
+              path  = string
+              order = string
+            }))
+          })), [])
+          spatial_indexes = optional(set(object({
+            path = string
+          })), [])
+        }), null)
+      })), {})
+      })), {
+      application = {
+        name = "cosmosdb"
+        containers = {
+          conversations = {
+            name                = "conversations"
+            partition_key_paths = ["/principal_id"]
+            default_ttl         = -1
+            indexing_policy = {
+              indexing_mode = "consistent"
+              included_paths = [{
+                path = "/*"
+              }]
+              composite_indexes = [
+                {
+                  indexes = [
+                    {
+                      path  = "/isDeleted"
+                      order = "Ascending"
+                    },
+                    {
+                      path  = "/_ts"
+                      order = "Descending"
+                    }
+                  ]
+                },
+                {
+                  indexes = [
+                    {
+                      path  = "/isDeleted"
+                      order = "Ascending"
+                    },
+                    {
+                      path  = "/name"
+                      order = "Ascending"
+                    },
+                    {
+                      path  = "/_ts"
+                      order = "Descending"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    })
     tags = optional(map(string))
   })
   default     = {}
@@ -250,6 +341,21 @@ Configuration object for the Azure Cosmos DB account to be created for GenAI ser
   - `allowed_origins` - Set of allowed origins.
   - `exposed_headers` - Set of exposed headers.
   - `max_age_in_seconds` - (Optional) Maximum age in seconds for CORS.
+- `sql_databases` - (Optional) SQL databases and containers to create. The default creates the `cosmosdb` database and the `conversations` container with partition key `/principal_id`, infinite TTL, and the source landing zone's composite indexes.
+  - `name` - Database name.
+  - `throughput` - (Optional) Manual database throughput.
+  - `autoscale_settings.max_throughput` - (Optional) Maximum autoscale throughput.
+  - `containers` - (Optional) SQL containers keyed by an arbitrary map key.
+    - `name` - Container name.
+    - `partition_key_paths` - Partition key paths.
+    - `partition_key_version` - (Optional) Partition key version. Default is 2.
+    - `throughput` - (Optional) Manual container throughput.
+    - `default_ttl` - (Optional) Default time to live. The parity default is -1.
+    - `analytical_storage_ttl` - (Optional) Analytical-store time to live.
+    - `unique_keys` - (Optional) Unique key paths.
+    - `autoscale_settings.max_throughput` - (Optional) Maximum autoscale throughput.
+    - `conflict_resolution_policy` - (Optional) Conflict-resolution mode and path or procedure.
+    - `indexing_policy` - (Optional) Indexing mode, included/excluded paths, composite indexes, and spatial indexes.
 - `tags` - (Optional) Map of tags to assign to the Cosmos DB account.
 DESCRIPTION
 }
@@ -365,10 +471,40 @@ variable "genai_storage_account_definition" {
       delegated_managed_identity_resource_id = optional(string, null)
       principal_type                         = optional(string, null)
     })), {})
+    containers = optional(map(object({
+      name                           = string
+      public_access                  = optional(string, "None")
+      metadata                       = optional(map(string))
+      default_encryption_scope       = optional(string)
+      deny_encryption_scope_override = optional(bool)
+      enable_nfs_v3_all_squash       = optional(bool)
+      enable_nfs_v3_root_squash      = optional(bool)
+      immutable_storage_with_versioning = optional(object({
+        enabled = bool
+      }))
+      role_assignments = optional(map(object({
+        role_definition_id_or_name             = string
+        principal_id                           = string
+        principal_type                         = optional(string, null)
+        description                            = optional(string, null)
+        skip_service_principal_aad_check       = optional(bool, false)
+        condition                              = optional(string, null)
+        condition_version                      = optional(string, null)
+        delegated_managed_identity_resource_id = optional(string, null)
+      })), {})
+      timeouts = optional(object({
+        create = optional(string)
+        delete = optional(string)
+        read   = optional(string)
+        update = optional(string)
+      }))
+      })), {
+      documents = {
+        name          = "documents"
+        public_access = "None"
+      }
+    })
     tags = optional(map(string))
-
-    #TODO:
-    # Implement subservice passthrough here
   })
   default     = {}
   description = <<DESCRIPTION
@@ -395,6 +531,17 @@ Configuration object for the Azure Storage Account to be created for GenAI servi
 - `access_tier` - (Optional) The access tier for the storage account. Default is "Hot".
 - `public_network_access_enabled` - (Optional) Whether public network access is enabled. Default is false.
 - `shared_access_key_enabled` - (Optional) Whether shared access keys are enabled. Default is true.
+- `containers` - (Optional) Blob containers to create. The default creates a private `documents` container.
+  - `name` - Container name.
+  - `public_access` - (Optional) Public access level. Default is "None".
+  - `metadata` - (Optional) Container metadata.
+  - `default_encryption_scope` - (Optional) Default encryption scope.
+  - `deny_encryption_scope_override` - (Optional) Whether clients may override the encryption scope.
+  - `enable_nfs_v3_all_squash` - (Optional) Whether NFSv3 all squash is enabled.
+  - `enable_nfs_v3_root_squash` - (Optional) Whether NFSv3 root squash is enabled.
+  - `immutable_storage_with_versioning` - (Optional) Immutable storage configuration.
+  - `role_assignments` - (Optional) Container-scoped role assignments.
+  - `timeouts` - (Optional) Container operation timeouts.
 - `role_assignments` - (Optional) Map of role assignments to create on the Storage Account. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
   - `role_definition_id_or_name` - The role definition ID or name to assign.
   - `principal_id` - The principal ID to assign the role to.
