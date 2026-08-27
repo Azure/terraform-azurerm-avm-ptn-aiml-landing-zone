@@ -38,8 +38,8 @@ locals {
   } : {})
   genai_container_registry_name = try(var.genai_container_registry_definition.name, null) != null ? var.genai_container_registry_definition.name : (var.name_prefix != null ? "${var.name_prefix}genaicr${random_string.name_suffix.result}" : "genaicr${random_string.name_suffix.result}")
   genai_container_registry_role_assignments = merge(
-    local.genai_container_registry_default_role_assignments,
-    var.genai_container_registry_definition.role_assignments
+    var.genai_container_registry_definition.role_assignments,
+    local.genai_container_registry_default_role_assignments
   )
   genai_cosmosdb_diagnostic_settings = var.genai_cosmosdb_definition.enable_diagnostic_settings ? (length(var.genai_cosmosdb_definition.diagnostic_settings) > 0 ? var.genai_cosmosdb_definition.diagnostic_settings : local.genai_cosmosdb_diagnostic_settings_inner) : {}
   genai_cosmosdb_diagnostic_settings_inner = (local.deploy_diagnostics_settings ? {
