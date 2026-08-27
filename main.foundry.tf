@@ -26,10 +26,24 @@ module "foundry_ptn" {
 resource "azapi_resource_action" "purge_ai_foundry" {
   count = var.ai_foundry_definition.purge_on_destroy ? 1 : 0
 
-  method      = "DELETE"
-  resource_id = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/providers/Microsoft.CognitiveServices/locations/${azurerm_resource_group.this.location}/resourceGroups/${azurerm_resource_group.this.name}/deletedAccounts/${local.ai_foundry_name}"
-  type        = "Microsoft.CognitiveServices/locations/resourceGroups/deletedAccounts@2021-04-30"
-  when        = "destroy"
+  method                 = "DELETE"
+  resource_id            = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/providers/Microsoft.CognitiveServices/locations/${azurerm_resource_group.this.location}/resourceGroups/${azurerm_resource_group.this.name}/deletedAccounts/${local.ai_foundry_name}"
+  type                   = var.resource_types.cognitiveservices_locations_resource_groups_deleted_accounts
+  headers                = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  response_export_values = []
+  retry                  = var.retry
+  when                   = "destroy"
+
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
+
+    content {
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
+    }
+  }
 
   depends_on = [time_sleep.purge_ai_foundry_cooldown]
 }
