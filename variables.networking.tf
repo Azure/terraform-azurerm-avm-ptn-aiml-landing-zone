@@ -37,9 +37,10 @@ variable "vnet_definition" {
       principal_type                         = optional(string, null)
     })), {})
     subnets = optional(map(object({
-      enabled        = optional(bool, true)
-      name           = optional(string)
-      address_prefix = optional(string)
+      enabled                           = optional(bool, true)
+      name                              = optional(string)
+      address_prefix                    = optional(string)
+      private_endpoint_network_policies = optional(string)
       ipam_pools = optional(list(object({
         pool_id       = string
         prefix_length = string
@@ -104,6 +105,7 @@ Configuration object for the Virtual Network (VNet) to be deployed.
   - `enabled` - (Optional) Whether the subnet is enabled. Default is true.
   - `name` - (Optional) The name of the subnet. If not provided, a name will be generated.
   - `address_prefix` - (Optional) The address prefix for the subnet in CIDR notation.
+  - `private_endpoint_network_policies` - (Optional) Private endpoint network policy mode. Supported values are `Disabled`, `Enabled`, `NetworkSecurityGroupEnabled`, and `RouteTableEnabled`.
   - `ipam_pools` - (Optional) List of IPAM pools to associate with the subnet. If present, the address_prefix will be ignored and IPAM pools will be used for address allocation.
     - `pool_id` - The ID of the IPAM pool.
     - `prefix_length` - The prefix length to request from the IPAM pool.
@@ -129,9 +131,10 @@ DESCRIPTION
 
 variable "app_gateway_definition" {
   type = object({
-    deploy       = optional(bool, false)
-    name         = optional(string)
-    http2_enable = optional(bool, true)
+    deploy                     = optional(bool, false)
+    name                       = optional(string)
+    http2_enable               = optional(bool, true)
+    allowed_source_ip_prefixes = optional(set(string), [])
     authentication_certificate = optional(map(object({
       name = string
       data = string
@@ -348,6 +351,7 @@ Configuration object for the Azure Application Gateway to be deployed.
 - `deploy` - (Optional) Deploy the application gateway. Default is true.
 - `name` - (Optional) The name of the Application Gateway. If not provided, a name will be generated.
 - `http2_enable` - (Optional) Whether HTTP/2 is enabled. Default is true.
+- `allowed_source_ip_prefixes` - (Optional) Source IP prefixes allowed to reach the Application Gateway frontend on ports 80 and 443. An empty set preserves the existing unrestricted rule.
 - `authentication_certificate` - (Optional) Map of authentication certificates for backend authentication.
   - `name` - The name of the authentication certificate.
   - `data` - The base64 encoded certificate data.
@@ -483,6 +487,7 @@ variable "bastion_definition" {
     deploy              = optional(bool, true)
     name                = optional(string)
     sku                 = optional(string, "Standard")
+    tunneling_enabled   = optional(bool, false)
     tags                = optional(map(string))
     zones               = optional(list(string), ["1", "2", "3"])
     resource_group_name = optional(string)
@@ -494,6 +499,7 @@ Configuration object for the Azure Bastion service to be deployed.
 - `deploy` - (Optional) Deploy the bastion service? Default is true.
 - `name` - (Optional) The name of the Bastion service. If not provided, a name will be generated.
 - `sku` - (Optional) The SKU of the Bastion service. Default is "Standard".
+- `tunneling_enabled` - (Optional) Whether native client SSH and RDP tunneling is enabled. Default is false.
 - `tags` - (Optional) Map of tags to assign to the Bastion service.
 - `zones` - (Optional) List of availability zones for the Bastion service. Default is ["1", "2", "3"].
 - `resource_group_name` - (Optional) The name of the resource group to deploy the Bastion service into. If not provided, the module's resource group will be used.
@@ -530,6 +536,14 @@ variable "firewall_definition" {
       delegated_managed_identity_resource_id = optional(string, null)
       principal_type                         = optional(string, null)
     })), {})
+    private_ip_address      = optional(string)
+    route_table_resource_id = optional(string)
+    routes = optional(map(object({
+      name                   = string
+      address_prefix         = string
+      next_hop_type          = string
+      next_hop_in_ip_address = optional(string)
+    })), {})
     tags                = optional(map(string))
     resource_group_name = optional(string)
   })
@@ -563,9 +577,17 @@ Configuration object for the Azure Firewall to be deployed.
   - `condition_version` - (Optional) Version of the condition.
   - `delegated_managed_identity_resource_id` - (Optional) Resource ID of the delegated managed identity.
   - `principal_type` - (Optional) Type of the principal (User, Group, ServicePrincipal).
+- `private_ip_address` - (Optional) Private IP address of an existing or externally managed firewall to use as the default route next hop.
+- `route_table_resource_id` - (Optional) Resource ID of an existing route table to associate with workload subnets instead of creating the module route table.
+- `routes` - (Optional) Additional routes to add to the module-created route table. These are ignored when `route_table_resource_id` is set.
 - `tags` - (Optional) Map of tags to assign to the Azure Firewall.
 - `resource_group_name` - (Optional) The name of the resource group to deploy the Azure Firewall into. If not provided, the module's resource group will be used.
 DESCRIPTION
+
+  validation {
+    condition     = var.firewall_definition.route_table_resource_id == null || can(provider::azapi::parse_resource_id("Microsoft.Network/routeTables", var.firewall_definition.route_table_resource_id))
+    error_message = "firewall_definition.route_table_resource_id must be a valid route table resource ID."
+  }
 }
 
 #TODO: Add a variable for the firewall policy definition.
@@ -598,6 +620,78 @@ Configuration object for the Azure Firewall Policy to be deployed.
   - `protocols` - List of protocols for the rule (TCP/UDP/ICMP/Any).
 - `resource_group_name` - (Optional) The name of the resource group to deploy the Firewall Policy into. If not provided, the module's resource group will be used.
 DESCRIPTION
+}
+
+variable "nat_gateway_definition" {
+  type = object({
+    deploy                  = optional(bool, false)
+    resource_id             = optional(string)
+    name                    = optional(string)
+    resource_group_name     = optional(string)
+    idle_timeout_in_minutes = optional(number, 4)
+    subnet_keys             = optional(set(string), ["JumpboxSubnet"])
+    zones                   = optional(set(string), [])
+    tags                    = optional(map(string))
+    resource_types = optional(object({
+      network_nat_gateways        = optional(string)
+      network_public_ip_addresses = optional(string)
+    }), {})
+    retry = optional(object({
+      error_message_regex  = list(string)
+      interval_seconds     = optional(number)
+      max_interval_seconds = optional(number)
+    }))
+    timeouts = optional(object({
+      create = optional(string)
+      delete = optional(string)
+      read   = optional(string)
+      update = optional(string)
+    }))
+    ignore_body_changes = optional(object({
+      network_nat_gateways        = optional(list(string), [])
+      network_public_ip_addresses = optional(list(string), [])
+    }), {})
+  })
+  default     = {}
+  description = <<DESCRIPTION
+Configuration object for optional standalone NAT Gateway egress.
+
+- `deploy` - (Optional) Whether this module creates a NAT Gateway. Default is false.
+- `resource_id` - (Optional) Resource ID of an existing NAT Gateway to associate instead of creating one.
+- `name` - (Optional) Name of the created NAT Gateway.
+- `resource_group_name` - (Optional) Resource group for the created NAT Gateway. Defaults to the module resource group.
+- `idle_timeout_in_minutes` - (Optional) Idle timeout for the created NAT Gateway. Default is 4.
+- `subnet_keys` - (Optional) Keys from `vnet_definition.subnets` or the built-in subnet set that receive the NAT Gateway association. Default is `["JumpboxSubnet"]`.
+- `zones` - (Optional) Zero or one availability zone for the created Standard NAT Gateway. Defaults to no explicit NAT zone and a zone-redundant Standard public IP; when one zone is set, the public IP uses the same zone.
+- `tags` - (Optional) Tags for the created NAT Gateway and public IP.
+- `resource_types` - (Optional) AzAPI resource type and API-version overrides passed to the focused NAT Gateway submodule.
+- `retry` - (Optional) Retry configuration applied to the NAT Gateway and public IP AzAPI resources.
+- `timeouts` - (Optional) Per-operation timeouts applied to the NAT Gateway and public IP AzAPI resources.
+- `ignore_body_changes` - (Optional) Body-relative dot-notation paths ignored for each AzAPI resource. Ignored configuration is not sent to Azure until its path is removed, and changes take effect only after apply.
+
+NAT Gateway creation and association are disabled when `flag_platform_landing_zone` is true. Setting `resource_id` takes precedence over `deploy`.
+DESCRIPTION
+
+  validation {
+    condition     = var.nat_gateway_definition.resource_id == null || can(provider::azapi::parse_resource_id("Microsoft.Network/natGateways", var.nat_gateway_definition.resource_id))
+    error_message = "nat_gateway_definition.resource_id must be a valid NAT Gateway resource ID."
+  }
+  validation {
+    condition     = var.nat_gateway_definition.idle_timeout_in_minutes >= 4 && var.nat_gateway_definition.idle_timeout_in_minutes <= 120
+    error_message = "nat_gateway_definition.idle_timeout_in_minutes must be between 4 and 120."
+  }
+  validation {
+    condition     = length(var.nat_gateway_definition.zones) <= 1 && alltrue([for zone in var.nat_gateway_definition.zones : contains(["1", "2", "3"], zone)])
+    error_message = "nat_gateway_definition.zones must be empty or contain exactly one of \"1\", \"2\", or \"3\" for the Standard NAT Gateway SKU."
+  }
+  validation {
+    condition = alltrue(flatten([
+      for paths in values(var.nat_gateway_definition.ignore_body_changes) : [
+        for path in paths : trimspace(path) != ""
+      ]
+    ]))
+    error_message = "nat_gateway_definition.ignore_body_changes paths must be non-empty strings."
+  }
 }
 
 variable "nsgs_definition" {
@@ -664,6 +758,7 @@ variable "private_dns_zones" {
   type = object({
     azure_policy_pe_zone_linking_enabled      = optional(bool, true)
     existing_zones_resource_group_resource_id = optional(string)
+    existing_zone_resource_ids                = optional(map(string), {})
     allow_internet_resolution_fallback        = optional(bool, false)
     network_links = optional(map(object({
       vnetlinkname     = string
@@ -675,14 +770,99 @@ variable "private_dns_zones" {
   description = <<DESCRIPTION
 Configuration object for Private DNS Zones and their network links.
 
-- `azure_policy_pe_zone_linking_enabled` - (Optional) Whether Azure Policy is used to enable private endpoint dns zone linking when using a platform landing zone (platform landing zone flag = true). Default is true.
-- `existing_zones_resource_group_resource_id` - (Optional) Resource group resource id where existing Private DNS Zones are located.
+- `azure_policy_pe_zone_linking_enabled` - (Optional) Whether Azure Policy manages private endpoint DNS zone groups. When true, private endpoint consumers do not attach DNS zone groups. Default is true.
+- `existing_zones_resource_group_resource_id` - (Optional) Resource group resource ID containing the complete canonical set of existing Private DNS Zones. In standalone mode the module creates links from these zones to the managed or BYO virtual network. In platform landing-zone mode the platform owns those links.
+- `existing_zone_resource_ids` - (Optional) Granular existing Private DNS zone resource IDs keyed by canonical zone key. Entries override resource-group-derived IDs. In standalone mode the module links supplied zones to the managed or BYO virtual network; in platform landing-zone mode it does not create links.
 - `allow_internet_resolution_fallback` - (Optional) Whether to allow fallback to internet resolution for Private DNS Zone network links. Default is false.
 - `network_links` - (Optional) Map of network links to create for Private DNS Zones. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
   - `vnetlinkname` - The name of the virtual network link.
   - `vnetid` - The resource ID of the virtual network to link.
   - `resolutionPolicy` - (Optional) The resolution policy for the virtual network link. Default is "Default".
 DESCRIPTION
+
+  validation {
+    condition = alltrue([
+      for resource_id in values(var.private_dns_zones.existing_zone_resource_ids) :
+      can(provider::azapi::parse_resource_id("Microsoft.Network/privateDnsZones", resource_id))
+    ])
+    error_message = "Each private_dns_zones.existing_zone_resource_ids value must be a valid Private DNS zone resource ID."
+  }
+  validation {
+    condition     = var.private_dns_zones.existing_zones_resource_group_resource_id == null || can(provider::azapi::parse_resource_id("Microsoft.Resources/resourceGroups", var.private_dns_zones.existing_zones_resource_group_resource_id))
+    error_message = "private_dns_zones.existing_zones_resource_group_resource_id must be a valid resource group resource ID."
+  }
+  validation {
+    condition = length(setsubtract(
+      toset(keys(var.private_dns_zones.existing_zone_resource_ids)),
+      toset([
+        "ai_foundry_ai_services_zone",
+        "ai_foundry_cognitive_services_zone",
+        "ai_foundry_openai_zone",
+        "ai_search_zone",
+        "apim_zone",
+        "app_configuration_zone",
+        "container_registry_zone",
+        "cosmos_analytical_zone",
+        "cosmos_cassandra_zone",
+        "cosmos_gremlin_zone",
+        "cosmos_mongo_zone",
+        "cosmos_postgres_zone",
+        "cosmos_sql_zone",
+        "cosmos_table_zone",
+        "key_vault_zone",
+        "storage_blob_zone",
+        "storage_dlfs_zone",
+        "storage_file_zone",
+        "storage_queue_zone",
+        "storage_table_zone",
+        "storage_web_zone",
+      ])
+    )) == 0
+    error_message = "private_dns_zones.existing_zone_resource_ids contains an unsupported zone key."
+  }
+  validation {
+    condition = !var.flag_platform_landing_zone || var.private_dns_zones.existing_zones_resource_group_resource_id != null || length(setsubtract(
+      toset([
+        "ai_foundry_ai_services_zone",
+        "ai_foundry_cognitive_services_zone",
+        "ai_foundry_openai_zone",
+        "ai_search_zone",
+        "apim_zone",
+        "app_configuration_zone",
+        "container_registry_zone",
+        "cosmos_analytical_zone",
+        "cosmos_cassandra_zone",
+        "cosmos_gremlin_zone",
+        "cosmos_mongo_zone",
+        "cosmos_postgres_zone",
+        "cosmos_sql_zone",
+        "cosmos_table_zone",
+        "key_vault_zone",
+        "storage_blob_zone",
+        "storage_dlfs_zone",
+        "storage_file_zone",
+        "storage_queue_zone",
+        "storage_table_zone",
+        "storage_web_zone",
+      ]),
+      toset(keys(var.private_dns_zones.existing_zone_resource_ids))
+    )) == 0
+    error_message = "Platform landing-zone mode requires existing_zones_resource_group_resource_id or existing_zone_resource_ids entries for every canonical Private DNS zone."
+  }
+  validation {
+    condition = alltrue([
+      for link in values(var.private_dns_zones.network_links) :
+      can(provider::azapi::parse_resource_id("Microsoft.Network/virtualNetworks", link.vnetid))
+    ])
+    error_message = "Each private_dns_zones.network_links vnetid must be a valid virtual network resource ID."
+  }
+  validation {
+    condition = alltrue([
+      for link in values(var.private_dns_zones.network_links) :
+      contains(["Default", "NxDomainRedirect"], link.resolutionPolicy)
+    ])
+    error_message = "Each private_dns_zones.network_links resolutionPolicy must be \"Default\" or \"NxDomainRedirect\"."
+  }
 }
 
 variable "use_internet_routing" {

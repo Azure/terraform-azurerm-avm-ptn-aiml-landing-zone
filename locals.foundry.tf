@@ -9,9 +9,9 @@ locals {
         useMicrosoftManagedNetwork = false
       }]
       private_dns_zone_resource_ids = var.private_dns_zones.azure_policy_pe_zone_linking_enabled ? null : [
-        (!var.flag_platform_landing_zone ? module.private_dns_zones.ai_foundry_openai_zone.resource_id : local.private_dns_zones_existing.ai_foundry_openai_zone.resource_id),
-        (!var.flag_platform_landing_zone ? module.private_dns_zones.ai_foundry_ai_services_zone.resource_id : local.private_dns_zones_existing.ai_foundry_ai_services_zone.resource_id),
-        (!var.flag_platform_landing_zone ? module.private_dns_zones.ai_foundry_cognitive_services_zone.resource_id : local.private_dns_zones_existing.ai_foundry_cognitive_services_zone.resource_id)
+        local.private_dns_zone_resource_ids.ai_foundry_openai_zone,
+        local.private_dns_zone_resource_ids.ai_foundry_ai_services_zone,
+        local.private_dns_zone_resource_ids.ai_foundry_cognitive_services_zone
       ]
       private_endpoints_manage_dns_zone_group = var.private_dns_zones.azure_policy_pe_zone_linking_enabled ? false : var.ai_foundry_definition.ai_foundry.private_endpoints_manage_dns_zone_group
       tags                                    = merge(local.tags, var.ai_foundry_definition.ai_foundry.tags != null ? var.ai_foundry_definition.ai_foundry.tags : {})
@@ -19,14 +19,14 @@ locals {
   )
   foundry_ai_search_definition = { for key, value in var.ai_foundry_definition.ai_search_definition : key => merge(
     var.ai_foundry_definition.ai_search_definition[key], {
-      private_dns_zone_resource_id            = var.private_dns_zones.azure_policy_pe_zone_linking_enabled ? null : (!var.flag_platform_landing_zone ? module.private_dns_zones.ai_search_zone.resource_id : local.private_dns_zones_existing.ai_search_zone.resource_id)
+      private_dns_zone_resource_id            = var.private_dns_zones.azure_policy_pe_zone_linking_enabled ? null : local.private_dns_zone_resource_ids.ai_search_zone
       private_endpoints_manage_dns_zone_group = var.private_dns_zones.azure_policy_pe_zone_linking_enabled ? false : var.ai_foundry_definition.ai_search_definition[key].private_endpoints_manage_dns_zone_group
       tags                                    = merge(local.tags, value.tags != null ? value.tags : {})
     }
   ) }
   foundry_cosmosdb_definition = { for key, value in var.ai_foundry_definition.cosmosdb_definition : key => merge(
     var.ai_foundry_definition.cosmosdb_definition[key], {
-      private_dns_zone_resource_id            = var.private_dns_zones.azure_policy_pe_zone_linking_enabled ? null : (!var.flag_platform_landing_zone ? module.private_dns_zones.cosmos_sql_zone.resource_id : local.private_dns_zones_existing.cosmos_sql_zone.resource_id)
+      private_dns_zone_resource_id            = var.private_dns_zones.azure_policy_pe_zone_linking_enabled ? null : local.private_dns_zone_resource_ids.cosmos_sql_zone
       private_endpoints_manage_dns_zone_group = var.private_dns_zones.azure_policy_pe_zone_linking_enabled ? false : var.ai_foundry_definition.cosmosdb_definition[key].private_endpoints_manage_dns_zone_group
       tags                                    = merge(local.tags, value.tags != null ? value.tags : {})
     }
@@ -48,7 +48,7 @@ locals {
   } : {})
   foundry_key_vault_definition = { for key, value in var.ai_foundry_definition.key_vault_definition : key => merge(
     var.ai_foundry_definition.key_vault_definition[key], {
-      private_dns_zone_resource_id            = var.private_dns_zones.azure_policy_pe_zone_linking_enabled ? null : (!var.flag_platform_landing_zone ? module.private_dns_zones.key_vault_zone.resource_id : local.private_dns_zones_existing.key_vault_zone.resource_id)
+      private_dns_zone_resource_id            = var.private_dns_zones.azure_policy_pe_zone_linking_enabled ? null : local.private_dns_zone_resource_ids.key_vault_zone
       private_endpoints_manage_dns_zone_group = var.private_dns_zones.azure_policy_pe_zone_linking_enabled ? false : var.ai_foundry_definition.key_vault_definition[key].private_endpoints_manage_dns_zone_group
       tags                                    = merge(local.tags, value.tags != null ? value.tags : {})
     }
@@ -58,7 +58,7 @@ locals {
       endpoints = {
         for ek, ev in value.endpoints :
         ek => {
-          private_dns_zone_resource_id            = var.private_dns_zones.azure_policy_pe_zone_linking_enabled ? null : (!var.flag_platform_landing_zone ? module.private_dns_zones["storage_${lower(ek)}_zone"].resource_id : local.private_dns_zones_existing["storage_${lower(ek)}_zone"].resource_id)
+          private_dns_zone_resource_id            = var.private_dns_zones.azure_policy_pe_zone_linking_enabled ? null : local.private_dns_zone_resource_ids["storage_${lower(ek)}_zone"]
           private_endpoints_manage_dns_zone_group = var.private_dns_zones.azure_policy_pe_zone_linking_enabled ? false : var.ai_foundry_definition.storage_account_definition[key].endpoints[ek].private_endpoints_manage_dns_zone_group
           type                                    = lower(ek)
         }

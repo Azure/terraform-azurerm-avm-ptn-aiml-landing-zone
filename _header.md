@@ -13,6 +13,14 @@ Start from one of the deployable examples in this repository:
 
 Copy the example that best matches your environment, then replace `source = "../../"` with the registry source when deploying from your own configuration.
 
+## Networking controls
+
+Standalone deployments (`flag_platform_landing_zone = false`) can create an AzAPI-managed Standard NAT Gateway with a Standard static public IP, or reuse an existing NAT Gateway, and select the workload subnets that receive it. The NAT Gateway has no explicit availability zone by default, while its public IP is zone-redundant; set `nat_gateway_definition.zones` to a single zone when both resources must use that zone. They can also reuse an existing route table, supply an external firewall next hop, add custom routes, enable Bastion native-client tunneling, restrict Application Gateway ingress source prefixes, and supply individual existing Private DNS zone IDs.
+
+Platform landing zone behavior remains unchanged: the module does not create or associate the standalone NAT Gateway or route table when `flag_platform_landing_zone = true`. Reverse hub peering remains configurable through `vnet_definition.vnet_peering_configuration`; set `create_reverse_peering = false` when the hub-to-spoke peering is platform-owned.
+
+Private DNS zone ownership differs by deployment mode. In standalone mode, zones supplied through `private_dns_zones.existing_zone_resource_ids` or `existing_zones_resource_group_resource_id` remain externally owned, while this module creates their links to the managed or BYO VNet. In platform landing-zone mode, the platform owns both the existing zones and their VNet links, so this module does not create duplicate links. When `azure_policy_pe_zone_linking_enabled = true`, Azure Policy continues to own private endpoint DNS zone groups.
+
 ## Policy-restricted environments
 
 If your tenant policies enforce restrictions (for example, storage account key access controls), use the same `azurerm` provider settings as the examples:
