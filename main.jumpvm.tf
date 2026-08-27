@@ -10,7 +10,7 @@ module "jumpvm" {
   version = "0.20.0"
   count   = !var.flag_platform_landing_zone && var.jumpvm_definition.deploy ? 1 : 0
 
-  location = azurerm_resource_group.this.location
+  location = azapi_resource.this.location
   name     = local.jump_vm_name
   network_interfaces = {
     network_interface_1 = {
@@ -23,7 +23,7 @@ module "jumpvm" {
       }
     }
   }
-  resource_group_name = azurerm_resource_group.this.name
+  resource_group_name = azapi_resource.this.name
   zone                = length(local.region_zones) > 0 ? random_integer.zone_index[0].result : null
   account_credentials = {
     key_vault_configuration = {

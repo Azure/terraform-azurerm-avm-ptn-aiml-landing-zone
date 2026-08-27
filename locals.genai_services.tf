@@ -69,7 +69,7 @@ locals {
         failover_priority = 1
       },
       {
-        location          = azurerm_resource_group.this.location
+        location          = azapi_resource.this.location
         zone_redundant    = false #length(local.region_zones) > 1 ? true : false
         failover_priority = 0
       }

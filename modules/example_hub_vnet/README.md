@@ -11,7 +11,9 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 3.116, < 5.0)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.12)
+
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 
@@ -21,8 +23,8 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
-- [azurerm_bastion_host.bastion](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/bastion_host) (resource)
-- [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
+- [azapi_resource.bastion](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.this](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [random_integer.zone_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 - [random_string.name_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
 - [time_sleep.wait_for_kv_rbac](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
@@ -85,6 +87,24 @@ Type: `bool`
 
 Default: `true`
 
+### <a name="input_ignore_body_changes"></a> [ignore\_body\_changes](#input\_ignore\_body\_changes)
+
+Description: Body-relative dot-notation paths to ignore for each AzAPI resource. Ignored configuration is not sent to Azure, and changes to these paths take effect only after apply.
+
+- `network_bastion_hosts` - Paths ignored on the Bastion host.
+- `resources_resource_groups` - Paths ignored on the resource group.
+
+Type:
+
+```hcl
+object({
+    network_bastion_hosts     = optional(list(string), [])
+    resources_resource_groups = optional(list(string), [])
+  })
+```
+
+Default: `{}`
+
 ### <a name="input_jump_vm_definition"></a> [jump\_vm\_definition](#input\_jump\_vm\_definition)
 
 Description: Configuration object for the Build VM to be created for managing the implementation services.
@@ -117,6 +137,44 @@ Type: `string`
 
 Default: `null`
 
+### <a name="input_resource_types"></a> [resource\_types](#input\_resource\_types)
+
+Description: AzAPI resource types and API versions used by this module.
+
+- `network_bastion_hosts` - Bastion host resource type.
+- `resources_resource_groups` - Resource group resource type.
+
+Type:
+
+```hcl
+object({
+    network_bastion_hosts     = optional(string, "Microsoft.Network/bastionHosts@2024-05-01")
+    resources_resource_groups = optional(string, "Microsoft.Resources/resourceGroups@2024-11-01")
+  })
+```
+
+Default: `{}`
+
+### <a name="input_retry"></a> [retry](#input\_retry)
+
+Description: Retry configuration applied to every supported AzAPI resource declared by this module.
+
+- `error_message_regex` - Regular expressions matching errors that should be retried.
+- `interval_seconds` - Initial interval in seconds between retries.
+- `max_interval_seconds` - Maximum interval in seconds between retries.
+
+Type:
+
+```hcl
+object({
+    error_message_regex  = optional(list(string))
+    interval_seconds     = optional(number)
+    max_interval_seconds = optional(number)
+  })
+```
+
+Default: `null`
+
 ### <a name="input_tags"></a> [tags](#input\_tags)
 
 Description: Map of tags to be assigned to all resources created by this module.
@@ -124,6 +182,28 @@ Description: Map of tags to be assigned to all resources created by this module.
 Tags are key-value pairs that help organize and manage Azure resources. These tags will be applied to all resources created by the module, enabling consistent resource governance, cost tracking, and operational management across the AI/ML landing zone infrastructure.
 
 Type: `map(string)`
+
+Default: `null`
+
+### <a name="input_timeouts"></a> [timeouts](#input\_timeouts)
+
+Description: Default per-operation timeouts applied to every supported AzAPI resource declared by this module.
+
+- `create` - Timeout for create operations.
+- `read` - Timeout for read operations.
+- `update` - Timeout for update operations.
+- `delete` - Timeout for delete operations.
+
+Type:
+
+```hcl
+object({
+    create = optional(string)
+    read   = optional(string)
+    update = optional(string)
+    delete = optional(string)
+  })
+```
 
 Default: `null`
 

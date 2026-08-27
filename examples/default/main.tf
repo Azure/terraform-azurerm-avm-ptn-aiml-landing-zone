@@ -3,12 +3,13 @@ terraform {
 
   required_providers {
     azapi = {
-      source  = "azure/azapi"
-      version = "~> 2.0"
+      source  = "Azure/azapi"
+      version = "~> 2.12"
     }
+    # tflint-ignore: provider_azurerm_disallowed
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.21"
+      version = "~> 4.0"
     }
     http = {
       source  = "hashicorp/http"
@@ -22,20 +23,12 @@ terraform {
 }
 
 provider "azurerm" {
-  storage_use_azuread = true
-  features {
-    resource_group {
-      prevent_deletion_if_contains_resources = false
-    }
-    virtual_machine {
-      delete_os_disk_on_deletion = true
-    }
-    cognitive_account {
-      purge_soft_delete_on_destroy = true
-    }
-  }
+  features {}
 }
 
+# AzAPI issue #981 can resolve CLI credentials instead of the configured provider identity.
+# Remove this exception when https://github.com/Azure/terraform-provider-azapi/issues/981 is fixed.
+# tflint-ignore: provider_azurerm_disallowed
 data "azurerm_client_config" "current" {}
 
 ## Section to provide a random Azure region for the resource group

@@ -10,12 +10,13 @@ terraform {
 
   required_providers {
     azapi = {
-      source  = "azure/azapi"
-      version = "~> 2.0"
+      source  = "Azure/azapi"
+      version = "~> 2.12"
     }
+    # tflint-ignore: provider_azurerm_disallowed
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = ">= 3.116, < 5.0"
+      version = "~> 4.0"
     }
     http = {
       source  = "hashicorp/http"
@@ -29,24 +30,16 @@ terraform {
 }
 
 provider "azurerm" {
-  storage_use_azuread = true
-  features {
-    resource_group {
-      prevent_deletion_if_contains_resources = false
-    }
-    virtual_machine {
-      delete_os_disk_on_deletion = true
-    }
-    cognitive_account {
-      purge_soft_delete_on_destroy = true
-    }
-  }
+  features {}
 }
 
 locals {
   location = "australiaeast"
 }
 
+# AzAPI issue #981 can resolve CLI credentials instead of the configured provider identity.
+# Remove this exception when https://github.com/Azure/terraform-provider-azapi/issues/981 is fixed.
+# tflint-ignore: provider_azurerm_disallowed
 data "azurerm_client_config" "current" {}
 
 ## Section to provide a random Azure region for the resource group
@@ -97,9 +90,13 @@ module "vm_sku" {
 }
 
 # Add a vnet in a separate resource group
-resource "azurerm_resource_group" "vnet_rg" {
-  location = local.location
-  name     = module.naming.resource_group.name_unique
+resource "azapi_resource" "vnet_rg" {
+  type      = "Microsoft.Resources/resourceGroups@2024-11-01"
+  name      = module.naming.resource_group.name_unique
+  parent_id = "/subscriptions/${data.azurerm_client_config.current.subscription_id}"
+  location  = local.location
+
+  response_export_values = []
 }
 
 #create a sample hub to mimic an existing network landing zone configuration
@@ -123,8 +120,8 @@ module "vnet" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
   version = "=0.16.0"
 
-  location      = azurerm_resource_group.vnet_rg.location
-  parent_id     = azurerm_resource_group.vnet_rg.id
+  location      = azapi_resource.vnet_rg.location
+  parent_id     = azapi_resource.vnet_rg.id
   address_space = ["192.168.0.0/20"]
   dns_servers = {
     dns_servers = [for key, value in module.example_hub.dns_resolver_inbound_ip_addresses : value]
@@ -315,9 +312,9 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
-- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.0)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.12)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 3.116, < 5.0)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
 
 - <a name="requirement_http"></a> [http](#requirement\_http) (~> 3.4)
 
@@ -327,8 +324,8 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
-- [azapi_update_resource.allow_drop_unencrypted_vnet](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/update_resource) (resource)
-- [azurerm_resource_group.vnet_rg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
+- [azapi_resource.vnet_rg](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_update_resource.allow_drop_unencrypted_vnet](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 - [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 - [http_http.ip](https://registry.terraform.io/providers/hashicorp/http/latest/docs/data-sources/http) (data source)

@@ -85,3 +85,67 @@ Map of tags to be assigned to all resources created by this module.
 Tags are key-value pairs that help organize and manage Azure resources. These tags will be applied to all resources created by the module, enabling consistent resource governance, cost tracking, and operational management across the AI/ML landing zone infrastructure.
 DESCRIPTION
 }
+
+variable "resource_types" {
+  type = object({
+    network_bastion_hosts     = optional(string, "Microsoft.Network/bastionHosts@2024-05-01")
+    resources_resource_groups = optional(string, "Microsoft.Resources/resourceGroups@2024-11-01")
+  })
+  default     = {}
+  nullable    = false
+  description = <<DESCRIPTION
+AzAPI resource types and API versions used by this module.
+
+- `network_bastion_hosts` - Bastion host resource type.
+- `resources_resource_groups` - Resource group resource type.
+DESCRIPTION
+}
+
+variable "retry" {
+  type = object({
+    error_message_regex  = optional(list(string))
+    interval_seconds     = optional(number)
+    max_interval_seconds = optional(number)
+  })
+  default     = null
+  description = <<DESCRIPTION
+Retry configuration applied to every supported AzAPI resource declared by this module.
+
+- `error_message_regex` - Regular expressions matching errors that should be retried.
+- `interval_seconds` - Initial interval in seconds between retries.
+- `max_interval_seconds` - Maximum interval in seconds between retries.
+DESCRIPTION
+}
+
+variable "timeouts" {
+  type = object({
+    create = optional(string)
+    read   = optional(string)
+    update = optional(string)
+    delete = optional(string)
+  })
+  default     = null
+  description = <<DESCRIPTION
+Default per-operation timeouts applied to every supported AzAPI resource declared by this module.
+
+- `create` - Timeout for create operations.
+- `read` - Timeout for read operations.
+- `update` - Timeout for update operations.
+- `delete` - Timeout for delete operations.
+DESCRIPTION
+}
+
+variable "ignore_body_changes" {
+  type = object({
+    network_bastion_hosts     = optional(list(string), [])
+    resources_resource_groups = optional(list(string), [])
+  })
+  default     = {}
+  nullable    = false
+  description = <<DESCRIPTION
+Body-relative dot-notation paths to ignore for each AzAPI resource. Ignored configuration is not sent to Azure, and changes to these paths take effect only after apply.
+
+- `network_bastion_hosts` - Paths ignored on the Bastion host.
+- `resources_resource_groups` - Paths ignored on the resource group.
+DESCRIPTION
+}

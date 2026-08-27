@@ -3,12 +3,13 @@ terraform {
 
   required_providers {
     azapi = {
-      source  = "azure/azapi"
-      version = "~> 2.0"
+      source  = "Azure/azapi"
+      version = "~> 2.12"
     }
+    # tflint-ignore: provider_azurerm_disallowed
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.21"
+      version = "~> 4.0"
     }
     http = {
       source  = "hashicorp/http"
@@ -22,24 +23,16 @@ terraform {
 }
 
 provider "azurerm" {
-  storage_use_azuread = true
-  features {
-    resource_group {
-      prevent_deletion_if_contains_resources = false
-    }
-    virtual_machine {
-      delete_os_disk_on_deletion = true
-    }
-    cognitive_account {
-      purge_soft_delete_on_destroy = true
-    }
-  }
+  features {}
 }
 
 locals {
   location = "australiaeast"
 }
 
+# AzAPI issue #981 can resolve CLI credentials instead of the configured provider identity.
+# Remove this exception when https://github.com/Azure/terraform-provider-azapi/issues/981 is fixed.
+# tflint-ignore: provider_azurerm_disallowed
 data "azurerm_client_config" "current" {}
 
 ## Section to provide a random Azure region for the resource group
@@ -91,17 +84,21 @@ module "vm_sku" {
 
 # Add a vnet in a separate resource group
 
-resource "azurerm_resource_group" "vnet_rg" {
-  location = local.location
-  name     = module.naming.resource_group.name_unique
+resource "azapi_resource" "vnet_rg" {
+  type      = "Microsoft.Resources/resourceGroups@2024-11-01"
+  name      = module.naming.resource_group.name_unique
+  parent_id = "/subscriptions/${data.azurerm_client_config.current.subscription_id}"
+  location  = local.location
+
+  response_export_values = []
 }
 
 module "vnet" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
   version = "=0.16.0"
 
-  location      = azurerm_resource_group.vnet_rg.location
-  parent_id     = azurerm_resource_group.vnet_rg.id
+  location      = azapi_resource.vnet_rg.location
+  parent_id     = azapi_resource.vnet_rg.id
   address_space = ["192.168.0.0/20"]
   name          = module.naming.virtual_network.name_unique
 }

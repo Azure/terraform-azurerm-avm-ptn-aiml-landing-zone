@@ -14,7 +14,7 @@ resource "azapi_resource" "apim_backend_ai_foundry" {
 
   name      = "ai-foundry-backend"
   parent_id = module.apim[0].resource_id
-  type      = "Microsoft.ApiManagement/service/backends@2024-05-01"
+  type      = var.resource_types.apimanagement_service_backends
   body = {
     properties = {
       description = "Azure AI Foundry backend service"
@@ -28,9 +28,21 @@ resource "azapi_resource" "apim_backend_ai_foundry" {
   }
   create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  ignore_body_changes    = length(var.ignore_body_changes.apimanagement_service_backends) > 0 ? var.ignore_body_changes.apimanagement_service_backends : null
   read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   response_export_values = []
+  retry                  = var.retry
   update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
+    content {
+      create = timeouts.value.create
+      read   = timeouts.value.read
+      update = timeouts.value.update
+      delete = timeouts.value.delete
+    }
+  }
 
   depends_on = [time_sleep.apim_ready]
 }
@@ -40,7 +52,7 @@ resource "azapi_resource" "apim_api_ai_foundry" {
 
   name      = "azure-openai-api"
   parent_id = module.apim[0].resource_id
-  type      = "Microsoft.ApiManagement/service/apis@2024-05-01"
+  type      = var.resource_types.apimanagement_service_apis
   body = {
     properties = {
       description = "Sample API for Azure AI Foundry - validates APIM to AI Foundry connectivity"
@@ -60,9 +72,21 @@ resource "azapi_resource" "apim_api_ai_foundry" {
   }
   create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  ignore_body_changes    = length(var.ignore_body_changes.apimanagement_service_apis) > 0 ? var.ignore_body_changes.apimanagement_service_apis : null
   read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   response_export_values = []
+  retry                  = var.retry
   update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
+    content {
+      create = timeouts.value.create
+      read   = timeouts.value.read
+      update = timeouts.value.update
+      delete = timeouts.value.delete
+    }
+  }
 
   depends_on = [azapi_resource.apim_backend_ai_foundry]
 }
@@ -72,7 +96,7 @@ resource "azapi_resource" "apim_api_operation_chat_completions" {
 
   name      = "chat-completions"
   parent_id = azapi_resource.apim_api_ai_foundry[0].id
-  type      = "Microsoft.ApiManagement/service/apis/operations@2024-05-01"
+  type      = var.resource_types.apimanagement_service_apis_operations
   body = {
     properties = {
       description = "Creates a completion for the chat message using a deployed model."
@@ -102,9 +126,21 @@ resource "azapi_resource" "apim_api_operation_chat_completions" {
   }
   create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  ignore_body_changes    = length(var.ignore_body_changes.apimanagement_service_apis_operations) > 0 ? var.ignore_body_changes.apimanagement_service_apis_operations : null
   read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   response_export_values = []
+  retry                  = var.retry
   update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
+    content {
+      create = timeouts.value.create
+      read   = timeouts.value.read
+      update = timeouts.value.update
+      delete = timeouts.value.delete
+    }
+  }
 }
 
 resource "azapi_resource" "apim_api_operation_list_models" {
@@ -112,7 +148,7 @@ resource "azapi_resource" "apim_api_operation_list_models" {
 
   name      = "list-models"
   parent_id = azapi_resource.apim_api_ai_foundry[0].id
-  type      = "Microsoft.ApiManagement/service/apis/operations@2024-05-01"
+  type      = var.resource_types.apimanagement_service_apis_operations
   body = {
     properties = {
       description = "Lists the available models for the Azure OpenAI service."
@@ -134,9 +170,21 @@ resource "azapi_resource" "apim_api_operation_list_models" {
   }
   create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  ignore_body_changes    = length(var.ignore_body_changes.apimanagement_service_apis_operations) > 0 ? var.ignore_body_changes.apimanagement_service_apis_operations : null
   read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   response_export_values = []
+  retry                  = var.retry
   update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
+    content {
+      create = timeouts.value.create
+      read   = timeouts.value.read
+      update = timeouts.value.update
+      delete = timeouts.value.delete
+    }
+  }
 }
 
 resource "azapi_resource" "apim_api_policy_ai_foundry" {
@@ -144,7 +192,7 @@ resource "azapi_resource" "apim_api_policy_ai_foundry" {
 
   name      = "policy"
   parent_id = azapi_resource.apim_api_ai_foundry[0].id
-  type      = "Microsoft.ApiManagement/service/apis/policies@2024-05-01"
+  type      = var.resource_types.apimanagement_service_apis_policies
   body = {
     properties = {
       format = "rawxml"
@@ -169,9 +217,21 @@ resource "azapi_resource" "apim_api_policy_ai_foundry" {
   }
   create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  ignore_body_changes    = length(var.ignore_body_changes.apimanagement_service_apis_policies) > 0 ? var.ignore_body_changes.apimanagement_service_apis_policies : null
   read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   response_export_values = []
+  retry                  = var.retry
   update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
+    content {
+      create = timeouts.value.create
+      read   = timeouts.value.read
+      update = timeouts.value.update
+      delete = timeouts.value.delete
+    }
+  }
 
   lifecycle {
     ignore_changes = [body]

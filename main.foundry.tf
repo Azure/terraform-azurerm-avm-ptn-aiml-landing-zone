@@ -4,8 +4,8 @@ module "foundry_ptn" {
 
   #configure the base resource
   base_name                  = coalesce(var.name_prefix, "foundry")
-  location                   = azurerm_resource_group.this.location
-  resource_group_resource_id = azurerm_resource_group.this.id
+  location                   = azapi_resource.this.location
+  resource_group_resource_id = azapi_resource.this.id
   #pass through the resource definitions
   ai_foundry                          = local.foundry_ai_foundry
   ai_model_deployments                = var.ai_foundry_definition.ai_model_deployments
@@ -26,10 +26,22 @@ module "foundry_ptn" {
 resource "azapi_resource_action" "purge_ai_foundry" {
   count = var.ai_foundry_definition.purge_on_destroy ? 1 : 0
 
-  method      = "DELETE"
-  resource_id = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/providers/Microsoft.CognitiveServices/locations/${azurerm_resource_group.this.location}/resourceGroups/${azurerm_resource_group.this.name}/deletedAccounts/${local.ai_foundry_name}"
-  type        = "Microsoft.CognitiveServices/locations/resourceGroups/deletedAccounts@2021-04-30"
-  when        = "destroy"
+  method                 = "DELETE"
+  resource_id            = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/providers/Microsoft.CognitiveServices/locations/${azapi_resource.this.location}/resourceGroups/${azapi_resource.this.name}/deletedAccounts/${local.ai_foundry_name}"
+  type                   = var.resource_types.cognitiveservices_locations_resource_groups_deleted_accounts
+  response_export_values = []
+  retry                  = var.retry
+  when                   = "destroy"
+
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
+    content {
+      create = timeouts.value.create
+      read   = timeouts.value.read
+      update = timeouts.value.update
+      delete = timeouts.value.delete
+    }
+  }
 
   depends_on = [time_sleep.purge_ai_foundry_cooldown]
 }

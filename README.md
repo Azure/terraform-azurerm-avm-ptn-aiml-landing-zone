@@ -15,28 +15,25 @@ Start from one of the deployable examples in this repository:
 
 Copy the example that best matches your environment, then replace `source = "../../"` with the registry source when deploying from your own configuration.
 
-## Policy-restricted environments
+## Provider authentication
 
-If your tenant policies enforce restrictions (for example, storage account key access controls), use the same `azurerm` provider settings as the examples:
+The module uses AzAPI for its direct Azure control-plane operations. It retains one narrowly scoped `azurerm_client_config` data source so the deployment-principal object ID, tenant ID, and subscription ID come from the configured AzureRM provider identity. AzAPI [issue #981](https://github.com/Azure/terraform-provider-azapi/issues/981) can otherwise return the Azure CLI identity instead of the configured service principal, managed identity, or provider alias.
+
+Configure both providers with the same authentication context:
 
 ```hcl
 provider "azurerm" {
-  storage_use_azuread = true
-  features {
-    resource_group {
-      prevent_deletion_if_contains_resources = false
-    }
-    virtual_machine {
-      delete_os_disk_on_deletion = true
-    }
-    cognitive_account {
-      purge_soft_delete_on_destroy = true
-    }
-  }
+  features {}
 }
 ```
 
-These settings are used across the examples to help deployments succeed in policy-restricted environments.
+No direct AzureRM resource is created by this module. The client-config exception will be removed after issue #981 is fixed.
+
+## Upgrading from v0.5.1
+
+Version 0.6.0 migrates direct AzureRM control-plane resources to AzAPI. Declarative `moved` blocks preserve the existing resource group, network security rules, virtual hub connection, Key Vault deployment-principal role assignment, and example networking resources.
+
+Read the [v0.6.0 migration guide](./docs/migrations/v0.6.0.md) before upgrading. Back up state and review the upgrade plan before applying because AzAPI provider state migration is one-way.
 
 <!-- markdownlint-disable MD033 -->
 ## Requirements
@@ -45,7 +42,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
-- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.4)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.12)
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
 
@@ -65,11 +62,11 @@ The following resources are used by this module:
 - [azapi_resource.apim_api_policy_ai_foundry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.apim_backend_ai_foundry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.bing_grounding](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.deployment_user_kv_admin](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.network_security_rule](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.this](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.virtual_hub_connection](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource_action.purge_ai_foundry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action) (resource)
-- [azurerm_network_security_rule.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_security_rule) (resource)
-- [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
-- [azurerm_role_assignment.deployment_user_kv_admin](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
-- [azurerm_virtual_hub_connection.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_hub_connection) (resource)
 - [modtm_telemetry.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/resources/telemetry) (resource)
 - [random_integer.zone_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 - [random_string.name_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
@@ -78,8 +75,8 @@ The following resources are used by this module:
 - [time_sleep.purge_ai_foundry_cooldown](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
 - [time_sleep.wait_for_kv_rbac](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
 - [azapi_client_config.telemetry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config) (data source)
+- [azapi_resource.ai_lz_vnet](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
-- [azurerm_virtual_network.ai_lz_vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/virtual_network) (data source)
 - [modtm_module_source.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/data-sources/module_source) (data source)
 
 <!-- markdownlint-disable MD013 -->
@@ -2004,6 +2001,38 @@ object({
 
 Default: `{}`
 
+### <a name="input_ignore_body_changes"></a> [ignore\_body\_changes](#input\_ignore\_body\_changes)
+
+Description: Body-relative dot-notation paths to ignore for each AzAPI resource. Ignored configuration is not sent to Azure, and changes to these paths take effect only after apply.
+
+- `apimanagement_service_apis` - Paths ignored on API Management APIs.
+- `apimanagement_service_apis_operations` - Paths ignored on API Management API operations.
+- `apimanagement_service_apis_policies` - Paths ignored on API Management API policies.
+- `apimanagement_service_backends` - Paths ignored on API Management backends.
+- `authorization_role_assignments` - Paths ignored on role assignments.
+- `bing_accounts` - Paths ignored on Bing accounts.
+- `network_network_security_groups_security_rules` - Paths ignored on network security rules.
+- `network_virtual_hubs_hub_virtual_network_connections` - Paths ignored on virtual hub connections.
+- `resources_resource_groups` - Paths ignored on resource groups.
+
+Type:
+
+```hcl
+object({
+    apimanagement_service_apis                           = optional(list(string), [])
+    apimanagement_service_apis_operations                = optional(list(string), [])
+    apimanagement_service_apis_policies                  = optional(list(string), [])
+    apimanagement_service_backends                       = optional(list(string), [])
+    authorization_role_assignments                       = optional(list(string), [])
+    bing_accounts                                        = optional(list(string), [])
+    network_network_security_groups_security_rules       = optional(list(string), [])
+    network_virtual_hubs_hub_virtual_network_connections = optional(list(string), [])
+    resources_resource_groups                            = optional(list(string), [])
+  })
+```
+
+Default: `{}`
+
 ### <a name="input_jumpvm_definition"></a> [jumpvm\_definition](#input\_jumpvm\_definition)
 
 Description: Configuration object for the Jump VM to be created for managing the implementation services.
@@ -2258,6 +2287,60 @@ object({
 
 Default: `{}`
 
+### <a name="input_resource_types"></a> [resource\_types](#input\_resource\_types)
+
+Description: AzAPI resource types and API versions used by this module.
+
+- `apimanagement_service_apis` - API Management API resource type.
+- `apimanagement_service_apis_operations` - API Management API operation resource type.
+- `apimanagement_service_apis_policies` - API Management API policy resource type.
+- `apimanagement_service_backends` - API Management backend resource type.
+- `authorization_role_assignments` - Role assignment resource type.
+- `bing_accounts` - Bing account resource type.
+- `cognitiveservices_locations_resource_groups_deleted_accounts` - Deleted Cognitive Services account action type.
+- `network_network_security_groups_security_rules` - Network security rule resource type.
+- `network_virtual_hubs_hub_virtual_network_connections` - Virtual hub connection resource type.
+- `resources_resource_groups` - Resource group resource type.
+
+Type:
+
+```hcl
+object({
+    apimanagement_service_apis                                   = optional(string, "Microsoft.ApiManagement/service/apis@2024-05-01")
+    apimanagement_service_apis_operations                        = optional(string, "Microsoft.ApiManagement/service/apis/operations@2024-05-01")
+    apimanagement_service_apis_policies                          = optional(string, "Microsoft.ApiManagement/service/apis/policies@2024-05-01")
+    apimanagement_service_backends                               = optional(string, "Microsoft.ApiManagement/service/backends@2024-05-01")
+    authorization_role_assignments                               = optional(string, "Microsoft.Authorization/roleAssignments@2022-04-01")
+    bing_accounts                                                = optional(string, "Microsoft.Bing/accounts@2025-05-01-preview")
+    cognitiveservices_locations_resource_groups_deleted_accounts = optional(string, "Microsoft.CognitiveServices/locations/resourceGroups/deletedAccounts@2021-04-30")
+    network_network_security_groups_security_rules               = optional(string, "Microsoft.Network/networkSecurityGroups/securityRules@2024-05-01")
+    network_virtual_hubs_hub_virtual_network_connections         = optional(string, "Microsoft.Network/virtualHubs/hubVirtualNetworkConnections@2024-05-01")
+    resources_resource_groups                                    = optional(string, "Microsoft.Resources/resourceGroups@2024-11-01")
+  })
+```
+
+Default: `{}`
+
+### <a name="input_retry"></a> [retry](#input\_retry)
+
+Description: Retry configuration applied to every supported AzAPI resource declared by this module.
+
+- `error_message_regex` - Regular expressions matching errors that should be retried.
+- `interval_seconds` - Initial interval in seconds between retries.
+- `max_interval_seconds` - Maximum interval in seconds between retries.
+
+Type:
+
+```hcl
+object({
+    error_message_regex  = optional(list(string))
+    interval_seconds     = optional(number)
+    max_interval_seconds = optional(number)
+  })
+```
+
+Default: `null`
+
 ### <a name="input_tags"></a> [tags](#input\_tags)
 
 Description: Map of tags to be assigned to all resources created by this module.
@@ -2265,6 +2348,28 @@ Description: Map of tags to be assigned to all resources created by this module.
 Tags are key-value pairs that help organize and manage Azure resources. These tags will be applied to all resources created by the module, enabling consistent resource governance, cost tracking, and operational management across the AI/ML landing zone infrastructure.
 
 Type: `map(string)`
+
+Default: `null`
+
+### <a name="input_timeouts"></a> [timeouts](#input\_timeouts)
+
+Description: Default per-operation timeouts applied to every supported AzAPI resource declared by this module.
+
+- `create` - Timeout for create operations.
+- `read` - Timeout for read operations.
+- `update` - Timeout for update operations.
+- `delete` - Timeout for delete operations.
+
+Type:
+
+```hcl
+object({
+    create = optional(string)
+    read   = optional(string)
+    update = optional(string)
+    delete = optional(string)
+  })
+```
 
 Default: `null`
 
