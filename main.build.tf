@@ -1,21 +1,10 @@
 module "buildvm" {
   source  = "Azure/avm-res-compute-virtualmachine/azurerm"
-  version = "0.20.0"
+  version = "0.21.0"
   count   = !var.flag_platform_landing_zone && var.buildvm_definition.deploy ? 1 : 0
 
-  location = azurerm_resource_group.this.location
-  name     = local.build_vm_name
-  network_interfaces = {
-    network_interface_1 = {
-      name = "${local.build_vm_name}-nic1"
-      ip_configurations = {
-        ip_configuration_1 = {
-          name                          = "${local.build_vm_name}-nic1-ipconfig1"
-          private_ip_subnet_resource_id = local.subnet_ids["DevOpsBuildSubnet"]
-        }
-      }
-    }
-  }
+  location            = azurerm_resource_group.this.location
+  name                = local.build_vm_name
   resource_group_name = azurerm_resource_group.this.name
   zone                = length(local.region_zones) > 0 ? random_integer.zone_index[0].result : null
   account_credentials = {
@@ -30,6 +19,17 @@ module "buildvm" {
   enable_telemetry = var.enable_telemetry
   managed_identities = {
     system_assigned = true
+  }
+  network_interfaces = {
+    network_interface_1 = {
+      name = "${local.build_vm_name}-nic1"
+      ip_configurations = {
+        ip_configuration_1 = {
+          name                          = "${local.build_vm_name}-nic1-ipconfig1"
+          private_ip_subnet_resource_id = local.subnet_ids["DevOpsBuildSubnet"]
+        }
+      }
+    }
   }
   os_type = "Linux"
   role_assignments_system_managed_identity = {
