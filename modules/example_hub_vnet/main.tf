@@ -1,4 +1,3 @@
-
 data "azurerm_client_config" "current" {}
 
 module "avm_utl_regions" {
@@ -130,6 +129,7 @@ module "firewall_network_rule_collection_group" {
   firewall_policy_rule_collection_group_network_rule_collection = local.firewall_policy_rule_collection_group_network_rule_collection
   firewall_policy_rule_collection_group_priority                = local.firewall_policy_rule_collection_group_priority
 }
+
 # Add a log analytics workspace for the firewall logs to do any connectivity troubleshooting if needed.
 module "log_analytics_workspace" {
   source  = "Azure/avm-res-operationalinsights-workspace/azurerm"
@@ -142,6 +142,7 @@ module "log_analytics_workspace" {
   log_analytics_workspace_retention_in_days = 30
   log_analytics_workspace_sku               = "PerGB2018"
 }
+
 # Add DNS resolver with inbound endpoint
 module "private_resolver" {
   source  = "Azure/avm-res-network-dnsresolver/azurerm"
@@ -158,6 +159,7 @@ module "private_resolver" {
     }
   }
 }
+
 # Create the Private DNS zones and link to the hub VNet
 module "private_dns_zones" {
   source   = "Azure/avm-res-network-privatednszone/azurerm"
@@ -176,6 +178,7 @@ module "private_dns_zones" {
     }
   }
 }
+
 # Create a jump VM for verifying connectivity to the linked vnet and private connection resources.
 resource "random_integer" "zone_index" {
   max = length(local.region_zones)
