@@ -126,8 +126,8 @@ module "firewall_network_rule_collection_group" {
 
   firewall_policy_rule_collection_group_firewall_policy_id      = module.firewall_policy.resource_id
   firewall_policy_rule_collection_group_name                    = local.firewall_policy_rule_collection_group_name
-  firewall_policy_rule_collection_group_network_rule_collection = local.firewall_policy_rule_collection_group_network_rule_collection
   firewall_policy_rule_collection_group_priority                = local.firewall_policy_rule_collection_group_priority
+  firewall_policy_rule_collection_group_network_rule_collection = local.firewall_policy_rule_collection_group_network_rule_collection
 }
 
 # Add a log analytics workspace for the firewall logs to do any connectivity troubleshooting if needed.
