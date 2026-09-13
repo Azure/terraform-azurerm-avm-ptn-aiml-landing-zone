@@ -12,6 +12,7 @@ Start from one of the deployable examples in this repository:
 - [default-byo-vnet](./examples/default-byo-vnet) - Platform landing zone with an existing VNet.
 - [standalone](./examples/standalone) - Standalone deployment without platform landing zone dependencies.
 - [standalone-byo-vnet](./examples/standalone-byo-vnet) - Standalone deployment with an existing VNet.
+- [standalone-managed-vnet](./examples/standalone-managed-vnet) - Standalone deployment where the AI Foundry agent uses a Microsoft-managed VNet.
 
 Copy the example that best matches your environment, then replace `source = "../../"` with the registry source when deploying from your own configuration.
 
@@ -261,6 +262,7 @@ Description: Configuration object for the Azure AI Foundry deployment (hub, proj
     - `marketplace_partner_resource_id` - (Optional) The full ARM resource ID of the Marketplace resource to which you would like to send Diagnostic Logs.
   - `allow_project_management` - (Optional) Whether project management is allowed from the hub. Default is true.
   - `create_ai_agent_service` - (Optional) Whether to create the AI Agent service in the hub. Default is false.
+  - `agent_managed_network_enabled` - (Optional) Whether the AI Agent service should use a Microsoft-managed virtual network instead of being injected into the landing zone's `AIFoundrySubnet`. When set to true, no agent subnet injection is configured (and the delegated `AIFoundrySubnet` is not deployed), and the agent service runs in a Microsoft-managed network. Default is false. See https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/configure-managed-network.
   - `private_dns_zone_resource_ids` - (Optional) List of private DNS zone resource IDs for hub endpoints. Default is [].
   - `sku` - (Optional) The SKU for the hub. Default is "S0".
   - `tags` - (Optional) Map of tags to assign to the AI Foundry hub.
@@ -492,9 +494,10 @@ object({
         event_hub_name                           = optional(string, null)
         marketplace_partner_resource_id          = optional(string, null)
       })), {})
-      allow_project_management = optional(bool, true)
-      create_ai_agent_service  = optional(bool, false)
-      #network_injections is statically set to vnet/subnet created in the module.
+      allow_project_management      = optional(bool, true)
+      create_ai_agent_service       = optional(bool, false)
+      agent_managed_network_enabled = optional(bool, false)
+      #network_injections is statically set to vnet/subnet created in the module unless agent_managed_network_enabled is true.
       private_dns_zone_resource_ids           = optional(list(string), [])
       private_endpoints_manage_dns_zone_group = optional(bool, true)
       sku                                     = optional(string, "S0")

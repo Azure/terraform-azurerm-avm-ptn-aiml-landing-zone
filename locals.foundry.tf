@@ -3,7 +3,7 @@ locals {
   foundry_ai_foundry = merge(
     var.ai_foundry_definition.ai_foundry, {
       name = local.ai_foundry_name
-      network_injections = [{
+      network_injections = var.ai_foundry_definition.ai_foundry.agent_managed_network_enabled ? null : [{
         scenario                   = "agent"
         subnetArmId                = local.subnet_ids["AIFoundrySubnet"]
         useMicrosoftManagedNetwork = false
