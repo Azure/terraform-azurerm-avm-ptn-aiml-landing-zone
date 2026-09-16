@@ -1,3 +1,5 @@
+# This read is used only for its postconditions, which verify the deployed WAF rules.
+# tflint-ignore: terraform_unused_declarations
 data "azapi_resource" "waf_policy" {
   name                   = "custom-rules-waf-policy"
   parent_id              = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/ai-lz-rg-standalone-${substr(module.naming.unique-seed, 0, 5)}"
