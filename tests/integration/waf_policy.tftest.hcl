@@ -1,3 +1,7 @@
+provider "azurerm" {
+  features {}
+}
+
 variables {
   location            = "australiaeast"
   resource_group_name = "waf-policy-test-${substr(uuid(), 0, 8)}"
