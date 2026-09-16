@@ -101,6 +101,32 @@ module "example_hub" {
   name_prefix        = "${module.naming.resource_group.name_unique}-hub"
 }
 
+module "external_waf_policy" {
+  source  = "Azure/avm-res-network-applicationgatewaywebapplicationfirewallpolicy/azurerm"
+  version = "0.2.0"
+
+  location = "australiaeast"
+  managed_rules = {
+    managed_rule_set = {
+      drs = {
+        version = "2.1"
+        type    = "Microsoft_DefaultRuleSet"
+      }
+      bot = {
+        version = "1.1"
+        type    = "Microsoft_BotManagerRuleSet"
+      }
+    }
+  }
+  name                = "external-waf-policy"
+  resource_group_name = provider::azapi::parse_resource_id("Microsoft.Resources/resourceGroups", module.example_hub.resource_group_resource_id).name
+  enable_telemetry    = var.enable_telemetry
+  policy_settings = {
+    enabled = true
+    mode    = "Prevention"
+  }
+}
+
 module "test" {
   source = "../../"
 
@@ -183,6 +209,7 @@ module "test" {
     publisher_name     = "Azure API Management"
   }
   app_gateway_definition = {
+    deploy = true
     backend_address_pools = {
       example_pool = {
         name = "example-backend-pool"
@@ -260,5 +287,10 @@ module "test" {
   private_dns_zones = {
     azure_policy_pe_zone_linking_enabled      = true
     existing_zones_resource_group_resource_id = module.example_hub.resource_group_resource_id
+  }
+  waf_policy_definition = {
+    existing_policy = {
+      resource_id = module.external_waf_policy.resource_id
+    }
   }
 }

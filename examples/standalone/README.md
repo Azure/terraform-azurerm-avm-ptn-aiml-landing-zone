@@ -4,6 +4,8 @@
 
 This example demonstrates a configuration when the platform landing zone flag is set to false.  In this case, all supporting services are included as part of AI landing zone deployment.
 
+The internal WAF policy includes a custom rule that blocks requests from `192.0.2.1/32`, a documentation-only address. This exercises custom-rule passthrough without changing the module's default rules.
+
 ```hcl
 terraform {
   required_version = ">= 1.9, < 2.0"
@@ -179,6 +181,7 @@ module "test" {
     publisher_name  = "Azure API Management"
   }
   app_gateway_definition = {
+    deploy = true
     backend_address_pools = {
       example_pool = {
         name = "example-backend-pool"
@@ -253,6 +256,26 @@ module "test" {
   ks_ai_search_definition = {
     enable_diagnostic_settings = false
   }
+  waf_policy_definition = {
+    name = "custom-rules-waf-policy"
+    custom_rules = {
+      block_example_ip = {
+        name      = "BlockExampleIP"
+        priority  = 10
+        rule_type = "MatchRule"
+        action    = "Block"
+        match_conditions = {
+          client_ip = {
+            match_values = ["192.0.2.1/32"]
+            operator     = "IPMatch"
+            match_variables = [{
+              variable_name = "RemoteAddr"
+            }]
+          }
+        }
+      }
+    }
+  }
 }
 ```
 
@@ -277,6 +300,7 @@ The following resources are used by this module:
 
 - [azapi_update_resource.allow_drop_unencrypted_vnet](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/update_resource) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
+- [azapi_resource.waf_policy](https://registry.terraform.io/providers/azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 - [http_http.ip](https://registry.terraform.io/providers/hashicorp/http/latest/docs/data-sources/http) (data source)
 
