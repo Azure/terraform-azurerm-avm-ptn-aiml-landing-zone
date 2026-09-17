@@ -6,6 +6,8 @@ This example demonstrates a configuration when the platform landing zone flag is
 
 The internal WAF policy includes a custom rule that blocks requests from `192.0.2.1/32`, a documentation-only address. This exercises custom-rule passthrough without changing the module's default rules.
 
+This example enables `use_internet_routing` because Application Gateway v2 requires the default route to use `Internet`, not `VirtualAppliance`, in this configuration. The shared route table therefore sends internet-bound traffic from all associated subnets directly to the internet, bypassing Azure Firewall. This is an explicit example setting; the module's default remains firewall routing. See [Application Gateway routing requirements](https://learn.microsoft.com/azure/application-gateway/configuration-infrastructure#supported-user-defined-routes).
+
 ```hcl
 terraform {
   required_version = ">= 1.9, < 2.0"
@@ -256,6 +258,7 @@ module "test" {
   ks_ai_search_definition = {
     enable_diagnostic_settings = false
   }
+  use_internet_routing = true
   waf_policy_definition = {
     name = "custom-rules-waf-policy"
     custom_rules = {

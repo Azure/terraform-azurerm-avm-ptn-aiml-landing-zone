@@ -247,6 +247,7 @@ module "test" {
   ks_ai_search_definition = {
     enable_diagnostic_settings = false
   }
+  use_internet_routing = true
   waf_policy_definition = {
     name = "custom-rules-waf-policy"
     custom_rules = {
