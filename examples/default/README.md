@@ -50,6 +50,8 @@ data "azurerm_client_config" "current" {}
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
   version = "0.9.2"
+
+  enable_telemetry = false
 }
 
 # This allows us to randomize the region for the resource group.
@@ -80,8 +82,9 @@ module "vm_sku" {
   source  = "Azure/avm-utl-sku-finder/azapi"
   version = "0.3.0"
 
-  location      = "australiaeast"
-  cache_results = true
+  location         = "australiaeast"
+  cache_results    = true
+  enable_telemetry = false
   vm_filters = {
     cpu_architecture_type          = "x64"
     min_vcpus                      = 2
@@ -103,7 +106,7 @@ module "example_hub" {
   vnet_definition = {
     address_space = "10.10.0.0/24"
   }
-  enable_telemetry   = var.enable_telemetry
+  enable_telemetry   = false
   jump_vm_definition = { sku = module.vm_sku.sku }
   name_prefix        = "${module.naming.resource_group.name_unique}-hub"
 }
@@ -238,7 +241,7 @@ module "test" {
   container_app_environment_definition = {
     enable_diagnostic_settings = false
   }
-  enable_telemetry           = var.enable_telemetry
+  enable_telemetry           = false
   flag_platform_landing_zone = true
   genai_app_configuration_definition = {
     enable_diagnostic_settings = false
