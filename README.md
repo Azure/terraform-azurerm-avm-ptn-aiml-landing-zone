@@ -262,6 +262,14 @@ Description: Configuration object for the Azure AI Foundry deployment (hub, proj
   - `allow_project_management` - (Optional) Whether project management is allowed from the hub. Default is true.
   - `create_ai_agent_service` - (Optional) Whether to create the AI Agent service in the hub. Default is false.
   - `private_dns_zone_resource_ids` - (Optional) List of private DNS zone resource IDs for hub endpoints. Default is [].
+  - `public_network_access_enabled` - (Optional) Overrides public network access on the hub account. Default is null, which lets the upstream module derive the value from the private endpoint configuration (public access disabled).
+  - `network_acls` - (Optional) Network access control list applied to the hub account. Default is null, which allows traffic from all networks. The rules only take effect when `public_network_access_enabled` is true.
+    - `default_action` - (Optional) Action taken when no rule matches. Possible values are "Allow" and "Deny". Default is "Allow".
+    - `bypass` - (Optional) Set to "AzureServices" to let trusted Azure services bypass the rules. Default is null.
+    - `ip_rules` - (Optional) List of IPv4 addresses or CIDR ranges allowed inbound access. Default is [].
+    - `virtual_network_rules` - (Optional) List of subnets allowed inbound access. Default is [].
+      - `subnet_resource_id` - The resource ID of the subnet to allow.
+      - `ignore_missing_vnet_service_endpoint` - (Optional) Whether to ignore a missing virtual network service endpoint on the subnet. Default is false.
   - `sku` - (Optional) The SKU for the hub. Default is "S0".
   - `tags` - (Optional) Map of tags to assign to the AI Foundry hub.
   - `role_assignments` - (Optional) Map of role assignments on the hub. The map key is deliberately arbitrary to avoid plan-time unknown key issues.
@@ -332,6 +340,10 @@ Description: Configuration object for the Azure AI Foundry deployment (hub, proj
     - `semantic_search_sku` - (Optional) Semantic search SKU. Default is "standard".
     - `semantic_search_enabled` - (Optional) Whether semantic search is enabled. Default is false.
     - `hosting_mode` - (Optional) Hosting mode. Default is "default".
+    - `public_network_access_enabled` - (Optional) Overrides public network access on the search service. Default is null, which lets the upstream module derive the value from the private endpoint configuration (public access disabled).
+    - `network_rule_set` - (Optional) Inbound network rules applied to the search service. Only takes effect when public network access is enabled.
+      - `bypass` - (Optional) Whether trusted Azure services may bypass the rules. Possible values are "None" and "AzureServices". Default is "None".
+      - `ip_rules` - (Optional) List of IPv4 addresses or CIDR ranges allowed inbound access. Default is [].
     - `tags` - (Optional) Map of tags for the service.
     - `role_assignments` - (Optional) Map of role assignments on the service.
       - `role_definition_id_or_name` - Role definition ID or name to assign.
@@ -370,6 +382,11 @@ Description: Configuration object for the Azure AI Foundry deployment (hub, proj
     - `local_authentication_disabled` - (Optional) Whether local authentication is disabled. Default is true.
     - `partition_merge_enabled` - (Optional) Whether partition merge is enabled. Default is false.
     - `multiple_write_locations_enabled` - (Optional) Whether multiple write locations are enabled. Default is false.
+    - `ip_range_filter` - (Optional) Set of IP addresses or CIDR ranges allowed to reach the Cosmos DB account. Defaults to the Azure portal and global Azure datacenter source IPs documented at https://learn.microsoft.com/azure/cosmos-db/how-to-configure-firewall. Set to `[]` to remove the allowlist.
+    - `network_acl_bypass_for_azure_services` - (Optional) Whether Azure services can bypass the network ACLs. Default is true.
+    - `network_acl_bypass_resource_ids` - (Optional) Set of resource IDs allowed to bypass the network ACLs. Default is [].
+    - `virtual_network_rules` - (Optional) Set of subnets allowed to reach the Cosmos DB account. Default is [].
+      - `subnet_id` - The resource ID of the subnet to allow.
     - `analytical_storage_config` - (Optional) Analytical storage configuration. Default is null.
       - `schema_type` - Schema type for analytical storage.
     - `consistency_policy` - (Optional) Consistency policy configuration.
@@ -421,6 +438,12 @@ Description: Configuration object for the Azure AI Foundry deployment (hub, proj
         - `marketplace_partner_resource_id` - (Optional) The full ARM resource ID of the Marketplace resource to which you would like to send Diagnostic Logs.
     - `sku` - (Optional) Vault SKU. Default is "standard".
     - `tenant_id` - (Optional) Tenant ID for the Key Vault.
+    - `public_network_access_enabled` - (Optional) Overrides public network access on the Key Vault. Default is null, which lets the upstream module derive the value from the private endpoint configuration (public access disabled).
+    - `network_acls` - (Optional) Network access control list applied to the Key Vault. Defaults to allowing all networks with an `AzureServices` bypass.
+      - `bypass` - (Optional) Traffic permitted to bypass the rules. Possible values are "AzureServices" and "None". Default is "AzureServices".
+      - `default_action` - (Optional) Action taken when no rule matches. Possible values are "Allow" and "Deny". Default is "Allow".
+      - `ip_rules` - (Optional) List of IPv4 addresses or CIDR ranges allowed access. Default is [].
+      - `virtual_network_subnet_ids` - (Optional) List of subnet resource IDs allowed access. Default is [].
     - `role_assignments` - (Optional) Map of role assignments on the vault.
       - `role_definition_id_or_name` - Role definition ID or name to assign.
       - `principal_id` - Principal ID for the assignment.
@@ -456,6 +479,15 @@ Description: Configuration object for the Azure AI Foundry deployment (hub, proj
       - `private_endpoints_manage_dns_zone_group` - (Optional) Whether to manage private DNS zone groups with this module. If set to false, you must manage private DNS zone groups externally, e.g. using Azure Policy. Default is true.
     - `access_tier` - (Optional) Access tier for the account. Default is "Hot".
     - `shared_access_key_enabled` - (Optional) Whether shared access keys are enabled. Default is false.
+    - `public_network_access_enabled` - (Optional) Overrides public network access on the storage account. Default is null, which lets the upstream module derive the value from the private endpoint configuration (public access disabled).
+    - `network_rules` - (Optional) Storage account firewall configuration. Default is null, in which case the upstream module applies deny-by-default with an `AzureServices` bypass, matching the private endpoint topology this module deploys.
+      - `bypass` - (Optional) Traffic permitted to bypass the rules. Any combination of "Logging", "Metrics", "AzureServices" or "None". Default is ["AzureServices"].
+      - `default_action` - (Optional) Action taken when no rule matches. Possible values are "Allow" and "Deny". Default is "Deny".
+      - `ip_rules` - (Optional) Set of public IPv4 addresses or CIDR ranges allowed access. RFC 1918 private ranges are not permitted by Azure. Default is [].
+      - `virtual_network_subnet_ids` - (Optional) Set of subnet resource IDs allowed access. Default is [].
+      - `private_link_access` - (Optional) List of resource access rules granting private link access. Default is null.
+        - `endpoint_resource_id` - The resource ID granted access.
+        - `endpoint_tenant_id` - (Optional) The tenant ID of the resource. Defaults to the current tenant.
     - `role_assignments` - (Optional) Map of role assignments on the storage account.
       - `role_definition_id_or_name` - Role definition ID or name to assign.
       - `principal_id` - Principal ID for the assignment.
@@ -497,8 +529,18 @@ object({
       #network_injections is statically set to vnet/subnet created in the module.
       private_dns_zone_resource_ids           = optional(list(string), [])
       private_endpoints_manage_dns_zone_group = optional(bool, true)
-      sku                                     = optional(string, "S0")
-      tags                                    = optional(map(string))
+      public_network_access_enabled           = optional(bool, null)
+      network_acls = optional(object({
+        default_action = optional(string, "Allow")
+        bypass         = optional(string, null)
+        ip_rules       = optional(list(string), [])
+        virtual_network_rules = optional(list(object({
+          subnet_resource_id                   = string
+          ignore_missing_vnet_service_endpoint = optional(bool, false)
+        })), [])
+      }), null)
+      sku  = optional(string, "S0")
+      tags = optional(map(string))
       role_assignments = optional(map(object({
         role_definition_id_or_name             = string
         principal_id                           = string
@@ -571,14 +613,19 @@ object({
         event_hub_name                           = optional(string, null)
         marketplace_partner_resource_id          = optional(string, null)
       })), {})
-      sku                          = optional(string, "standard")
-      local_authentication_enabled = optional(bool, true)
-      partition_count              = optional(number, 1)
-      replica_count                = optional(number, 2)
-      semantic_search_sku          = optional(string, "standard")
-      semantic_search_enabled      = optional(bool, false)
-      hosting_mode                 = optional(string, "default")
-      tags                         = optional(map(string))
+      sku                           = optional(string, "standard")
+      local_authentication_enabled  = optional(bool, true)
+      partition_count               = optional(number, 1)
+      replica_count                 = optional(number, 2)
+      semantic_search_sku           = optional(string, "standard")
+      semantic_search_enabled       = optional(bool, false)
+      hosting_mode                  = optional(string, "default")
+      public_network_access_enabled = optional(bool, null)
+      network_rule_set = optional(object({
+        bypass   = optional(string, "None")
+        ip_rules = optional(list(string), [])
+      }), {})
+      tags = optional(map(string))
       role_assignments = optional(map(object({
         role_definition_id_or_name             = string
         principal_id                           = string
@@ -620,6 +667,18 @@ object({
       local_authentication_disabled    = optional(bool, true)
       partition_merge_enabled          = optional(bool, false)
       multiple_write_locations_enabled = optional(bool, false)
+      # Default allowlist is the Azure portal plus global Azure datacenter source IPs: https://learn.microsoft.com/azure/cosmos-db/how-to-configure-firewall
+      ip_range_filter = optional(set(string), [
+        "168.125.123.255",
+        "170.0.0.0/24",
+        "0.0.0.0",
+        "104.42.195.92", "40.76.54.131", "52.176.6.30", "52.169.50.45", "52.187.184.26"
+      ])
+      network_acl_bypass_for_azure_services = optional(bool, true)
+      network_acl_bypass_resource_ids       = optional(set(string), [])
+      virtual_network_rules = optional(set(object({
+        subnet_id = string
+      })), [])
       analytical_storage_config = optional(object({
         schema_type = string
       }), null)
@@ -678,8 +737,15 @@ object({
         event_hub_name                           = optional(string, null)
         marketplace_partner_resource_id          = optional(string, null)
       })), {})
-      sku       = optional(string, "standard")
-      tenant_id = optional(string)
+      sku                           = optional(string, "standard")
+      tenant_id                     = optional(string)
+      public_network_access_enabled = optional(bool, null)
+      network_acls = optional(object({
+        bypass                     = optional(string, "AzureServices")
+        default_action             = optional(string, "Allow")
+        ip_rules                   = optional(list(string), [])
+        virtual_network_subnet_ids = optional(list(string), [])
+      }), {})
       role_assignments = optional(map(object({
         role_definition_id_or_name             = string
         principal_id                           = string
@@ -720,8 +786,19 @@ object({
           type = "blob"
         }
       })
-      access_tier               = optional(string, "Hot")
-      shared_access_key_enabled = optional(bool, false)
+      access_tier                   = optional(string, "Hot")
+      shared_access_key_enabled     = optional(bool, false)
+      public_network_access_enabled = optional(bool, null)
+      network_rules = optional(object({
+        bypass                     = optional(set(string), ["AzureServices"])
+        default_action             = optional(string, "Deny")
+        ip_rules                   = optional(set(string), [])
+        virtual_network_subnet_ids = optional(set(string), [])
+        private_link_access = optional(list(object({
+          endpoint_resource_id = string
+          endpoint_tenant_id   = optional(string)
+        })), null)
+      }), null)
       role_assignments = optional(map(object({
         role_definition_id_or_name             = string
         principal_id                           = string
@@ -1587,6 +1664,7 @@ Description: Configuration object for the Azure App Configuration service to be 
 - `deploy` - (Optional) Whether to deploy the App Configuration store. Default is true.
 - `name` - (Optional) The name of the App Configuration store. If not provided, a name will be generated.
 - `local_auth_enabled` - (Optional) Whether local authentication is enabled. Default is false.
+- `public_network_access_enabled` - (Optional) Whether public network access is enabled. Default is false. Azure App Configuration exposes no IP-based network ACLs, so access is restricted through the private endpoint this module creates.
 - `purge_protection_enabled` - (Optional) Whether purge protection is enabled. Default is true.
 - `sku` - (Optional) The SKU of the App Configuration store. Default is "standard".
 - `soft_delete_retention_in_days` - (Optional) The retention period in days for soft delete. Default is 7.
@@ -1624,6 +1702,7 @@ object({
     deploy                        = optional(bool, true)
     name                          = optional(string)
     local_auth_enabled            = optional(bool, false)
+    public_network_access_enabled = optional(bool, false)
     purge_protection_enabled      = optional(bool, true)
     sku                           = optional(string, "standard")
     soft_delete_retention_in_days = optional(number, 7)
@@ -1665,6 +1744,12 @@ Description: Configuration object for the Azure Container Registry to be created
 - `sku` - (Optional) The SKU of the Container Registry. Default is "Premium".
 - `zone_redundancy_enabled` - (Optional) Whether zone redundancy is enabled. Default is true.
 - `public_network_access_enabled` - (Optional) Whether public network access is enabled. Default is false.
+- `network_rule_bypass_option` - (Optional) Whether trusted Azure services can access a network restricted Container Registry. Possible values are "None" and "AzureServices". Default is "None".
+- `network_rule_set` - (Optional) IP allowlist applied to the Container Registry. Requires the Premium SKU. Default is null, which leaves the registry firewall unconfigured.
+  - `default_action` - (Optional) Action taken when no rule matches. Possible values are "Allow" and "Deny". Default is "Deny".
+  - `ip_rule` - (Optional) List of allowed IP ranges. Default is [].
+    - `action` - (Optional) The rule action. Azure only permits "Allow". Default is "Allow".
+    - `ip_range` - The CIDR block allowed inbound access.
 - `enable_diagnostic_settings` - (Optional) Whether diagnostic settings are enabled. Default is true.
 - `diagnostic_settings` - (Optional) Map of diagnostic settings configurations for the Container Registry. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
   - `name` - (Optional) The name of the diagnostic setting.
@@ -1697,7 +1782,15 @@ object({
     sku                           = optional(string, "Premium")
     zone_redundancy_enabled       = optional(bool, true)
     public_network_access_enabled = optional(bool, false)
-    enable_diagnostic_settings    = optional(bool, true)
+    network_rule_bypass_option    = optional(string, "None")
+    network_rule_set = optional(object({
+      default_action = optional(string, "Deny")
+      ip_rule = optional(list(object({
+        action   = optional(string, "Allow")
+        ip_range = string
+      })), [])
+    }), null)
+    enable_diagnostic_settings = optional(bool, true)
     diagnostic_settings = optional(map(object({
       name                                     = optional(string, null)
       log_categories                           = optional(set(string), [])
@@ -1754,6 +1847,11 @@ Description: Configuration object for the Azure Cosmos DB account to be created 
 - `local_authentication_disabled` - (Optional) Whether local authentication is disabled. Default is true.
 - `partition_merge_enabled` - (Optional) Whether partition merge is enabled. Default is false.
 - `multiple_write_locations_enabled` - (Optional) Whether multiple write locations are enabled. Default is false.
+- `ip_range_filter` - (Optional) Set of IP addresses or CIDR ranges allowed to reach the Cosmos DB account. Defaults to the Azure portal and global Azure datacenter source IPs documented at https://learn.microsoft.com/azure/cosmos-db/how-to-configure-firewall. Set to `[]` to remove the allowlist.
+- `network_acl_bypass_for_azure_services` - (Optional) Whether Azure services can bypass the network ACLs. Default is true.
+- `network_acl_bypass_resource_ids` - (Optional) Set of resource IDs allowed to bypass the network ACLs. Default is [].
+- `virtual_network_rules` - (Optional) Set of subnets allowed to reach the Cosmos DB account. Default is [].
+  - `subnet_id` - The resource ID of the subnet to allow.
 - `analytical_storage_config` - (Optional) Analytical storage configuration.
   - `schema_type` - The schema type for analytical storage.
 - `consistency_policy` - (Optional) Consistency policy configuration.
@@ -1808,6 +1906,18 @@ object({
     local_authentication_disabled    = optional(bool, true)
     partition_merge_enabled          = optional(bool, false)
     multiple_write_locations_enabled = optional(bool, false)
+    # Default allowlist is the Azure portal plus global Azure datacenter source IPs: https://learn.microsoft.com/azure/cosmos-db/how-to-configure-firewall
+    ip_range_filter = optional(set(string), [
+      "168.125.123.255",
+      "170.0.0.0/24",
+      "0.0.0.0",
+      "104.42.195.92", "40.76.54.131", "52.176.6.30", "52.169.50.45", "52.187.184.26"
+    ])
+    network_acl_bypass_for_azure_services = optional(bool, true)
+    network_acl_bypass_resource_ids       = optional(set(string), [])
+    virtual_network_rules = optional(set(object({
+      subnet_id = string
+    })), [])
     analytical_storage_config = optional(object({
       schema_type = string
     }), null)
@@ -1948,6 +2058,14 @@ Description: Configuration object for the Azure Storage Account to be created fo
 - `access_tier` - (Optional) The access tier for the storage account. Default is "Hot".
 - `public_network_access_enabled` - (Optional) Whether public network access is enabled. Default is false.
 - `shared_access_key_enabled` - (Optional) Whether shared access keys are enabled. Default is true.
+- `network_rules` - (Optional) Storage account firewall configuration. Defaults to `{}`, which denies public traffic while still allowing trusted Azure services. Set to `null` to remove all network rules, which leaves the account reachable from any public network.
+  - `bypass` - (Optional) Traffic permitted to bypass the rules. Any combination of "Logging", "Metrics", "AzureServices" or "None". Default is ["AzureServices"].
+  - `default_action` - (Optional) Action taken when no rule matches. Possible values are "Allow" and "Deny". Default is "Deny".
+  - `ip_rules` - (Optional) Set of public IPv4 addresses or CIDR ranges allowed access. RFC 1918 private ranges are not permitted by Azure. Default is [].
+  - `virtual_network_subnet_ids` - (Optional) Set of subnet resource IDs allowed access. Default is [].
+  - `private_link_access` - (Optional) List of resource access rules granting private link access. Default is null.
+    - `endpoint_resource_id` - The resource ID granted access.
+    - `endpoint_tenant_id` - (Optional) The tenant ID of the resource. Defaults to the current tenant.
 - `role_assignments` - (Optional) Map of role assignments to create on the Storage Account. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
   - `role_definition_id_or_name` - The role definition ID or name to assign.
   - `principal_id` - The principal ID to assign the role to.
@@ -1985,6 +2103,16 @@ object({
     access_tier                   = optional(string, "Hot")
     public_network_access_enabled = optional(bool, false)
     shared_access_key_enabled     = optional(bool, true)
+    network_rules = optional(object({
+      bypass                     = optional(set(string), ["AzureServices"])
+      default_action             = optional(string, "Deny")
+      ip_rules                   = optional(set(string), [])
+      virtual_network_subnet_ids = optional(set(string), [])
+      private_link_access = optional(list(object({
+        endpoint_resource_id = string
+        endpoint_tenant_id   = optional(string)
+      })), null)
+    }), {})
     role_assignments = optional(map(object({
       role_definition_id_or_name             = string
       principal_id                           = string
@@ -2048,6 +2176,7 @@ Description: Configuration object for the Azure AI Search service to be created 
   - `marketplace_partner_resource_id` - (Optional) Resource ID of the marketplace partner resource.
 - `sku` - (Optional) The SKU of the AI Search service. Default is "standard".
 - `local_authentication_enabled` - (Optional) Whether local authentication is enabled. Default is true.
+- `allowed_ips` - (Optional) List of IP addresses or CIDR blocks allowed to reach the AI Search service. Default is null (no IP allowlist). Only takes effect when `public_network_access_enabled` is true.
 - `network_rule_bypass_option` - (Optional) Whether trusted Azure services can access a network restricted AI Search service. Possible values are "None" and "AzureServices". Default is "None".
 - `partition_count` - (Optional) The number of partitions for the search service. Default is 1.
 - `public_network_access_enabled` - (Optional) Whether public network access is enabled. Default is false.
@@ -2086,6 +2215,7 @@ object({
     })), {})
     sku                           = optional(string, "standard")
     local_authentication_enabled  = optional(bool, true)
+    allowed_ips                   = optional(list(string), null)
     network_rule_bypass_option    = optional(string, "None")
     partition_count               = optional(number, 1)
     public_network_access_enabled = optional(bool, false)
@@ -2511,7 +2641,7 @@ Version: 0.4.1
 
 Source: Azure/avm-ptn-aiml-ai-foundry/azurerm
 
-Version: 0.11.2
+Version: 0.11.3
 
 ### <a name="module_fw_pip"></a> [fw\_pip](#module\_fw\_pip)
 
