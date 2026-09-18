@@ -47,6 +47,8 @@ data "azurerm_client_config" "current" {}
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
   version = "0.9.2"
+
+  enable_telemetry = var.enable_telemetry
 }
 
 # This allows us to randomize the region for the resource group.
@@ -79,8 +81,9 @@ module "vm_sku" {
   source  = "Azure/avm-utl-sku-finder/azapi"
   version = "0.3.0"
 
-  location      = local.location
-  cache_results = true
+  location         = local.location
+  cache_results    = true
+  enable_telemetry = var.enable_telemetry
   vm_filters = {
     cpu_architecture_type          = "x64"
     min_vcpus                      = 2
@@ -124,7 +127,8 @@ module "vnet" {
   dns_servers = {
     dns_servers = [for key, value in module.example_hub.dns_resolver_inbound_ip_addresses : value]
   }
-  name = module.naming.virtual_network.name_unique
+  enable_telemetry = var.enable_telemetry
+  name             = module.naming.virtual_network.name_unique
   #name = "ai-lz-vnet-default-2"
   peerings = {
     peertovnet1 = {

@@ -54,6 +54,8 @@ data "azurerm_client_config" "current" {}
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
   version = "0.9.2"
+
+  enable_telemetry = var.enable_telemetry
 }
 
 # This allows us to randomize the region for the resource group.
@@ -86,8 +88,9 @@ module "vm_sku" {
   source  = "Azure/avm-utl-sku-finder/azapi"
   version = "0.3.0"
 
-  location      = local.location
-  cache_results = true
+  location         = local.location
+  cache_results    = true
+  enable_telemetry = var.enable_telemetry
   vm_filters = {
     cpu_architecture_type          = "x64"
     min_vcpus                      = 2
@@ -109,10 +112,11 @@ module "vnet" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
   version = "=0.16.0"
 
-  location      = azurerm_resource_group.vnet_rg.location
-  parent_id     = azurerm_resource_group.vnet_rg.id
-  address_space = ["192.168.0.0/20"]
-  name          = module.naming.virtual_network.name_unique
+  location         = azurerm_resource_group.vnet_rg.location
+  parent_id        = azurerm_resource_group.vnet_rg.id
+  address_space    = ["192.168.0.0/20"]
+  enable_telemetry = var.enable_telemetry
+  name             = module.naming.virtual_network.name_unique
 }
 
 module "test" {
@@ -317,7 +321,7 @@ If it is set to false, then no telemetry will be collected.
 
 Type: `bool`
 
-Default: `true`
+Default: `false`
 
 ## Outputs
 
