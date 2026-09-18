@@ -55,7 +55,7 @@ module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
   version = "0.9.2"
 
-  enable_telemetry = false
+  enable_telemetry = var.enable_telemetry
 }
 
 # This allows us to randomize the region for the resource group.
@@ -90,7 +90,7 @@ module "vm_sku" {
 
   location         = local.location
   cache_results    = true
-  enable_telemetry = false
+  enable_telemetry = var.enable_telemetry
   vm_filters = {
     cpu_architecture_type          = "x64"
     min_vcpus                      = 2
@@ -118,7 +118,7 @@ module "example_hub" {
   vnet_definition = {
     address_space = "10.10.0.0/24"
   }
-  enable_telemetry   = false
+  enable_telemetry   = var.enable_telemetry
   jump_vm_definition = { sku = module.vm_sku.sku }
   name_prefix        = "${module.naming.resource_group.name_unique}-hub"
 }
@@ -134,7 +134,7 @@ module "vnet" {
   dns_servers = {
     dns_servers = [for key, value in module.example_hub.dns_resolver_inbound_ip_addresses : value]
   }
-  enable_telemetry = false
+  enable_telemetry = var.enable_telemetry
   name             = module.naming.virtual_network.name_unique
   #name = "ai-lz-vnet-default-2"
   peerings = {
@@ -278,7 +278,7 @@ module "test" {
   container_app_environment_definition = {
     enable_diagnostic_settings = false
   }
-  enable_telemetry           = false
+  enable_telemetry           = var.enable_telemetry
   flag_platform_landing_zone = true
   genai_app_configuration_definition = {
     enable_diagnostic_settings = false
@@ -356,7 +356,7 @@ If it is set to false, then no telemetry will be collected.
 
 Type: `bool`
 
-Default: `true`
+Default: `false`
 
 ## Outputs
 
