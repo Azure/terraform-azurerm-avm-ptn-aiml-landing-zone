@@ -6,6 +6,22 @@ variable "vnet_definition" {
       firewall_ip_address = optional(string)
       }
     )), {})
+    managed_vnet = optional(object({
+      isolation_mode = optional(string, null)
+      outbound_rules = optional(map(object({
+        type = string
+        destination = object({
+          fqdns               = optional(list(string))
+          service_tag         = optional(string)
+          protocol            = optional(string)
+          port_ranges         = optional(string)
+          service_resource_id = optional(string)
+          subresource_target  = optional(string)
+          spark_enabled       = optional(bool, false)
+        })
+      })), {})
+      firewall_sku = optional(string, null)
+    }), null)
     address_space = optional(list(string), ["192.168.0.0/20"])
     ipam_pools = optional(list(object({
       id            = string
@@ -70,9 +86,25 @@ variable "vnet_definition" {
 Configuration object for the Virtual Network (VNet) to be deployed.
 
 - `name` - (Optional) The name of the Virtual Network. If not provided, a name will be generated.
-- `existing_byo_vnet` - (Optional) Map to configure use of an existing Virtual Network (BYO VNet). If provided, no new VNet will be created. The module will add subnets to the existing VNet during deployment, so ensure that the deployer account has sufficient permissions to create subnets. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
+- `existing_byo_vnet` - (Optional) Map to configure use of an existing Virtual Network (BYO VNet). If provided, no new VNet will be created. The module will add subnets to the existing VNet during deployment, so ensure that the deployer account has sufficient permissions to create subnets. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time. Mutually exclusive with `managed_vnet`.
   - `vnet_resource_id` - Resource ID of the existing Virtual Network to use.
   - `firewall_ip_address` - (Optional) IP address of the firewall if a firewall is deployed for use by the BYO vnet. This IP address wlll be used to configure the route table for the subnets when provided. If using a BYO Vnet, the firewall is assumed to be deployed and configured outside of this module.
+- `managed_vnet` - (Optional) Configures the Foundry account to use Microsoft-managed VNet isolation instead of a customer-delegated `AIFoundrySubnet`. When set, the module skips creation of `AIFoundrySubnet` and switches `network_injections.useMicrosoftManagedNetwork` to `true`. The module-created customer VNet is still created; the private endpoint subnet, Bastion subnet, and other non-Foundry subnets remain in the customer VNet. Defaults to `null` (preserve existing BYO/module-created VNet behavior).
+
+  > **Sub-module dependency:** Setting `isolation_mode`, `outbound_rules`, or `firewall_sku` requires `terraform-azurerm-avm-ptn-aiml-ai-foundry` v0.11+ (pending). With v0.10.x, only the presence of `managed_vnet` takes effect (toggles `useMicrosoftManagedNetwork`).
+
+  - `isolation_mode` - (Optional) Managed network isolation mode. One of `AllowInternetOutbound` or `AllowOnlyApprovedOutbound`. Defaults to `null`, which leaves the Foundry backend default in effect. With the current backend behavior, setting only `useMicrosoftManagedNetwork = true` provisions the managed network in `AllowInternetOutbound` mode; `AllowOnlyApprovedOutbound` requires a follow-up managed network PUT/PATCH call from `terraform-azurerm-avm-ptn-aiml-ai-foundry` v0.11+ (pending).
+  - `outbound_rules` - (Optional) Map of custom outbound rules for `AllowOnlyApprovedOutbound` mode. The map key is the rule name. Azure auto-creates `PrivateEndpoint`-type rules for BYOR resources (storage, cosmos, search) — do NOT declare those here or they will collide. Use only for `ServiceTag`, `FQDN`, or `PrivateEndpoint`-to-non-BYOR targets.
+    - `type` - One of `ServiceTag`, `FQDN`, or `PrivateEndpoint`.
+    - `destination` - Destination configuration. Required fields depend on `type`:
+      - `fqdns` - (FQDN only) List of FQDNs. FQDN rules support TCP ports 80 and 443 only.
+      - `service_tag` - (ServiceTag only) The service tag (e.g., `Storage`, `AzureActiveDirectory`).
+      - `protocol` - (ServiceTag only) `TCP` or `UDP`.
+      - `port_ranges` - (ServiceTag only) Comma-separated port ranges (e.g., `"443"` or `"80,443"`).
+      - `service_resource_id` - (PrivateEndpoint only) Resource ID of the target.
+      - `subresource_target` - (PrivateEndpoint only) Subresource (e.g., `blob`, `sql`).
+      - `spark_enabled` - (PrivateEndpoint only) Whether Spark is enabled. Defaults to `false`.
+  - `firewall_sku` - (Optional) Set to `Standard` to opt in to a managed Azure Firewall. Setting this alone does not provision a firewall — Azure provisions a managed Azure Firewall (~$1/hr base + data processing) only when `firewall_sku` is set AND at least one `FQDN`-type outbound rule exists. Defaults to `null` (no firewall).
 - `address_space` - (Optional) The address space for the Virtual Network in CIDR notation. Defaults to 192.168.0.0/20 if none provided. Not used when `existing_byo_vnet` is configured.
 - `ipam_pools` - (Optional) List of IPAM pools to associate with the VNet. If present, the address_space will be ignored and IPAM pools will be used for address allocation.
   - `id` - The ID of the IPAM pool.
@@ -125,6 +157,15 @@ Configuration object for the Virtual Network (VNet) to be deployed.
   - `peer_vwan_hub_resource_id` - (Optional) Resource ID of the Virtual WAN hub to peer with.
 
 DESCRIPTION
+
+  validation {
+    condition     = !(length(var.vnet_definition.existing_byo_vnet) > 0 && var.vnet_definition.managed_vnet != null)
+    error_message = "vnet_definition.managed_vnet and vnet_definition.existing_byo_vnet are mutually exclusive — set at most one. Microsoft-managed VNet replaces the customer-delegated AIFoundrySubnet entirely; the BYO VNet path expects to provide that subnet."
+  }
+  validation {
+    condition     = var.vnet_definition.managed_vnet == null || var.vnet_definition.managed_vnet.isolation_mode == null || contains(["AllowInternetOutbound", "AllowOnlyApprovedOutbound"], var.vnet_definition.managed_vnet.isolation_mode)
+    error_message = "vnet_definition.managed_vnet.isolation_mode must be one of: AllowInternetOutbound, AllowOnlyApprovedOutbound."
+  }
 }
 
 variable "app_gateway_definition" {
