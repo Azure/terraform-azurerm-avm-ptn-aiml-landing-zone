@@ -4,6 +4,8 @@
 
 This example deploys the version of the module with the platform landing zone flag set to true. In this configuration, the assumption is that a hub Vnet hosting DNS has been provided and that the landing zone will attach to a hub Vnet for all the standard network services. (DNS, Hybrid Connectivity, Firewalls, and etc.)
 
+Application Gateway uses a WAF policy created separately in the example hub resource group. The pattern module receives its computed resource ID through `waf_policy_definition.existing_policy` and does not create an internal WAF policy.
+
 ```hcl
 terraform {
   required_version = ">= 1.9, < 2.0"
@@ -111,6 +113,32 @@ module "example_hub" {
   name_prefix        = "${module.naming.resource_group.name_unique}-hub"
 }
 
+module "external_waf_policy" {
+  source  = "Azure/avm-res-network-applicationgatewaywebapplicationfirewallpolicy/azurerm"
+  version = "0.2.0"
+
+  location = "australiaeast"
+  managed_rules = {
+    managed_rule_set = {
+      drs = {
+        version = "2.1"
+        type    = "Microsoft_DefaultRuleSet"
+      }
+      bot = {
+        version = "1.1"
+        type    = "Microsoft_BotManagerRuleSet"
+      }
+    }
+  }
+  name                = "external-waf-policy"
+  resource_group_name = provider::azapi::parse_resource_id("Microsoft.Resources/resourceGroups", module.example_hub.resource_group_resource_id).name
+  enable_telemetry    = var.enable_telemetry
+  policy_settings = {
+    enabled = true
+    mode    = "Prevention"
+  }
+}
+
 module "test" {
   source = "../../"
 
@@ -193,6 +221,7 @@ module "test" {
     publisher_name     = "Azure API Management"
   }
   app_gateway_definition = {
+    deploy = true
     backend_address_pools = {
       example_pool = {
         name = "example-backend-pool"
@@ -271,6 +300,11 @@ module "test" {
     azure_policy_pe_zone_linking_enabled      = true
     existing_zones_resource_group_resource_id = module.example_hub.resource_group_resource_id
   }
+  waf_policy_definition = {
+    existing_policy = {
+      resource_id = module.external_waf_policy.resource_id
+    }
+  }
 }
 ```
 
@@ -295,6 +329,7 @@ The following resources are used by this module:
 
 - [azapi_update_resource.allow_drop_unencrypted_vnet](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/update_resource) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
+- [azapi_resource.application_gateway](https://registry.terraform.io/providers/azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 - [http_http.ip](https://registry.terraform.io/providers/hashicorp/http/latest/docs/data-sources/http) (data source)
 
@@ -330,6 +365,12 @@ The following Modules are called:
 Source: ../../modules/example_hub_vnet
 
 Version:
+
+### <a name="module_external_waf_policy"></a> [external\_waf\_policy](#module\_external\_waf\_policy)
+
+Source: Azure/avm-res-network-applicationgatewaywebapplicationfirewallpolicy/azurerm
+
+Version: 0.2.0
 
 ### <a name="module_naming"></a> [naming](#module\_naming)
 

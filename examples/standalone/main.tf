@@ -175,6 +175,7 @@ module "test" {
     publisher_name  = "Azure API Management"
   }
   app_gateway_definition = {
+    deploy = true
     backend_address_pools = {
       example_pool = {
         name = "example-backend-pool"
@@ -248,5 +249,26 @@ module "test" {
   }
   ks_ai_search_definition = {
     enable_diagnostic_settings = false
+  }
+  use_internet_routing = true
+  waf_policy_definition = {
+    name = "custom-rules-waf-policy"
+    custom_rules = {
+      block_example_ip = {
+        name      = "BlockExampleIP"
+        priority  = 10
+        rule_type = "MatchRule"
+        action    = "Block"
+        match_conditions = {
+          client_ip = {
+            match_values = ["192.0.2.1/32"]
+            operator     = "IPMatch"
+            match_variables = [{
+              variable_name = "RemoteAddr"
+            }]
+          }
+        }
+      }
+    }
   }
 }
