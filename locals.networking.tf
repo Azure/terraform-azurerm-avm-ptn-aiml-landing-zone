@@ -257,7 +257,10 @@ locals {
       }] : []
     }
     AIFoundrySubnet = {
-      enabled = try(local.subnets_definition["AIFoundrySubnet"].enabled, true)
+      # Microsoft-managed VNet provides its own isolated network for Foundry — the customer-side
+      # AIFoundrySubnet (with Microsoft.App/environments delegation) is not used and would conflict
+      # with managed-VNet provisioning. PE subnet, Bastion, and the rest of the customer VNet remain.
+      enabled = var.vnet_definition.managed_vnet == null && try(local.subnets_definition["AIFoundrySubnet"].enabled, true)
       name    = try(local.subnets_definition["AIFoundrySubnet"].name, null) != null ? local.subnets_definition["AIFoundrySubnet"].name : "AIFoundrySubnet"
       address_prefixes = (var.vnet_definition.ipam_pools == null ?
         try(local.subnets_definition["AIFoundrySubnet"].address_prefix, null) != null ?
