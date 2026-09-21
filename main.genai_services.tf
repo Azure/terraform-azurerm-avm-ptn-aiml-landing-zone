@@ -115,7 +115,6 @@ module "storage_account" {
 
   location                            = azurerm_resource_group.this.location
   name                                = local.genai_storage_account_name
-  resource_group_name                 = azurerm_resource_group.this.name
   access_tier                         = var.genai_storage_account_definition.access_tier
   account_kind                        = var.genai_storage_account_definition.account_kind
   account_replication_type            = var.genai_storage_account_definition.account_replication_type
@@ -136,6 +135,7 @@ module "storage_account" {
   role_assignments              = local.genai_storage_account_role_assignments
   shared_access_key_enabled     = var.genai_storage_account_definition.shared_access_key_enabled
   tags                          = merge(local.tags, var.genai_storage_account_definition.tags != null ? var.genai_storage_account_definition.tags : {})
+  resource_group_name           = azurerm_resource_group.this.name
 
   depends_on = [module.private_dns_zones, module.hub_vnet_peering]
 }
