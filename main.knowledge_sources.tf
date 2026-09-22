@@ -3,9 +3,9 @@ module "search_service" {
   version = "0.2.0"
   count   = var.ks_ai_search_definition.deploy ? 1 : 0
 
-  location                     = azurerm_resource_group.this.location
+  location                     = azapi_resource.this.location
   name                         = local.ks_ai_search_name
-  resource_group_name          = azurerm_resource_group.this.name
+  resource_group_name          = azapi_resource.this.name
   diagnostic_settings          = local.ks_ai_search_diagnostic_settings
   enable_telemetry             = var.enable_telemetry # see variables.tf
   local_authentication_enabled = var.ks_ai_search_definition.local_authentication_enabled
@@ -32,16 +32,29 @@ resource "azapi_resource" "bing_grounding" {
 
   location  = "global"
   name      = local.ks_bing_grounding_name
-  parent_id = azurerm_resource_group.this.id
-  type      = "Microsoft.Bing/accounts@2025-05-01-preview"
+  parent_id = azapi_resource.this.id
+  type      = var.resource_types.bing_accounts
   body = {
     kind = "Bing.Grounding"
     sku = {
       name = var.ks_bing_grounding_definition.sku
     }
   }
+  ignore_body_changes       = length(var.ignore_body_changes.bing_accounts) > 0 ? var.ignore_body_changes.bing_accounts : null
+  response_export_values    = []
+  retry                     = var.retry
   schema_validation_enabled = false
   tags                      = merge(local.tags, var.ks_bing_grounding_definition.tags != null ? var.ks_bing_grounding_definition.tags : {})
+
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
+    content {
+      create = timeouts.value.create
+      read   = timeouts.value.read
+      update = timeouts.value.update
+      delete = timeouts.value.delete
+    }
+  }
 
   # The Microsoft.Bing/accounts resource provider normalizes tag keys by
   # lower-casing the first character (e.g. "SecurityControl" -> "securityControl"),

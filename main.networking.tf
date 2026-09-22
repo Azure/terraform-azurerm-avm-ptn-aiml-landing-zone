@@ -3,8 +3,8 @@ module "ai_lz_vnet" {
   version = "0.16.0"
   count   = length(var.vnet_definition.existing_byo_vnet) > 0 ? 0 : 1
 
-  location      = azurerm_resource_group.this.location
-  parent_id     = azurerm_resource_group.this.id
+  location      = azapi_resource.this.location
+  parent_id     = azapi_resource.this.id
   address_space = var.vnet_definition.ipam_pools == null ? var.vnet_definition.address_space : null
   ddos_protection_plan = var.vnet_definition.ddos_protection_plan_resource_id != null ? {
     id     = var.vnet_definition.ddos_protection_plan_resource_id
@@ -22,11 +22,12 @@ module "ai_lz_vnet" {
   tags             = merge(local.tags, var.vnet_definition.tags != null ? var.vnet_definition.tags : {})
 }
 
-data "azurerm_virtual_network" "ai_lz_vnet" {
+data "azapi_resource" "ai_lz_vnet" {
   count = length(var.vnet_definition.existing_byo_vnet) > 0 ? 1 : 0
 
-  name                = try(basename(values(var.vnet_definition.existing_byo_vnet)[0].vnet_resource_id), "")
-  resource_group_name = split("/", try(values(var.vnet_definition.existing_byo_vnet)[0].vnet_resource_id, "/n/o/t/u/s/e/d"))[4]
+  resource_id            = values(var.vnet_definition.existing_byo_vnet)[0].vnet_resource_id
+  type                   = "Microsoft.Network/virtualNetworks@2024-05-01"
+  response_export_values = ["properties.addressSpace"]
 }
 
 module "byo_subnets" {
@@ -48,37 +49,48 @@ module "nsgs" {
   source  = "Azure/avm-res-network-networksecuritygroup/azurerm"
   version = "0.5.0"
 
-  location            = azurerm_resource_group.this.location
+  location            = azapi_resource.this.location
   name                = local.nsg_name
-  resource_group_name = var.nsgs_definition.resource_group_name != null ? var.nsgs_definition.resource_group_name : azurerm_resource_group.this.name
+  resource_group_name = var.nsgs_definition.resource_group_name != null ? var.nsgs_definition.resource_group_name : azapi_resource.this.name
 }
 
 # NSGs are required during subnet creation but rules use cidrs which are not known until after vnet creation.
 # Therefore, NSG rules are created in a separate resource after the VNet and subnets are created.
-resource "azurerm_network_security_rule" "this" {
+resource "azapi_resource" "network_security_rule" {
   for_each = local.nsg_rules
 
-  access                                     = each.value.access
-  direction                                  = each.value.direction
-  name                                       = each.value.name
-  network_security_group_name                = module.nsgs.resource.name
-  priority                                   = each.value.priority
-  protocol                                   = each.value.protocol
-  resource_group_name                        = module.nsgs.resource.resource_group_name
-  description                                = try(each.value.description, null)
-  destination_address_prefix                 = try(each.value.destination_address_prefix, null)
-  destination_address_prefixes               = try(each.value.destination_address_prefixes, null)
-  destination_application_security_group_ids = try(each.value.destination_application_security_group_ids, null)
-  destination_port_range                     = try(each.value.destination_port_range, null)
-  destination_port_ranges                    = try(each.value.destination_port_ranges, null)
-  source_address_prefix                      = try(each.value.source_address_prefix, null)
-  source_address_prefixes                    = try(each.value.source_address_prefixes, null)
-  source_application_security_group_ids      = try(each.value.source_application_security_group_ids, null)
-  source_port_range                          = try(each.value.source_port_range, null)
-  source_port_ranges                         = try(each.value.source_port_ranges, null)
+  name      = each.value.name
+  parent_id = module.nsgs.resource_id
+  type      = var.resource_types.network_network_security_groups_security_rules
+  body = {
+    properties = {
+      access                               = each.value.access
+      direction                            = each.value.direction
+      priority                             = each.value.priority
+      protocol                             = each.value.protocol
+      description                          = try(each.value.description, null)
+      destinationAddressPrefix             = try(each.value.destination_address_prefix, null)
+      destinationAddressPrefixes           = try(tolist(each.value.destination_address_prefixes), null)
+      destinationApplicationSecurityGroups = try([for id in each.value.destination_application_security_group_ids : { id = id }], null)
+      destinationPortRange                 = try(each.value.destination_port_range, null)
+      destinationPortRanges                = try(tolist(each.value.destination_port_ranges), null)
+      sourceAddressPrefix                  = try(each.value.source_address_prefix, null)
+      sourceAddressPrefixes                = try(tolist(each.value.source_address_prefixes), null)
+      sourceApplicationSecurityGroups      = try([for id in each.value.source_application_security_group_ids : { id = id }], null)
+      sourcePortRange                      = try(each.value.source_port_range, null)
+      sourcePortRanges                     = try(tolist(each.value.source_port_ranges), null)
+    }
+  }
+  create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  ignore_body_changes    = length(var.ignore_body_changes.network_network_security_groups_security_rules) > 0 ? var.ignore_body_changes.network_network_security_groups_security_rules : null
+  read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  response_export_values = []
+  retry                  = var.retry
+  update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   dynamic "timeouts" {
-    for_each = try(each.value.timeouts, null) == null ? [] : [each.value.timeouts]
+    for_each = try(each.value.timeouts, null) != null ? [each.value.timeouts] : var.timeouts == null ? [] : [var.timeouts]
 
     content {
       create = timeouts.value.create
@@ -112,12 +124,39 @@ module "hub_vnet_peering" {
 
 #TODO: Add the platform landing zone flag as a secondary decision point for the vwan connection?
 #peer_vwan_hub_resource_id
-resource "azurerm_virtual_hub_connection" "this" {
+resource "azapi_resource" "virtual_hub_connection" {
   count = length(var.vnet_definition.existing_byo_vnet) == 0 && try(var.vnet_definition.vwan_hub_peering_configuration.peer_vwan_hub_resource_id, null) != null ? 1 : 0
 
-  name                      = "${local.vnet_name}-to-${basename(var.vnet_definition.vwan_hub_peering_configuration.peer_vwan_hub_resource_id)}"
-  remote_virtual_network_id = local.vnet_resource_id
-  virtual_hub_id            = var.vnet_definition.vwan_hub_peering_configuration.peer_vwan_hub_resource_id
+  name      = "${local.vnet_name}-to-${basename(var.vnet_definition.vwan_hub_peering_configuration.peer_vwan_hub_resource_id)}"
+  parent_id = var.vnet_definition.vwan_hub_peering_configuration.peer_vwan_hub_resource_id
+  type      = var.resource_types.network_virtual_hubs_hub_virtual_network_connections
+  body = {
+    properties = {
+      remoteVirtualNetwork = {
+        id = local.vnet_resource_id
+      }
+    }
+  }
+  create_headers      = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers      = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  ignore_body_changes = length(var.ignore_body_changes.network_virtual_hubs_hub_virtual_network_connections) > 0 ? var.ignore_body_changes.network_virtual_hubs_hub_virtual_network_connections : null
+  read_headers        = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  replace_triggers_refs = [
+    "properties.remoteVirtualNetwork.id",
+  ]
+  response_export_values = []
+  retry                  = var.retry
+  update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
+    content {
+      create = timeouts.value.create
+      read   = timeouts.value.read
+      update = timeouts.value.update
+      delete = timeouts.value.delete
+    }
+  }
 }
 
 module "firewall_route_table" {
@@ -126,9 +165,9 @@ module "firewall_route_table" {
   count = ((!var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
   (!var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? 1 : 0
 
-  location                      = azurerm_resource_group.this.location
+  location                      = azapi_resource.this.location
   name                          = local.route_table_name
-  resource_group_name           = var.firewall_definition.resource_group_name != null ? var.firewall_definition.resource_group_name : azurerm_resource_group.this.name
+  resource_group_name           = var.firewall_definition.resource_group_name != null ? var.firewall_definition.resource_group_name : azapi_resource.this.name
   bgp_route_propagation_enabled = true
   routes = var.use_internet_routing ? {
     internet_route = {
@@ -151,9 +190,9 @@ module "fw_pip" {
   version = "0.2.0"
   count   = !var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0 ? 1 : 0
 
-  location            = azurerm_resource_group.this.location
+  location            = azapi_resource.this.location
   name                = "${local.firewall_name}-pip"
-  resource_group_name = var.firewall_definition.resource_group_name != null ? var.firewall_definition.resource_group_name : azurerm_resource_group.this.name
+  resource_group_name = var.firewall_definition.resource_group_name != null ? var.firewall_definition.resource_group_name : azapi_resource.this.name
   enable_telemetry    = var.enable_telemetry
   zones               = var.firewall_definition.zones
 }
@@ -165,9 +204,9 @@ module "firewall" {
 
   firewall_sku_name   = var.firewall_definition.sku
   firewall_sku_tier   = var.firewall_definition.tier
-  location            = azurerm_resource_group.this.location
+  location            = azapi_resource.this.location
   name                = local.firewall_name
-  resource_group_name = var.firewall_definition.resource_group_name != null ? var.firewall_definition.resource_group_name : azurerm_resource_group.this.name
+  resource_group_name = var.firewall_definition.resource_group_name != null ? var.firewall_definition.resource_group_name : azapi_resource.this.name
   diagnostic_settings = local.az_fw_diagnostic_settings
   enable_telemetry    = var.enable_telemetry
   firewall_ip_configuration = [
@@ -188,9 +227,9 @@ module "firewall_policy" {
   version = "0.3.3"
   count   = !var.flag_platform_landing_zone && var.firewall_definition.deploy && length(var.vnet_definition.existing_byo_vnet) == 0 ? 1 : 0
 
-  location            = azurerm_resource_group.this.location
+  location            = azapi_resource.this.location
   name                = "${local.firewall_name}-policy"
-  resource_group_name = var.firewall_policy_definition.resource_group_name != null ? var.firewall_policy_definition.resource_group_name : azurerm_resource_group.this.name
+  resource_group_name = var.firewall_policy_definition.resource_group_name != null ? var.firewall_policy_definition.resource_group_name : azapi_resource.this.name
   enable_telemetry    = var.enable_telemetry
 }
 
@@ -211,9 +250,9 @@ module "azure_bastion" {
   version = "0.7.2"
   count   = !var.flag_platform_landing_zone && var.bastion_definition.deploy ? 1 : 0
 
-  location            = azurerm_resource_group.this.location
+  location            = azapi_resource.this.location
   name                = local.bastion_name
-  resource_group_name = var.bastion_definition.resource_group_name != null ? var.bastion_definition.resource_group_name : azurerm_resource_group.this.name
+  resource_group_name = var.bastion_definition.resource_group_name != null ? var.bastion_definition.resource_group_name : azapi_resource.this.name
   enable_telemetry    = var.enable_telemetry
   ip_configuration = {
     subnet_id = local.subnet_ids["AzureBastionSubnet"]
@@ -229,7 +268,7 @@ module "private_dns_zones" {
   for_each = !var.flag_platform_landing_zone ? local.private_dns_zones : {}
 
   domain_name           = each.value.name
-  parent_id             = azurerm_resource_group.this.id
+  parent_id             = azapi_resource.this.id
   enable_telemetry      = var.enable_telemetry
   virtual_network_links = local.virtual_network_links
 
@@ -261,10 +300,10 @@ module "app_gateway_waf_policy" {
   version = "0.2.0"
   count   = var.app_gateway_definition.deploy ? 1 : 0
 
-  location            = azurerm_resource_group.this.location
+  location            = azapi_resource.this.location
   managed_rules       = var.waf_policy_definition.managed_rules #local.web_application_firewall_managed_rules
   name                = local.web_application_firewall_policy_name
-  resource_group_name = azurerm_resource_group.this.name
+  resource_group_name = azapi_resource.this.name
   enable_telemetry    = var.enable_telemetry
   policy_settings     = var.waf_policy_definition.policy_settings
   tags                = merge(local.tags, var.waf_policy_definition.tags != null ? var.waf_policy_definition.tags : {})
@@ -282,10 +321,10 @@ module "application_gateway" {
     subnet_id = local.subnet_ids["AppGatewaySubnet"]
   }
   http_listeners                     = var.app_gateway_definition.http_listeners
-  location                           = azurerm_resource_group.this.location
+  location                           = azapi_resource.this.location
   name                               = local.application_gateway_name
   request_routing_rules              = var.app_gateway_definition.request_routing_rules
-  resource_group_name                = azurerm_resource_group.this.name
+  resource_group_name                = azapi_resource.this.name
   app_gateway_waf_policy_resource_id = one(module.app_gateway_waf_policy[*].resource_id)
   authentication_certificate         = var.app_gateway_definition.authentication_certificate
   autoscale_configuration            = var.app_gateway_definition.autoscale_configuration
@@ -308,6 +347,6 @@ module "application_gateway" {
   zones                              = local.region_zones
 
   depends_on = [
-    azurerm_network_security_rule.this
+    azapi_resource.network_security_rule
   ]
 }

@@ -3,12 +3,12 @@ module "container_apps_managed_environment" {
   version = "0.3.0"
   count   = var.container_app_environment_definition.deploy ? 1 : 0
 
-  location                           = azurerm_resource_group.this.location
+  location                           = azapi_resource.this.location
   name                               = local.container_app_environment_name
-  resource_group_name                = azurerm_resource_group.this.name
+  resource_group_name                = azapi_resource.this.name
   diagnostic_settings                = local.cae_diagnostic_settings
   enable_telemetry                   = var.enable_telemetry
-  infrastructure_resource_group_name = "rg-managed-${azurerm_resource_group.this.name}"
+  infrastructure_resource_group_name = "rg-managed-${azapi_resource.this.name}"
   infrastructure_subnet_id           = local.subnet_ids["ContainerAppEnvironmentSubnet"]
   internal_load_balancer_enabled     = var.container_app_environment_definition.internal_load_balancer_enabled
   log_analytics_workspace = {

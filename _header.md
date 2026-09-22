@@ -13,25 +13,22 @@ Start from one of the deployable examples in this repository:
 
 Copy the example that best matches your environment, then replace `source = "../../"` with the registry source when deploying from your own configuration.
 
-## Policy-restricted environments
+## Provider authentication
 
-If your tenant policies enforce restrictions (for example, storage account key access controls), use the same `azurerm` provider settings as the examples:
+The module uses AzAPI for its direct Azure control-plane operations. It retains one narrowly scoped `azurerm_client_config` data source so the deployment-principal object ID, tenant ID, and subscription ID come from the configured AzureRM provider identity. AzAPI [issue #981](https://github.com/Azure/terraform-provider-azapi/issues/981) can otherwise return the Azure CLI identity instead of the configured service principal, managed identity, or provider alias.
+
+Configure both providers with the same authentication context:
 
 ```hcl
 provider "azurerm" {
-  storage_use_azuread = true
-  features {
-    resource_group {
-      prevent_deletion_if_contains_resources = false
-    }
-    virtual_machine {
-      delete_os_disk_on_deletion = true
-    }
-    cognitive_account {
-      purge_soft_delete_on_destroy = true
-    }
-  }
+  features {}
 }
 ```
 
-These settings are used across the examples to help deployments succeed in policy-restricted environments.
+No direct AzureRM resource is created by this module. The client-config exception will be removed after issue #981 is fixed.
+
+## Upgrading from v0.5.1
+
+Version 0.6.0 migrates direct AzureRM control-plane resources to AzAPI. Declarative `moved` blocks preserve the existing resource group, network security rules, virtual hub connection, Key Vault deployment-principal role assignment, and example networking resources.
+
+Read the [v0.6.0 migration guide](./docs/migrations/v0.6.0.md) before upgrading. Back up state and review the upgrade plan before applying because AzAPI provider state migration is one-way.
