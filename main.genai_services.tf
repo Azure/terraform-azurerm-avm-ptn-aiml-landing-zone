@@ -99,14 +99,11 @@ module "cosmosdb" {
     }
   }
   public_network_access_enabled = var.genai_cosmosdb_definition.public_network_access_enabled
+  sql_databases                 = var.genai_cosmosdb_definition.sql_databases
   tags                          = merge(local.tags, var.genai_cosmosdb_definition.tags != null ? var.genai_cosmosdb_definition.tags : {})
 
   depends_on = [module.private_dns_zones, module.hub_vnet_peering]
 }
-
-#TODO:
-# Implement subservice passthrough in variables and here
-# removing for testing PE DNS zone strategy when platform flag is false
 
 module "storage_account" {
   source  = "Azure/avm-res-storage-storageaccount/azurerm"
@@ -120,6 +117,7 @@ module "storage_account" {
   account_kind                        = var.genai_storage_account_definition.account_kind
   account_replication_type            = var.genai_storage_account_definition.account_replication_type
   account_tier                        = var.genai_storage_account_definition.account_tier
+  containers                          = var.genai_storage_account_definition.containers
   diagnostic_settings_storage_account = local.genai_storage_account_diagnostic_settings
   enable_telemetry                    = var.enable_telemetry
   local_user_enabled                  = false

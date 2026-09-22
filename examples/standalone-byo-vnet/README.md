@@ -238,6 +238,9 @@ module "test" {
       }
     }
   }
+  app_insights_definition = {
+    deploy = true
+  }
   bastion_definition = {
   }
   buildvm_definition = {
@@ -256,6 +259,37 @@ module "test" {
   }
   genai_cosmosdb_definition = {
     consistency_level = "Session"
+    sql_databases = {
+      application = {
+        name = "cosmosdb"
+        containers = {
+          conversations = {
+            name                = "conversations"
+            partition_key_paths = ["/principal_id"]
+            default_ttl         = -1
+            indexing_policy = {
+              indexing_mode  = "consistent"
+              included_paths = [{ path = "/*" }]
+              composite_indexes = [
+                {
+                  indexes = [
+                    { path = "/isDeleted", order = "Ascending" },
+                    { path = "/_ts", order = "Descending" }
+                  ]
+                },
+                {
+                  indexes = [
+                    { path = "/isDeleted", order = "Ascending" },
+                    { path = "/name", order = "Ascending" },
+                    { path = "/_ts", order = "Descending" }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
   }
   genai_key_vault_definition = {
     #this is for AVM testing purposes only. Doing this as we don't have an easy for the test runner to be privately connected for testing.
@@ -266,12 +300,24 @@ module "test" {
     }
   }
   genai_storage_account_definition = {
+    containers = {
+      documents = {
+        name          = "documents"
+        public_access = "None"
+      }
+    }
   }
   jumpvm_definition = {
     sku = module.vm_sku.sku
   }
   ks_ai_search_definition = {
     enable_diagnostic_settings = false
+  }
+  ks_speech_service_definition = {
+    deploy                           = true
+    assign_deployment_principal_rbac = false
+    enable_diagnostic_settings       = false
+    sku                              = "S0"
   }
   tags = {
     SecurityControl = "Ignore"

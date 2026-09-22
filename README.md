@@ -38,6 +38,54 @@ provider "azurerm" {
 
 These settings are used across the examples to help deployments succeed in policy-restricted environments.
 
+## Data and AI services proposal
+
+This branch contains a human-reviewable, additive proposal for the authorized Data & AI Services parity handoff. It does not claim parity and must not be treated as deployment, release, or publication approval.
+
+### Provenance
+
+- Source implementation: [`Azure/bicep-ptn-aiml-landing-zone@66a0d76f034b8c1003fd63bcdcf58e3255f3d030`](https://github.com/Azure/bicep-ptn-aiml-landing-zone/tree/66a0d76f034b8c1003fd63bcdcf58e3255f3d030).
+- Source contracts: `parity/handoffs/data-and-ai-services/data-and-ai-services-baseline.json` and `parity/inventory.json` at the same commit.
+- Terraform baseline: v0.5.1 commit `abe337894f93de3ddda525ea44898b33e1484070`.
+- Authorization: [Azure/bicep-ptn-aiml-landing-zone#147 comment 5375280499](https://github.com/Azure/bicep-ptn-aiml-landing-zone/pull/147#issuecomment-5375280499).
+- Expected release impact if accepted: pre-1.0 minor version (for example, `0.6.0`); this proposal does not perform a release.
+
+The baseline Terraform files for these capability groups are unchanged between v0.5.1 and the upstream main used for this proposal.
+
+### Additive service contract
+
+- Standalone GenAI Cosmos DB can explicitly compose a `cosmosdb` SQL database with a `conversations` container, `/principal_id` partition key, infinite default TTL, and the two source composite indexes. `sql_databases` defaults to empty.
+- Standalone GenAI Storage can explicitly compose a private `documents` blob container. `containers` defaults to empty; the account's existing defaults remain GRS replication with shared access keys enabled.
+- Foundry BYOR Storage remains distinct: ZRS replication with shared access keys disabled by default.
+- Application Insights can be created or referenced by resource ID. Existing-component reuse requires an explicitly reused Log Analytics workspace unless `allow_mixed_workspaces` records an intentional exception.
+- Azure AI Speech is opt-in and defaults to `S0`, system-assigned managed identity, disabled local authentication, disabled public network access, and a private endpoint using `privatelink.cognitiveservices.azure.com`. Deployment-principal RBAC is separately opt-in and defaults to disabled.
+- Root outputs contain only non-secret IDs, names, endpoints, regions, managed identity principal IDs, and data-container names. Connection strings, instrumentation keys, and access keys are never exposed.
+
+### Scenario status
+
+| Scenario | Data services | Observability | Search, Bing, Speech |
+| --- | --- | --- | --- |
+| `standalone-network-isolated` | Implemented statically through existing private endpoint, DNS, and peering ordering. | Partial: Log Analytics and Application Insights create/reuse are implemented; AMPLS remains deferred. | Search/Bing are preserved and opt-in Speech uses the existing Cognitive Services private DNS zone and private endpoint subnet. |
+| `standalone-standard` | Blocked by the root module's mandatory VNet/private-endpoint architecture. | Blocked by the same architecture. | Blocked by the same architecture. |
+| `hub-spoke` | Excluded by the authorized handoff. | Excluded by the authorized handoff. | Excluded by the authorized handoff. |
+
+### Exact deferrals and dependencies
+
+- AMPLS, its `azuremonitor` private endpoint, scoped-resource links, and the Azure Monitor/OMS/ODS/Automation private DNS zone set are deferred as one coherent networking change. Application Insights keeps internet ingestion/query enabled by default until that dependency is implemented.
+- Secure runtime propagation of an existing Application Insights connection string is deferred. The module intentionally accepts and outputs only the component resource ID.
+- Cosmos DB SQL data-plane role assignments are deferred pending an AzAPI/AVM implementation decision; ARM role assignments are not a substitute.
+- Default Search, Storage, Key Vault, and workload-identity data-plane role changes are deferred because silently changing existing defaults would violate the migration-free handoff. Creating the Speech account, managed identity, private endpoint, and diagnostics requires control-plane deployment permission but does not require persistent Cognitive Services data-plane roles. Set `assign_deployment_principal_rbac = true` only when that principal must perform post-deployment Cognitive Services operations; this grants exactly Cognitive Services Contributor and Cognitive Services User at the Speech account scope.
+- Bing-to-Foundry connection wiring remains dependent on the separately scoped Foundry connection capability groups.
+- Approved Azure deployment evidence, DNS resolution, endpoint reachability, RBAC behavior, and isolation comparison remain required before any parity claim.
+
+### Upgrade and release guidance
+
+- The proposed Data & AI capability set is additive and is expected to ship in a pre-1.0 minor release (for example, `0.6.0`), not a patch release.
+- `genai_cosmosdb_definition.sql_databases` and `genai_storage_account_definition.containers` deliberately default to `{}`. Existing consumers can upgrade without Terraform silently creating or colliding with databases, Cosmos containers, or blob containers.
+- Consumers that want the Bicep parity preset must copy the explicit `cosmosdb`/`conversations` and `documents` definitions from [`examples/standalone-byo-vnet`](./examples/standalone-byo-vnet). If equivalent child resources already exist, import them into the child-module addresses before enabling the preset.
+- `ks_speech_service_definition.assign_deployment_principal_rbac` defaults to `false`. Consumers that intentionally depended on the earlier proposal default must opt in explicitly and review the two persistent account-scoped assignments.
+- Non-empty `ignore_body_changes` values use the AzAPI write-only lifecycle interface and therefore require Terraform 1.11 or later; the default empty value remains compatible with the module's Terraform 1.9 minimum.
+
 <!-- markdownlint-disable MD033 -->
 ## Requirements
 
@@ -64,7 +112,16 @@ The following resources are used by this module:
 - [azapi_resource.apim_api_operation_list_models](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.apim_api_policy_ai_foundry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.apim_backend_ai_foundry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.application_insights](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.application_insights_diagnostic_setting](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.application_insights_role_assignment](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.bing_grounding](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.speech_diagnostic_setting](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.speech_private_dns_zone_group](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.speech_private_endpoint](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.speech_role_assignment](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.speech_service](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource_action.application_insights_daily_cap](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action) (resource)
 - [azapi_resource_action.purge_ai_foundry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action) (resource)
 - [azurerm_network_security_rule.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_security_rule) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
@@ -74,10 +131,14 @@ The following resources are used by this module:
 - [random_integer.zone_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 - [random_string.name_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) (resource)
 - [random_uuid.telemetry](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
+- [terraform_data.observability_contract](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) (resource)
 - [time_sleep.apim_ready](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
 - [time_sleep.purge_ai_foundry_cooldown](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
 - [time_sleep.wait_for_kv_rbac](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
 - [azapi_client_config.telemetry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config) (data source)
+- [azapi_resource.existing_application_insights](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
+- [azapi_resource_list.app_insights_role_definition](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_list) (data source)
+- [azapi_resource_list.ks_speech_role_definition](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_list) (data source)
 - [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 - [azurerm_virtual_network.ai_lz_vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/virtual_network) (data source)
 - [modtm_module_source.telemetry](https://registry.terraform.io/providers/azure/modtm/latest/docs/data-sources/module_source) (data source)
@@ -1305,6 +1366,84 @@ object({
 
 Default: `null`
 
+### <a name="input_app_insights_definition"></a> [app\_insights\_definition](#input\_app\_insights\_definition)
+
+Description: Configuration for a workspace-based Application Insights component or an existing component.
+
+- `deploy` - (Optional) Deploy a new component when `resource_id` is not supplied. Default is false to preserve existing Terraform deployments.
+- `resource_id` - (Optional) Resource ID of an existing Application Insights component. The ID is passed through and no connection string is read or output.
+- `name` - (Optional) Component name.
+- `application_type` - (Optional) Application type. Default is "web".
+- `daily_data_cap_in_gb` - (Optional) Daily data cap. Default is 100.
+- `disable_ip_masking` - (Optional) Disable IP masking. Default is false.
+- `internet_ingestion_enabled` - (Optional) Allow internet ingestion. Default is true while AMPLS composition remains deferred.
+- `internet_query_enabled` - (Optional) Allow internet query. Default is true while AMPLS composition remains deferred.
+- `local_authentication_disabled` - (Optional) Disable local authentication. Default is true.
+- `retention_in_days` - (Optional) Retention period. Default is 90.
+- `allow_mixed_workspaces` - (Optional) Allow reuse of Application Insights without an explicitly reused Log Analytics workspace. Default is false.
+- `enable_diagnostic_settings` - (Optional) Enable component diagnostic settings. Default is false.
+- `diagnostic_settings` - (Optional) Component diagnostic settings. When diagnostics are enabled and this map is empty, the automatic setting collects the `allLogs` category group and `AllMetrics`. Supplied settings are preserved without adding categories.
+- `role_assignments` - (Optional) Component-scoped role assignments.
+- `tags` - (Optional) Component tags.
+
+Type:
+
+```hcl
+object({
+    deploy                        = optional(bool, false)
+    resource_id                   = optional(string)
+    name                          = optional(string)
+    application_type              = optional(string, "web")
+    daily_data_cap_in_gb          = optional(number, 100)
+    disable_ip_masking            = optional(bool, false)
+    internet_ingestion_enabled    = optional(bool, true)
+    internet_query_enabled        = optional(bool, true)
+    local_authentication_disabled = optional(bool, true)
+    retention_in_days             = optional(number, 90)
+    allow_mixed_workspaces        = optional(bool, false)
+    enable_diagnostic_settings    = optional(bool, false)
+    diagnostic_settings = optional(map(object({
+      name = optional(string, null)
+      logs = optional(set(object({
+        category       = optional(string, null)
+        category_group = optional(string, null)
+        enabled        = optional(bool, true)
+        retention_policy = optional(object({
+          days    = optional(number, 0)
+          enabled = optional(bool, false)
+        }), {})
+      })), [])
+      metrics = optional(set(object({
+        category = optional(string, null)
+        enabled  = optional(bool, true)
+        retention_policy = optional(object({
+          days    = optional(number, 0)
+          enabled = optional(bool, false)
+        }), {})
+      })), [])
+      log_analytics_destination_type           = optional(string, "Dedicated")
+      workspace_resource_id                    = optional(string, null)
+      storage_account_resource_id              = optional(string, null)
+      event_hub_authorization_rule_resource_id = optional(string, null)
+      event_hub_name                           = optional(string, null)
+      marketplace_partner_resource_id          = optional(string, null)
+    })), {})
+    role_assignments = optional(map(object({
+      role_definition_id_or_name             = string
+      principal_id                           = string
+      description                            = optional(string, null)
+      skip_service_principal_aad_check       = optional(bool, false)
+      condition                              = optional(string, null)
+      condition_version                      = optional(string, null)
+      delegated_managed_identity_resource_id = optional(string, null)
+      principal_type                         = optional(string, null)
+    })), {})
+    tags = optional(map(string))
+  })
+```
+
+Default: `{}`
+
 ### <a name="input_bastion_definition"></a> [bastion\_definition](#input\_bastion\_definition)
 
 Description: Configuration object for the Azure Bastion service to be deployed.
@@ -1776,6 +1915,21 @@ Description: Configuration object for the Azure Cosmos DB account to be created 
   - `allowed_origins` - Set of allowed origins.
   - `exposed_headers` - Set of exposed headers.
   - `max_age_in_seconds` - (Optional) Maximum age in seconds for CORS.
+- `sql_databases` - (Optional) SQL databases and containers to create. Default is empty so an upgrade never creates or collides with child resources implicitly.
+  - `name` - Database name.
+  - `throughput` - (Optional) Manual database throughput.
+  - `autoscale_settings.max_throughput` - (Optional) Maximum autoscale throughput.
+  - `containers` - (Optional) SQL containers keyed by an arbitrary map key.
+    - `name` - Container name.
+    - `partition_key_paths` - Partition key paths.
+    - `partition_key_version` - (Optional) Partition key version. Default is 2.
+    - `throughput` - (Optional) Manual container throughput.
+    - `default_ttl` - (Optional) Default time to live. The parity default is -1.
+    - `analytical_storage_ttl` - (Optional) Analytical-store time to live.
+    - `unique_keys` - (Optional) Unique key paths.
+    - `autoscale_settings.max_throughput` - (Optional) Maximum autoscale throughput.
+    - `conflict_resolution_policy` - (Optional) Conflict-resolution mode and path or procedure.
+    - `indexing_policy` - (Optional) Indexing mode, included/excluded paths, composite indexes, and spatial indexes.
 - `tags` - (Optional) Map of tags to assign to the Cosmos DB account.
 
 Type:
@@ -1836,6 +1990,50 @@ object({
       exposed_headers    = set(string)
       max_age_in_seconds = optional(number, null)
     }), null)
+    sql_databases = optional(map(object({
+      name       = string
+      throughput = optional(number, null)
+      autoscale_settings = optional(object({
+        max_throughput = number
+      }), null)
+      containers = optional(map(object({
+        name                   = string
+        partition_key_paths    = list(string)
+        partition_key_version  = optional(number, 2)
+        throughput             = optional(number, null)
+        default_ttl            = optional(number, null)
+        analytical_storage_ttl = optional(number, null)
+        unique_keys = optional(list(object({
+          paths = set(string)
+        })), [])
+        autoscale_settings = optional(object({
+          max_throughput = number
+        }), null)
+        conflict_resolution_policy = optional(object({
+          mode                          = string
+          conflict_resolution_path      = optional(string, null)
+          conflict_resolution_procedure = optional(string, null)
+        }), null)
+        indexing_policy = optional(object({
+          indexing_mode = string
+          included_paths = optional(set(object({
+            path = string
+          })), [])
+          excluded_paths = optional(set(object({
+            path = string
+          })), [])
+          composite_indexes = optional(set(object({
+            indexes = set(object({
+              path  = string
+              order = string
+            }))
+          })), [])
+          spatial_indexes = optional(set(object({
+            path = string
+          })), [])
+        }), null)
+      })), {})
+    })), {})
     tags = optional(map(string))
   })
 ```
@@ -1948,6 +2146,17 @@ Description: Configuration object for the Azure Storage Account to be created fo
 - `access_tier` - (Optional) The access tier for the storage account. Default is "Hot".
 - `public_network_access_enabled` - (Optional) Whether public network access is enabled. Default is false.
 - `shared_access_key_enabled` - (Optional) Whether shared access keys are enabled. Default is true.
+- `containers` - (Optional) Blob containers to create. Default is empty so an upgrade never creates or collides with child resources implicitly.
+  - `name` - Container name.
+  - `public_access` - (Optional) Public access level. Default is "None".
+  - `metadata` - (Optional) Container metadata.
+  - `default_encryption_scope` - (Optional) Default encryption scope.
+  - `deny_encryption_scope_override` - (Optional) Whether clients may override the encryption scope.
+  - `enable_nfs_v3_all_squash` - (Optional) Whether NFSv3 all squash is enabled.
+  - `enable_nfs_v3_root_squash` - (Optional) Whether NFSv3 root squash is enabled.
+  - `immutable_storage_with_versioning` - (Optional) Immutable storage configuration.
+  - `role_assignments` - (Optional) Container-scoped role assignments.
+  - `timeouts` - (Optional) Container operation timeouts.
 - `role_assignments` - (Optional) Map of role assignments to create on the Storage Account. The map key is deliberately arbitrary to avoid issues where map keys may be unknown at plan time.
   - `role_definition_id_or_name` - The role definition ID or name to assign.
   - `principal_id` - The principal ID to assign the role to.
@@ -1995,10 +2204,71 @@ object({
       delegated_managed_identity_resource_id = optional(string, null)
       principal_type                         = optional(string, null)
     })), {})
+    containers = optional(map(object({
+      name                           = string
+      public_access                  = optional(string, "None")
+      metadata                       = optional(map(string))
+      default_encryption_scope       = optional(string)
+      deny_encryption_scope_override = optional(bool)
+      enable_nfs_v3_all_squash       = optional(bool)
+      enable_nfs_v3_root_squash      = optional(bool)
+      immutable_storage_with_versioning = optional(object({
+        enabled = bool
+      }))
+      role_assignments = optional(map(object({
+        role_definition_id_or_name             = string
+        principal_id                           = string
+        principal_type                         = optional(string, null)
+        description                            = optional(string, null)
+        skip_service_principal_aad_check       = optional(bool, false)
+        condition                              = optional(string, null)
+        condition_version                      = optional(string, null)
+        delegated_managed_identity_resource_id = optional(string, null)
+      })), {})
+      timeouts = optional(object({
+        create = optional(string)
+        delete = optional(string)
+        read   = optional(string)
+        update = optional(string)
+      }))
+    })), {})
     tags = optional(map(string))
+  })
+```
 
-    #TODO:
-    # Implement subservice passthrough here
+Default: `{}`
+
+### <a name="input_ignore_body_changes"></a> [ignore\_body\_changes](#input\_ignore\_body\_changes)
+
+Description: Body paths whose changes AzAPI should ignore, keyed by Azure resource type. Paths use dot notation and changes take effect only after apply. Non-empty values require Terraform 1.11 or later.
+
+- `apimanagement_service_apis` - API Management API body paths.
+- `apimanagement_service_apis_operations` - API Management API-operation body paths.
+- `apimanagement_service_apis_policies` - API Management API-policy body paths.
+- `apimanagement_service_backends` - API Management backend body paths.
+- `authorization_role_assignments` - Role-assignment body paths.
+- `bing_accounts` - Grounding with Bing account body paths.
+- `cognitiveservices_accounts` - Cognitive Services account body paths.
+- `insights_components` - Application Insights component body paths.
+- `insights_diagnostic_settings` - Diagnostic-setting body paths.
+- `network_private_endpoints` - Private endpoint body paths.
+- `network_private_endpoints_private_dns_zone_groups` - Private endpoint DNS-zone-group body paths.
+
+Type:
+
+```hcl
+object({
+    apimanagement_service_apis                        = optional(list(string), [])
+    apimanagement_service_apis_operations             = optional(list(string), [])
+    apimanagement_service_apis_policies               = optional(list(string), [])
+    apimanagement_service_backends                    = optional(list(string), [])
+    authorization_role_assignments                    = optional(list(string), [])
+    bing_accounts                                     = optional(list(string), [])
+    cognitiveservices_accounts                        = optional(list(string), [])
+    insights_components                               = optional(list(string), [])
+    insights_diagnostic_settings                      = optional(list(string), [])
+    network_private_endpoints                         = optional(list(string), [])
+    network_private_endpoints_private_dns_zone_groups = optional(list(string), [])
   })
 ```
 
@@ -2125,6 +2395,62 @@ object({
     name   = optional(string)
     sku    = optional(string, "G1")
     tags   = optional(map(string))
+  })
+```
+
+Default: `{}`
+
+### <a name="input_ks_speech_service_definition"></a> [ks\_speech\_service\_definition](#input\_ks\_speech\_service\_definition)
+
+Description: Configuration for an optional Azure AI Speech account.
+
+- `deploy` - (Optional) Deploy Speech. Default is false.
+- `name` - (Optional) Account and custom subdomain name.
+- `location` - (Optional) Azure region. Defaults to the landing-zone region.
+- `sku` - (Optional) Speech SKU. The network-isolated configuration requires "S0", which is the default.
+- `public_network_access_enabled` - (Optional) Enable public network access. Default is false.
+- `local_authentication_enabled` - (Optional) Enable key-based local authentication. Default is false.
+- `assign_deployment_principal_rbac` - (Optional) Assign Cognitive Services Contributor and Cognitive Services User to the deployment principal. Default is false. Account creation and managed-identity authentication do not require these persistent data-plane roles; enable only when the deployment principal must perform post-deployment Cognitive Services operations.
+- `enable_diagnostic_settings` - (Optional) Enable automatic diagnostics to the effective Log Analytics workspace. Default is true.
+- `diagnostic_settings` - (Optional) Explicit diagnostic settings, which take precedence over the automatic setting.
+- `role_assignments` - (Optional) Additional account-scoped role assignments for workload identities.
+- `tags` - (Optional) Account tags.
+
+Type:
+
+```hcl
+object({
+    deploy                           = optional(bool, false)
+    name                             = optional(string)
+    location                         = optional(string)
+    sku                              = optional(string, "S0")
+    public_network_access_enabled    = optional(bool, false)
+    local_authentication_enabled     = optional(bool, false)
+    assign_deployment_principal_rbac = optional(bool, false)
+    enable_diagnostic_settings       = optional(bool, true)
+    diagnostic_settings = optional(map(object({
+      name                                     = optional(string, null)
+      log_categories                           = optional(set(string), [])
+      log_groups                               = optional(set(string), ["allLogs"])
+      metric_categories                        = optional(set(string), ["AllMetrics"])
+      log_analytics_destination_type           = optional(string, "Dedicated")
+      workspace_resource_id                    = optional(string, null)
+      storage_account_resource_id              = optional(string, null)
+      event_hub_authorization_rule_resource_id = optional(string, null)
+      event_hub_name                           = optional(string, null)
+      marketplace_partner_resource_id          = optional(string, null)
+    })), {})
+    role_assignments = optional(map(object({
+      role_definition_id_or_name             = string
+      principal_id                           = string
+      description                            = optional(string, null)
+      skip_service_principal_aad_check       = optional(bool, false)
+      condition                              = optional(string, null)
+      condition_version                      = optional(string, null)
+      delegated_managed_identity_resource_id = optional(string, null)
+      principal_type                         = optional(string, null)
+    })), {})
+    tags = optional(map(string))
   })
 ```
 
@@ -2258,6 +2584,66 @@ object({
 
 Default: `{}`
 
+### <a name="input_resource_types"></a> [resource\_types](#input\_resource\_types)
+
+Description: Azure resource type and API-version overrides for resources managed directly with AzAPI.
+
+- `apimanagement_service_apis` - API Management APIs.
+- `apimanagement_service_apis_operations` - API Management API operations.
+- `apimanagement_service_apis_policies` - API Management API policies.
+- `apimanagement_service_backends` - API Management backends.
+- `authorization_role_assignments` - Azure role assignments.
+- `bing_accounts` - Grounding with Bing accounts.
+- `cognitiveservices_accounts` - Cognitive Services accounts, including Speech.
+- `cognitiveservices_locations_resource_groups_deleted_accounts` - Cognitive Services deleted-account purge endpoint.
+- `insights_components` - Application Insights components.
+- `insights_components_currentbillingfeatures` - Application Insights current billing features singleton.
+- `insights_diagnostic_settings` - Azure Monitor diagnostic settings.
+- `network_private_endpoints` - Private endpoints.
+- `network_private_endpoints_private_dns_zone_groups` - Private endpoint DNS zone groups.
+
+Type:
+
+```hcl
+object({
+    apimanagement_service_apis                                   = optional(string, "Microsoft.ApiManagement/service/apis@2024-05-01")
+    apimanagement_service_apis_operations                        = optional(string, "Microsoft.ApiManagement/service/apis/operations@2024-05-01")
+    apimanagement_service_apis_policies                          = optional(string, "Microsoft.ApiManagement/service/apis/policies@2024-05-01")
+    apimanagement_service_backends                               = optional(string, "Microsoft.ApiManagement/service/backends@2024-05-01")
+    authorization_role_assignments                               = optional(string, "Microsoft.Authorization/roleAssignments@2022-04-01")
+    bing_accounts                                                = optional(string, "Microsoft.Bing/accounts@2025-05-01-preview")
+    cognitiveservices_accounts                                   = optional(string, "Microsoft.CognitiveServices/accounts@2025-06-01")
+    cognitiveservices_locations_resource_groups_deleted_accounts = optional(string, "Microsoft.CognitiveServices/locations/resourceGroups/deletedAccounts@2021-04-30")
+    insights_components                                          = optional(string, "Microsoft.Insights/components@2020-02-02")
+    insights_components_currentbillingfeatures                   = optional(string, "Microsoft.Insights/components@2015-05-01")
+    insights_diagnostic_settings                                 = optional(string, "Microsoft.Insights/diagnosticSettings@2021-05-01-preview")
+    network_private_endpoints                                    = optional(string, "Microsoft.Network/privateEndpoints@2024-05-01")
+    network_private_endpoints_private_dns_zone_groups            = optional(string, "Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2024-05-01")
+  })
+```
+
+Default: `{}`
+
+### <a name="input_retry"></a> [retry](#input\_retry)
+
+Description: Retry configuration applied to every AzAPI resource declared directly by this module.
+
+- `error_message_regex` - (Optional) Error-message patterns that trigger retry.
+- `interval_seconds` - (Optional) Initial retry interval in seconds.
+- `max_interval_seconds` - (Optional) Maximum retry interval in seconds.
+
+Type:
+
+```hcl
+object({
+    error_message_regex  = optional(list(string), ["ScopeLocked", "Account.*state Accepted"])
+    interval_seconds     = optional(number)
+    max_interval_seconds = optional(number)
+  })
+```
+
+Default: `{}`
+
 ### <a name="input_tags"></a> [tags](#input\_tags)
 
 Description: Map of tags to be assigned to all resources created by this module.
@@ -2265,6 +2651,28 @@ Description: Map of tags to be assigned to all resources created by this module.
 Tags are key-value pairs that help organize and manage Azure resources. These tags will be applied to all resources created by the module, enabling consistent resource governance, cost tracking, and operational management across the AI/ML landing zone infrastructure.
 
 Type: `map(string)`
+
+Default: `null`
+
+### <a name="input_timeouts"></a> [timeouts](#input\_timeouts)
+
+Description: Default operation timeouts applied to every AzAPI resource declared directly by this module.
+
+- `create` - (Optional) Create timeout as a Go duration string.
+- `delete` - (Optional) Delete timeout as a Go duration string.
+- `read` - (Optional) Read timeout as a Go duration string.
+- `update` - (Optional) Update timeout as a Go duration string.
+
+Type:
+
+```hcl
+object({
+    create = optional(string)
+    delete = optional(string)
+    read   = optional(string)
+    update = optional(string)
+  })
+```
 
 Default: `null`
 
@@ -2384,6 +2792,18 @@ The following outputs are exported:
 ### <a name="output_apim"></a> [apim](#output\_apim)
 
 Description: Details of the deployed APIM instance.
+
+### <a name="output_application_insights_name"></a> [application\_insights\_name](#output\_application\_insights\_name)
+
+Description: The name of the created Application Insights component, or null when an existing component is reused.
+
+### <a name="output_application_insights_resource_id"></a> [application\_insights\_resource\_id](#output\_application\_insights\_resource\_id)
+
+Description: The resource ID of the created or reused Application Insights component. No connection string or instrumentation key is exposed.
+
+### <a name="output_data_ai_services"></a> [data\_ai\_services](#output\_data\_ai\_services)
+
+Description: Non-secret resource and runtime-discovery values for the Data & AI services parity contract.
 
 ### <a name="output_log_analytics_workspace_id"></a> [log\_analytics\_workspace\_id](#output\_log\_analytics\_workspace\_id)
 

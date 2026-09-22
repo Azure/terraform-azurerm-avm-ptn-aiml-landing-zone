@@ -39,6 +39,39 @@ If set to true, the module will deploy resources and connect to a platform landi
 DESCRIPTION
 }
 
+variable "ignore_body_changes" {
+  type = object({
+    apimanagement_service_apis                        = optional(list(string), [])
+    apimanagement_service_apis_operations             = optional(list(string), [])
+    apimanagement_service_apis_policies               = optional(list(string), [])
+    apimanagement_service_backends                    = optional(list(string), [])
+    authorization_role_assignments                    = optional(list(string), [])
+    bing_accounts                                     = optional(list(string), [])
+    cognitiveservices_accounts                        = optional(list(string), [])
+    insights_components                               = optional(list(string), [])
+    insights_diagnostic_settings                      = optional(list(string), [])
+    network_private_endpoints                         = optional(list(string), [])
+    network_private_endpoints_private_dns_zone_groups = optional(list(string), [])
+  })
+  default     = {}
+  description = <<DESCRIPTION
+Body paths whose changes AzAPI should ignore, keyed by Azure resource type. Paths use dot notation and changes take effect only after apply. Non-empty values require Terraform 1.11 or later.
+
+- `apimanagement_service_apis` - API Management API body paths.
+- `apimanagement_service_apis_operations` - API Management API-operation body paths.
+- `apimanagement_service_apis_policies` - API Management API-policy body paths.
+- `apimanagement_service_backends` - API Management backend body paths.
+- `authorization_role_assignments` - Role-assignment body paths.
+- `bing_accounts` - Grounding with Bing account body paths.
+- `cognitiveservices_accounts` - Cognitive Services account body paths.
+- `insights_components` - Application Insights component body paths.
+- `insights_diagnostic_settings` - Diagnostic-setting body paths.
+- `network_private_endpoints` - Private endpoint body paths.
+- `network_private_endpoints_private_dns_zone_groups` - Private endpoint DNS-zone-group body paths.
+DESCRIPTION
+  nullable    = false
+}
+
 variable "name_prefix" {
   type        = string
   default     = null
@@ -57,6 +90,59 @@ DESCRIPTION
   }
 }
 
+variable "resource_types" {
+  type = object({
+    apimanagement_service_apis                                   = optional(string, "Microsoft.ApiManagement/service/apis@2024-05-01")
+    apimanagement_service_apis_operations                        = optional(string, "Microsoft.ApiManagement/service/apis/operations@2024-05-01")
+    apimanagement_service_apis_policies                          = optional(string, "Microsoft.ApiManagement/service/apis/policies@2024-05-01")
+    apimanagement_service_backends                               = optional(string, "Microsoft.ApiManagement/service/backends@2024-05-01")
+    authorization_role_assignments                               = optional(string, "Microsoft.Authorization/roleAssignments@2022-04-01")
+    bing_accounts                                                = optional(string, "Microsoft.Bing/accounts@2025-05-01-preview")
+    cognitiveservices_accounts                                   = optional(string, "Microsoft.CognitiveServices/accounts@2025-06-01")
+    cognitiveservices_locations_resource_groups_deleted_accounts = optional(string, "Microsoft.CognitiveServices/locations/resourceGroups/deletedAccounts@2021-04-30")
+    insights_components                                          = optional(string, "Microsoft.Insights/components@2020-02-02")
+    insights_components_currentbillingfeatures                   = optional(string, "Microsoft.Insights/components@2015-05-01")
+    insights_diagnostic_settings                                 = optional(string, "Microsoft.Insights/diagnosticSettings@2021-05-01-preview")
+    network_private_endpoints                                    = optional(string, "Microsoft.Network/privateEndpoints@2024-05-01")
+    network_private_endpoints_private_dns_zone_groups            = optional(string, "Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2024-05-01")
+  })
+  default     = {}
+  description = <<DESCRIPTION
+Azure resource type and API-version overrides for resources managed directly with AzAPI.
+
+- `apimanagement_service_apis` - API Management APIs.
+- `apimanagement_service_apis_operations` - API Management API operations.
+- `apimanagement_service_apis_policies` - API Management API policies.
+- `apimanagement_service_backends` - API Management backends.
+- `authorization_role_assignments` - Azure role assignments.
+- `bing_accounts` - Grounding with Bing accounts.
+- `cognitiveservices_accounts` - Cognitive Services accounts, including Speech.
+- `cognitiveservices_locations_resource_groups_deleted_accounts` - Cognitive Services deleted-account purge endpoint.
+- `insights_components` - Application Insights components.
+- `insights_components_currentbillingfeatures` - Application Insights current billing features singleton.
+- `insights_diagnostic_settings` - Azure Monitor diagnostic settings.
+- `network_private_endpoints` - Private endpoints.
+- `network_private_endpoints_private_dns_zone_groups` - Private endpoint DNS zone groups.
+DESCRIPTION
+  nullable    = false
+}
+
+variable "retry" {
+  type = object({
+    error_message_regex  = optional(list(string), ["ScopeLocked", "Account.*state Accepted"])
+    interval_seconds     = optional(number)
+    max_interval_seconds = optional(number)
+  })
+  default     = {}
+  description = <<DESCRIPTION
+Retry configuration applied to every AzAPI resource declared directly by this module.
+
+- `error_message_regex` - (Optional) Error-message patterns that trigger retry.
+- `interval_seconds` - (Optional) Initial retry interval in seconds.
+- `max_interval_seconds` - (Optional) Maximum retry interval in seconds.
+DESCRIPTION
+}
+
 variable "tags" {
   type        = map(string)
   default     = null
@@ -64,5 +150,23 @@ variable "tags" {
 Map of tags to be assigned to all resources created by this module.
 
 Tags are key-value pairs that help organize and manage Azure resources. These tags will be applied to all resources created by the module, enabling consistent resource governance, cost tracking, and operational management across the AI/ML landing zone infrastructure.
+DESCRIPTION
+}
+
+variable "timeouts" {
+  type = object({
+    create = optional(string)
+    delete = optional(string)
+    read   = optional(string)
+    update = optional(string)
+  })
+  default     = null
+  description = <<DESCRIPTION
+Default operation timeouts applied to every AzAPI resource declared directly by this module.
+
+- `create` - (Optional) Create timeout as a Go duration string.
+- `delete` - (Optional) Delete timeout as a Go duration string.
+- `read` - (Optional) Read timeout as a Go duration string.
+- `update` - (Optional) Update timeout as a Go duration string.
 DESCRIPTION
 }
