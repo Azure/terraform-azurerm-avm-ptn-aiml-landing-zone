@@ -26,13 +26,9 @@ resource "azapi_resource" "apim_backend_ai_foundry" {
       }
     }
   }
-  create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   ignore_body_changes    = length(var.ignore_body_changes.apimanagement_service_backends) > 0 ? var.ignore_body_changes.apimanagement_service_backends : null
-  read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   response_export_values = []
   retry                  = var.retry
-  update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   dynamic "timeouts" {
     for_each = var.timeouts == null ? [] : [var.timeouts]
@@ -71,13 +67,9 @@ resource "azapi_resource" "apim_api_ai_foundry" {
       subscriptionRequired = true
     }
   }
-  create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   ignore_body_changes    = length(var.ignore_body_changes.apimanagement_service_apis) > 0 ? var.ignore_body_changes.apimanagement_service_apis : null
-  read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   response_export_values = []
   retry                  = var.retry
-  update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   dynamic "timeouts" {
     for_each = var.timeouts == null ? [] : [var.timeouts]
@@ -126,13 +118,9 @@ resource "azapi_resource" "apim_api_operation_chat_completions" {
       }
     }
   }
-  create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   ignore_body_changes    = length(var.ignore_body_changes.apimanagement_service_apis_operations) > 0 ? var.ignore_body_changes.apimanagement_service_apis_operations : null
-  read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   response_export_values = []
   retry                  = var.retry
-  update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   dynamic "timeouts" {
     for_each = var.timeouts == null ? [] : [var.timeouts]
@@ -171,13 +159,9 @@ resource "azapi_resource" "apim_api_operation_list_models" {
       }
     }
   }
-  create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   ignore_body_changes    = length(var.ignore_body_changes.apimanagement_service_apis_operations) > 0 ? var.ignore_body_changes.apimanagement_service_apis_operations : null
-  read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   response_export_values = []
   retry                  = var.retry
-  update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   dynamic "timeouts" {
     for_each = var.timeouts == null ? [] : [var.timeouts]
@@ -219,13 +203,9 @@ resource "azapi_resource" "apim_api_policy_ai_foundry" {
       XML
     }
   }
-  create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   ignore_body_changes    = length(var.ignore_body_changes.apimanagement_service_apis_policies) > 0 ? var.ignore_body_changes.apimanagement_service_apis_policies : null
-  read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   response_export_values = []
   retry                  = var.retry
-  update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   dynamic "timeouts" {
     for_each = var.timeouts == null ? [] : [var.timeouts]

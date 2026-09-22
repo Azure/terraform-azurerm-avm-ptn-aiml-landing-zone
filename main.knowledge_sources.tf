@@ -35,8 +35,7 @@ data "azapi_resource_list" "ks_speech_role_definition" {
   query_parameters = {
     "$filter" = ["roleName eq '${replace(each.value.role_definition_id_or_name, "'", "''")}'"]
   }
-  type    = "Microsoft.Authorization/roleDefinitions@2022-04-01"
-  headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  type = "Microsoft.Authorization/roleDefinitions@2022-04-01"
   response_export_values = {
     role_definition_id = "value[0].id"
   }
@@ -73,14 +72,10 @@ resource "azapi_resource" "speech_service" {
       publicNetworkAccess = var.ks_speech_service_definition.public_network_access_enabled ? "Enabled" : "Disabled"
     }
   }
-  create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   ignore_body_changes    = length(var.ignore_body_changes.cognitiveservices_accounts) > 0 ? var.ignore_body_changes.cognitiveservices_accounts : null
-  read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   response_export_values = ["properties.endpoint", "identity.principalId"]
   retry                  = var.retry
   tags                   = merge(local.tags, var.ks_speech_service_definition.tags != null ? var.ks_speech_service_definition.tags : {})
-  update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   identity {
     type = "SystemAssigned"
@@ -121,14 +116,10 @@ resource "azapi_resource" "speech_private_endpoint" {
       }
     }
   }
-  create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   ignore_body_changes    = length(var.ignore_body_changes.network_private_endpoints) > 0 ? var.ignore_body_changes.network_private_endpoints : null
-  read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   response_export_values = []
   retry                  = var.retry
   tags                   = merge(local.tags, var.ks_speech_service_definition.tags != null ? var.ks_speech_service_definition.tags : {})
-  update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   dynamic "timeouts" {
     for_each = var.timeouts == null ? [] : [var.timeouts]
@@ -162,13 +153,9 @@ resource "azapi_resource" "speech_private_dns_zone_group" {
       }]
     }
   }
-  create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   ignore_body_changes    = length(var.ignore_body_changes.network_private_endpoints_private_dns_zone_groups) > 0 ? var.ignore_body_changes.network_private_endpoints_private_dns_zone_groups : null
-  read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   response_export_values = []
   retry                  = var.retry
-  update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   dynamic "timeouts" {
     for_each = var.timeouts == null ? [] : [var.timeouts]
@@ -203,13 +190,9 @@ resource "azapi_resource" "speech_diagnostic_setting" {
       workspaceId          = each.value.workspace_resource_id
     } : key => value if value != null }
   }
-  create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   ignore_body_changes    = length(var.ignore_body_changes.insights_diagnostic_settings) > 0 ? var.ignore_body_changes.insights_diagnostic_settings : null
-  read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   response_export_values = []
   retry                  = var.retry
-  update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   dynamic "timeouts" {
     for_each = var.timeouts == null ? [] : [var.timeouts]
@@ -240,13 +223,9 @@ resource "azapi_resource" "speech_role_assignment" {
       roleDefinitionId                   = each.value.role_definition_id
     } : key => value if value != null }
   }
-  create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   ignore_body_changes    = length(var.ignore_body_changes.authorization_role_assignments) > 0 ? var.ignore_body_changes.authorization_role_assignments : null
-  read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   response_export_values = []
   retry                  = var.retry
-  update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   dynamic "timeouts" {
     for_each = var.timeouts == null ? [] : [var.timeouts]
@@ -273,15 +252,11 @@ resource "azapi_resource" "bing_grounding" {
       name = var.ks_bing_grounding_definition.sku
     }
   }
-  create_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   ignore_body_changes       = length(var.ignore_body_changes.bing_accounts) > 0 ? var.ignore_body_changes.bing_accounts : null
-  read_headers              = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   response_export_values    = []
   retry                     = var.retry
   schema_validation_enabled = false
   tags                      = merge(local.tags, var.ks_bing_grounding_definition.tags != null ? var.ks_bing_grounding_definition.tags : {})
-  update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   dynamic "timeouts" {
     for_each = var.timeouts == null ? [] : [var.timeouts]

@@ -29,7 +29,6 @@ resource "azapi_resource_action" "purge_ai_foundry" {
   method                 = "DELETE"
   resource_id            = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/providers/Microsoft.CognitiveServices/locations/${azurerm_resource_group.this.location}/resourceGroups/${azurerm_resource_group.this.name}/deletedAccounts/${local.ai_foundry_name}"
   type                   = var.resource_types.cognitiveservices_locations_resource_groups_deleted_accounts
-  headers                = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   response_export_values = []
   retry                  = var.retry
   when                   = "destroy"
