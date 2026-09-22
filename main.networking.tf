@@ -70,15 +70,15 @@ resource "azapi_resource" "network_security_rule" {
       protocol                             = each.value.protocol
       description                          = try(each.value.description, null)
       destinationAddressPrefix             = try(each.value.destination_address_prefix, null)
-      destinationAddressPrefixes           = try(tolist(each.value.destination_address_prefixes), null)
+      destinationAddressPrefixes           = coalesce(try(tolist(each.value.destination_address_prefixes), null), [])
       destinationApplicationSecurityGroups = try([for id in each.value.destination_application_security_group_ids : { id = id }], null)
       destinationPortRange                 = try(each.value.destination_port_range, null)
-      destinationPortRanges                = try(tolist(each.value.destination_port_ranges), null)
+      destinationPortRanges                = coalesce(try(tolist(each.value.destination_port_ranges), null), [])
       sourceAddressPrefix                  = try(each.value.source_address_prefix, null)
-      sourceAddressPrefixes                = try(tolist(each.value.source_address_prefixes), null)
+      sourceAddressPrefixes                = coalesce(try(tolist(each.value.source_address_prefixes), null), [])
       sourceApplicationSecurityGroups      = try([for id in each.value.source_application_security_group_ids : { id = id }], null)
       sourcePortRange                      = try(each.value.source_port_range, null)
-      sourcePortRanges                     = try(tolist(each.value.source_port_ranges), null)
+      sourcePortRanges                     = coalesce(try(tolist(each.value.source_port_ranges), null), [])
     }
   }
   ignore_body_changes    = length(var.ignore_body_changes.network_network_security_groups_security_rules) > 0 ? var.ignore_body_changes.network_network_security_groups_security_rules : null
