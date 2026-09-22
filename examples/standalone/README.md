@@ -4,6 +4,8 @@
 
 This example demonstrates a configuration when the platform landing zone flag is set to false.  In this case, all supporting services are included as part of AI landing zone deployment.
 
+The example omits `application_platform.container_apps[*].workload_profile_name`, so the Container App keeps the existing Consumption-profile behavior. For a dedicated-only environment, define the dedicated profile in `container_app_environment_definition.workload_profile` and set the Container App's `workload_profile_name` to the same profile name.
+
 ```hcl
 terraform {
   required_version = ">= 1.9, < 2.0"
@@ -225,6 +227,17 @@ module "test" {
   }
   buildvm_definition = {
     sku = module.vm_sku.sku
+  }
+  application_platform = {
+    environment_name               = "standalone-example"
+    app_runtime_configuration_mode = "containerEnv"
+    container_apps = {
+      hello = {
+        image                    = "mcr.microsoft.com/azuredocs/containerapps-helloworld:latest"
+        external_ingress_enabled = true
+        target_port              = 80
+      }
+    }
   }
   container_app_environment_definition = {
     enable_diagnostic_settings = false
