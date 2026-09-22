@@ -1,0 +1,6 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-verified-modules-tools/main/src/Avm.Authoring/Resources/Schemas/v1/avm-module-metadata.schema.json",
+  "moduleDisplayName": "example hub vnet for testing",
+  "moduleDescription": "This sub module creates a basic hub for use in testing the default configuration for the landing zone where the created AI LZA vnet will attach to a hub vnet.",
+  "canonicalType": "helper"
+}

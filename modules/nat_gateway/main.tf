@@ -33,14 +33,13 @@ resource "azapi_resource" "public_ip" {
     }
     zones = length(var.zones) == 0 ? ["1", "2", "3"] : sort(tolist(var.zones))
   }
-  tags = var.tags
-
   create_headers         = var.telemetry_headers
   delete_headers         = var.telemetry_headers
   ignore_body_changes    = length(var.ignore_body_changes.network_public_ip_addresses) > 0 ? var.ignore_body_changes.network_public_ip_addresses : null
   read_headers           = var.telemetry_headers
   response_export_values = []
   retry                  = var.retry
+  tags                   = var.tags
   update_headers         = var.telemetry_headers
 
   dynamic "timeouts" {
@@ -74,14 +73,13 @@ resource "azapi_resource" "this" {
     }
     zones = length(var.zones) == 0 ? null : sort(tolist(var.zones))
   }
-  tags = var.tags
-
   create_headers         = var.telemetry_headers
   delete_headers         = var.telemetry_headers
   ignore_body_changes    = length(var.ignore_body_changes.network_nat_gateways) > 0 ? var.ignore_body_changes.network_nat_gateways : null
   read_headers           = var.telemetry_headers
   response_export_values = []
   retry                  = var.retry
+  tags                   = var.tags
   update_headers         = var.telemetry_headers
 
   dynamic "timeouts" {

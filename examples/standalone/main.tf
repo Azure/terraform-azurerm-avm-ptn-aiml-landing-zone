@@ -41,6 +41,8 @@ provider "azurerm" {
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
   version = "0.9.2"
+
+  enable_telemetry = var.enable_telemetry
 }
 
 # This allows us to randomize the region for the resource group.
@@ -48,6 +50,7 @@ resource "random_integer" "region_index" {
   max = length(module.regions.regions) - 1
   min = 0
 }
+
 ## End of section to provide a random Azure region for the resource group
 
 # This ensures we have unique CAF compliant names for our resources.
@@ -60,6 +63,7 @@ module "naming" {
 # In practice your deployer machine will be on a private network and this will not be required.
 data "http" "ip" {
   url = "https://api.ipify.org/"
+
   retry {
     attempts     = 5
     max_delay_ms = 1000
@@ -77,8 +81,9 @@ module "vm_sku" {
   source  = "Azure/avm-utl-sku-finder/azapi"
   version = "0.3.0"
 
-  location      = local.location
-  cache_results = true
+  location         = local.location
+  cache_results    = true
+  enable_telemetry = var.enable_telemetry
   vm_filters = {
     cpu_architecture_type          = "x64"
     min_vcpus                      = 2
@@ -242,11 +247,11 @@ module "test" {
   jumpvm_definition = {
     sku = module.vm_sku.sku
   }
+  ks_ai_search_definition = {
+    enable_diagnostic_settings = false
+  }
   nat_gateway_definition = {
     deploy      = true
     subnet_keys = ["JumpboxSubnet"]
-  }
-  ks_ai_search_definition = {
-    enable_diagnostic_settings = false
   }
 }

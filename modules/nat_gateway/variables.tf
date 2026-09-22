@@ -39,28 +39,19 @@ variable "idle_timeout_in_minutes" {
   }
 }
 
-variable "zones" {
-  type        = set(string)
-  default     = []
-  description = "Zero or one availability zone for the Standard NAT Gateway. With no explicit NAT zone, its Standard public IP is zone-redundant across zones 1, 2, and 3; with one zone, the public IP uses the same zone."
+variable "ignore_body_changes" {
+  type = object({
+    network_nat_gateways        = optional(list(string), [])
+    network_public_ip_addresses = optional(list(string), [])
+  })
+  default     = {}
+  description = <<DESCRIPTION
+Body-relative dot-notation paths to ignore for each AzAPI resource. Ignored configuration is not sent to Azure until its path is removed, and changes take effect only after apply.
+
+- `network_nat_gateways` - Paths ignored on the NAT Gateway.
+- `network_public_ip_addresses` - Paths ignored on the public IP address.
+DESCRIPTION
   nullable    = false
-
-  validation {
-    condition     = length(var.zones) <= 1 && alltrue([for zone in var.zones : contains(["1", "2", "3"], zone)])
-    error_message = "zones must be empty or contain exactly one of \"1\", \"2\", or \"3\" for the Standard NAT Gateway SKU."
-  }
-}
-
-variable "tags" {
-  type        = map(string)
-  default     = null
-  description = "A map of tags to assign to the NAT Gateway and public IP address."
-}
-
-variable "telemetry_headers" {
-  type        = map(string)
-  default     = null
-  description = "Optional request headers used to propagate the parent module's AVM telemetry settings."
 }
 
 variable "resource_types" {
@@ -88,6 +79,18 @@ variable "retry" {
   description = "Retry configuration applied to the NAT Gateway and public IP AzAPI resources."
 }
 
+variable "tags" {
+  type        = map(string)
+  default     = null
+  description = "A map of tags to assign to the NAT Gateway and public IP address."
+}
+
+variable "telemetry_headers" {
+  type        = map(string)
+  default     = null
+  description = "Optional request headers used to propagate the parent module's AVM telemetry settings."
+}
+
 variable "timeouts" {
   type = object({
     create = optional(string)
@@ -99,17 +102,14 @@ variable "timeouts" {
   description = "Per-operation timeouts applied to the NAT Gateway and public IP AzAPI resources."
 }
 
-variable "ignore_body_changes" {
-  type = object({
-    network_nat_gateways        = optional(list(string), [])
-    network_public_ip_addresses = optional(list(string), [])
-  })
-  default     = {}
+variable "zones" {
+  type        = set(string)
+  default     = []
+  description = "Zero or one availability zone for the Standard NAT Gateway. With no explicit NAT zone, its Standard public IP is zone-redundant across zones 1, 2, and 3; with one zone, the public IP uses the same zone."
   nullable    = false
-  description = <<DESCRIPTION
-Body-relative dot-notation paths to ignore for each AzAPI resource. Ignored configuration is not sent to Azure until its path is removed, and changes take effect only after apply.
 
-- `network_nat_gateways` - Paths ignored on the NAT Gateway.
-- `network_public_ip_addresses` - Paths ignored on the public IP address.
-DESCRIPTION
+  validation {
+    condition     = length(var.zones) <= 1 && alltrue([for zone in var.zones : contains(["1", "2", "3"], zone)])
+    error_message = "zones must be empty or contain exactly one of \"1\", \"2\", or \"3\" for the Standard NAT Gateway SKU."
+  }
 }

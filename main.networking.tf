@@ -34,12 +34,12 @@ module "byo_subnets" {
   version  = "0.16.0"
   for_each = { for k, v in local.deployed_subnets : k => v if length(var.vnet_definition.existing_byo_vnet) > 0 }
 
+  name = each.value.name
   # Direct VNet resource id (module not instantiated when BYO is null due to empty for_each)
   parent_id                         = values(var.vnet_definition.existing_byo_vnet)[0].vnet_resource_id
-  ipam_pools                        = each.value.ipam_pools
-  name                              = each.value.name
   address_prefixes                  = each.value.ipam_pools == null ? each.value.address_prefixes : null
   delegations                       = try(each.value.delegations, try(each.value.delegation, null), null)
+  ipam_pools                        = each.value.ipam_pools
   nat_gateway                       = try(each.value.nat_gateway, null)
   network_security_group            = try(each.value.network_security_group, null)
   private_endpoint_network_policies = try(each.value.private_endpoint_network_policies, "Enabled")
@@ -59,7 +59,6 @@ module "nat_gateway" {
   resource_types          = var.nat_gateway_definition.resource_types
   retry                   = var.nat_gateway_definition.retry
   tags                    = merge(local.tags, var.nat_gateway_definition.tags != null ? var.nat_gateway_definition.tags : {})
-  telemetry_headers       = var.enable_telemetry ? { "User-Agent" = local.avm_azapi_header } : null
   timeouts                = var.nat_gateway_definition.timeouts
   zones                   = var.nat_gateway_definition.zones
 }
@@ -115,13 +114,13 @@ module "hub_vnet_peering" {
   version = "0.16.0"
   count   = length(var.vnet_definition.existing_byo_vnet) == 0 && var.vnet_definition.vnet_peering_configuration != null ? 1 : 0
 
-  parent_id                            = local.vnet_resource_id
   name                                 = var.vnet_definition.vnet_peering_configuration.name != null ? var.vnet_definition.vnet_peering_configuration.name : "${local.vnet_name}-local-to-remote"
+  parent_id                            = local.vnet_resource_id
+  remote_virtual_network_id            = var.vnet_definition.vnet_peering_configuration.peer_vnet_resource_id
   allow_forwarded_traffic              = var.vnet_definition.vnet_peering_configuration.allow_forwarded_traffic
   allow_gateway_transit                = var.vnet_definition.vnet_peering_configuration.allow_gateway_transit
   allow_virtual_network_access         = var.vnet_definition.vnet_peering_configuration.allow_virtual_network_access
   create_reverse_peering               = var.vnet_definition.vnet_peering_configuration.create_reverse_peering
-  remote_virtual_network_id            = var.vnet_definition.vnet_peering_configuration.peer_vnet_resource_id
   reverse_allow_forwarded_traffic      = var.vnet_definition.vnet_peering_configuration.reverse_allow_forwarded_traffic
   reverse_allow_gateway_transit        = var.vnet_definition.vnet_peering_configuration.reverse_allow_gateway_transit
   reverse_allow_virtual_network_access = var.vnet_definition.vnet_peering_configuration.reverse_allow_virtual_network_access
@@ -225,8 +224,8 @@ module "firewall_network_rule_collection_group" {
 
   firewall_policy_rule_collection_group_firewall_policy_id      = module.firewall_policy[0].resource_id
   firewall_policy_rule_collection_group_name                    = local.firewall_policy_rule_collection_group_name
-  firewall_policy_rule_collection_group_network_rule_collection = local.firewall_policy_rule_collection_group_network_rule_collection
   firewall_policy_rule_collection_group_priority                = local.firewall_policy_rule_collection_group_priority
+  firewall_policy_rule_collection_group_network_rule_collection = local.firewall_policy_rule_collection_group_network_rule_collection
 }
 
 module "azure_bastion" {
@@ -265,12 +264,12 @@ module "private_dns_zone_existing_vnet_links" {
   version  = "0.4.2"
   for_each = local.private_dns_zones_existing_vnet_links
 
-  parent_id                              = each.value.zone_resource_id
   name                                   = each.value.vnetlinkname
+  parent_id                              = each.value.zone_resource_id
+  virtual_network_id                     = each.value.vnetid
   private_dns_zone_supports_private_link = each.value.private_dns_zone_supports_private_link
   registration_enabled                   = each.value.registration_enabled
   resolution_policy                      = each.value.resolution_policy
-  virtual_network_id                     = each.value.vnetid
 
   depends_on = [module.hub_vnet_peering]
 }
