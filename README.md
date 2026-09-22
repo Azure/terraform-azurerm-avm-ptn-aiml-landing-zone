@@ -38,6 +38,37 @@ provider "azurerm" {
 
 These settings are used across the examples to help deployments succeed in policy-restricted environments.
 
+## Identity and RBAC automation
+
+The module preserves the existing Key Vault Administrator grant for the deployment principal at its legacy root resource address. By default, the current AzureRM client object ID remains the deployment principal.
+
+Use `security_definition` to opt into additional data-plane roles for the deployment principal or for existing workload managed identities:
+
+```hcl
+security_definition = {
+  grant_deployment_principal_app_configuration_data_owner = true
+
+  workload_managed_identities = {
+    api = {
+      principal_id                  = var.api_managed_identity_principal_id
+      app_configuration_data_reader = true
+      container_registry_pull       = true
+      key_vault_secrets_user        = true
+    }
+  }
+}
+```
+
+The workload map accepts managed identity principal IDs only; identity creation and attachment to individual workloads remain the caller's responsibility. `key_vault_secrets_user` grants access to existing secrets but does not create, read, or output secret values. Consumer-supplied `role_assignments` maps are merged after generated assignments and remain available for additional resource-specific RBAC.
+
+AI Foundry project and cross-service role assignments remain owned by the nested AI Foundry pattern module when project connections are enabled. This root automation does not duplicate those assignments. Cosmos DB SQL data-plane RBAC and per-container-app identity creation are not automated by this interface.
+
+### Upgrade behavior
+
+The deployment-principal Key Vault assignment remains at `azurerm_role_assignment.deployment_user_kv_admin[0]`. Keeping the legacy root address avoids a state-move collision when an existing consumer already uses the arbitrary `deployment_user_kv_admin` key in `genai_key_vault_definition.role_assignments`. No manual state command is required for this upgrade, and defaults, including the broad Key Vault Administrator grant and Foundry authentication settings, are unchanged.
+
+Moving this assignment into the Key Vault module, or converting it to an AzAPI-backed local submodule, is deferred until a breaking release can provide an explicit import or state-migration path for every affected address.
+
 <!-- markdownlint-disable MD033 -->
 ## Requirements
 
@@ -2252,6 +2283,37 @@ object({
       vnetlinkname     = string
       vnetid           = string
       resolutionPolicy = optional(string, "Default")
+    })), {})
+  })
+```
+
+Default: `{}`
+
+### <a name="input_security_definition"></a> [security\_definition](#input\_security\_definition)
+
+Description: Security and identity-based RBAC configuration for the landing zone.
+
+- `deployment_principal_id` - (Optional) Object ID of the principal that deploys and administers the landing zone. When omitted, the object ID from the current AzureRM client configuration is used.
+- `deployment_principal_type` - (Optional) Type of the deployment principal. Valid values are `User`, `Group`, and `ServicePrincipal`. Leave null when Azure should infer the principal type.
+- `grant_deployment_principal_app_configuration_data_owner` - (Optional) Grant the deployment principal the App Configuration Data Owner role on the GenAI App Configuration store. Default is false.
+- `workload_managed_identities` - (Optional) Map of existing system-assigned or user-assigned managed identity principal IDs and the least-privilege data-plane roles to automate. This module does not create workload identities.
+  - `principal_id` - Principal ID of the managed identity.
+  - `app_configuration_data_reader` - (Optional) Grant App Configuration Data Reader on the GenAI App Configuration store. Default is false.
+  - `container_registry_pull` - (Optional) Grant AcrPull on the GenAI Container Registry. Default is false.
+  - `key_vault_secrets_user` - (Optional) Grant Key Vault Secrets User on the GenAI Key Vault. Default is false. This grants access only; it does not create or return secrets.
+
+Type:
+
+```hcl
+object({
+    deployment_principal_id                                 = optional(string)
+    deployment_principal_type                               = optional(string)
+    grant_deployment_principal_app_configuration_data_owner = optional(bool, false)
+    workload_managed_identities = optional(map(object({
+      principal_id                  = string
+      app_configuration_data_reader = optional(bool, false)
+      container_registry_pull       = optional(bool, false)
+      key_vault_secrets_user        = optional(bool, false)
     })), {})
   })
 ```
