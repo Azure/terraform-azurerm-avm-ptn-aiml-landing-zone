@@ -3,9 +3,9 @@ module "avm_res_keyvault_vault" {
   version = "=0.10.2"
   count   = var.genai_key_vault_definition.deploy ? 1 : 0
 
-  location                        = azurerm_resource_group.this.location
+  location                        = azapi_resource.this.location
   name                            = local.genai_key_vault_name
-  resource_group_name             = azurerm_resource_group.this.name
+  resource_group_name             = azapi_resource.this.name
   tenant_id                       = var.genai_key_vault_definition.tenant_id != null ? var.genai_key_vault_definition.tenant_id : data.azurerm_client_config.current.tenant_id
   diagnostic_settings             = local.genai_key_vault_diagnostic_settings
   enabled_for_deployment          = true
@@ -36,12 +36,39 @@ module "avm_res_keyvault_vault" {
 
 #moving this outside of the KV AVM module so I can set an implicit dependency from the jump vm module to order deletion properly.
 #TODO: Review if this permission is too permissive.  Can this be Secrets User instead?
-resource "azurerm_role_assignment" "deployment_user_kv_admin" {
+resource "azapi_resource" "deployment_user_kv_admin" {
   count = var.genai_key_vault_definition.deploy ? 1 : 0
 
-  principal_id         = data.azurerm_client_config.current.object_id
-  scope                = module.avm_res_keyvault_vault[0].resource_id
-  role_definition_name = "Key Vault Administrator"
+  name      = uuidv5("url", "${module.avm_res_keyvault_vault[0].resource_id}|${data.azurerm_client_config.current.object_id}|00482a5a-887f-4fb3-b363-3b7fe8e74483")
+  parent_id = module.avm_res_keyvault_vault[0].resource_id
+  type      = var.resource_types.authorization_role_assignments
+  body = {
+    properties = {
+      principalId      = data.azurerm_client_config.current.object_id
+      roleDefinitionId = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/providers/Microsoft.Authorization/roleDefinitions/00482a5a-887f-4fb3-b363-3b7fe8e74483"
+    }
+  }
+  ignore_body_changes = length(var.ignore_body_changes.authorization_role_assignments) > 0 ? var.ignore_body_changes.authorization_role_assignments : null
+  replace_triggers_refs = [
+    "properties.principalId",
+    "properties.roleDefinitionId",
+  ]
+  response_export_values = []
+  retry                  = var.retry
+
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
+    content {
+      create = timeouts.value.create
+      read   = timeouts.value.read
+      update = timeouts.value.update
+      delete = timeouts.value.delete
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [name]
+  }
 }
 
 resource "time_sleep" "wait_for_kv_rbac" {
@@ -49,10 +76,10 @@ resource "time_sleep" "wait_for_kv_rbac" {
 
   create_duration = "60s"
   triggers = {
-    role_assignment = azurerm_role_assignment.deployment_user_kv_admin[0].id
+    role_assignment = azapi_resource.deployment_user_kv_admin[0].id
   }
 
-  depends_on = [azurerm_role_assignment.deployment_user_kv_admin]
+  depends_on = [azapi_resource.deployment_user_kv_admin]
 }
 
 #TODO:
@@ -63,9 +90,9 @@ module "cosmosdb" {
   version = "0.10.0"
   count   = var.genai_cosmosdb_definition.deploy ? 1 : 0
 
-  location                   = azurerm_resource_group.this.location
+  location                   = azapi_resource.this.location
   name                       = local.genai_cosmosdb_name
-  resource_group_name        = azurerm_resource_group.this.name
+  resource_group_name        = azapi_resource.this.name
   analytical_storage_config  = var.genai_cosmosdb_definition.analytical_storage_config
   analytical_storage_enabled = var.genai_cosmosdb_definition.analytical_storage_enabled
   automatic_failover_enabled = var.genai_cosmosdb_definition.automatic_failover_enabled
@@ -113,9 +140,9 @@ module "storage_account" {
   version = "0.6.6"
   count   = var.genai_storage_account_definition.deploy ? 1 : 0
 
-  location                            = azurerm_resource_group.this.location
+  location                            = azapi_resource.this.location
   name                                = local.genai_storage_account_name
-  resource_group_name                 = azurerm_resource_group.this.name
+  resource_group_name                 = azapi_resource.this.name
   access_tier                         = var.genai_storage_account_definition.access_tier
   account_kind                        = var.genai_storage_account_definition.account_kind
   account_replication_type            = var.genai_storage_account_definition.account_replication_type
@@ -145,9 +172,9 @@ module "containerregistry" {
   version = "0.5.0"
   count   = var.genai_container_registry_definition.deploy ? 1 : 0
 
-  location            = azurerm_resource_group.this.location
+  location            = azapi_resource.this.location
   name                = local.genai_container_registry_name
-  resource_group_name = azurerm_resource_group.this.name
+  resource_group_name = azapi_resource.this.name
   diagnostic_settings = local.genai_container_registry_diagnostic_settings
   enable_telemetry    = var.enable_telemetry
   private_endpoints = {
@@ -169,9 +196,9 @@ module "app_configuration" {
   version = "0.5.1"
   count   = var.genai_app_configuration_definition.deploy ? 1 : 0
 
-  location                        = azurerm_resource_group.this.location
+  location                        = azapi_resource.this.location
   name                            = local.genai_app_configuration_name
-  resource_group_resource_id      = azurerm_resource_group.this.id
+  resource_group_resource_id      = azapi_resource.this.id
   azapi_schema_validation_enabled = false
   diagnostic_settings             = local.genai_app_configuration_diagnostic_settings
   enable_telemetry                = var.enable_telemetry

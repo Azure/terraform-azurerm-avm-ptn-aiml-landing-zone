@@ -6,6 +6,7 @@ terraform {
       source  = "Azure/azapi"
       version = "~> 2.12"
     }
+    # tflint-ignore: avm_provider_azurerm_disallowed
     azurerm = {
       source  = "hashicorp/azurerm"
       version = "~> 4.0"

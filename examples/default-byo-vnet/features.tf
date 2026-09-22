@@ -4,4 +4,5 @@ resource "azapi_update_resource" "allow_drop_unencrypted_vnet" {
   body = {
     properties = {}
   }
+  response_export_values = []
 }

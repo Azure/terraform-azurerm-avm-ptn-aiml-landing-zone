@@ -365,7 +365,7 @@ locals {
   }
   subnets_definition       = var.vnet_definition.subnets
   virtual_network_links    = merge(local.default_virtual_network_link, var.private_dns_zones.network_links)
-  vnet_address_space       = length(var.vnet_definition.existing_byo_vnet) > 0 ? data.azurerm_virtual_network.ai_lz_vnet[0].address_space[0] : var.vnet_definition.address_space[0]
+  vnet_address_space       = length(var.vnet_definition.existing_byo_vnet) > 0 ? data.azapi_resource.ai_lz_vnet[0].output.properties.addressSpace.addressPrefixes[0] : var.vnet_definition.address_space[0]
   vnet_diagnostic_settings = var.vnet_definition.enable_diagnostic_settings ? (length(var.vnet_definition.diagnostic_settings) > 0 ? var.vnet_definition.diagnostic_settings : local.vnet_diagnostic_settings_inner) : {}
   vnet_diagnostic_settings_inner = (local.deploy_diagnostics_settings ? {
     sendToLogAnalytics = {
@@ -382,7 +382,7 @@ locals {
     }
   } : {})
   vnet_name        = length(var.vnet_definition.existing_byo_vnet) > 0 ? try(basename(values(var.vnet_definition.existing_byo_vnet)[0].vnet_resource_id), null) : (try(var.vnet_definition.name, null) != null ? var.vnet_definition.name : (var.name_prefix != null ? "${var.name_prefix}-vnet" : "ai-alz-vnet"))
-  vnet_resource_id = length(var.vnet_definition.existing_byo_vnet) > 0 ? data.azurerm_virtual_network.ai_lz_vnet[0].id : module.ai_lz_vnet[0].resource_id
+  vnet_resource_id = length(var.vnet_definition.existing_byo_vnet) > 0 ? data.azapi_resource.ai_lz_vnet[0].id : module.ai_lz_vnet[0].resource_id
   #web_application_firewall_managed_rules = var.waf_policy_definition.managed_rules == null ? {
   #  managed_rule_set = tomap({
   #    owasp = {

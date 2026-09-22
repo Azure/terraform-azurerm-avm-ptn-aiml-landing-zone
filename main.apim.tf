@@ -3,10 +3,10 @@ module "apim" {
   version = "0.0.5"
   count   = var.apim_definition.deploy ? 1 : 0
 
-  location                   = azurerm_resource_group.this.location
+  location                   = azapi_resource.this.location
   name                       = local.apim_name
   publisher_email            = var.apim_definition.publisher_email
-  resource_group_name        = azurerm_resource_group.this.name
+  resource_group_name        = azapi_resource.this.name
   additional_location        = var.apim_definition.additional_locations
   certificate                = var.apim_definition.certificate
   client_certificate_enabled = var.apim_definition.client_certificate_enabled
@@ -36,6 +36,6 @@ module "apim" {
   zones                         = var.apim_definition.sku_root == "Premium" ? local.region_zones : null
 
   depends_on = [
-    azurerm_network_security_rule.this
+    azapi_resource.network_security_rule
   ]
 }
