@@ -81,13 +81,9 @@ resource "azapi_resource" "network_security_rule" {
       sourcePortRanges                     = try(tolist(each.value.source_port_ranges), null)
     }
   }
-  create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   ignore_body_changes    = length(var.ignore_body_changes.network_network_security_groups_security_rules) > 0 ? var.ignore_body_changes.network_network_security_groups_security_rules : null
-  read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   response_export_values = []
   retry                  = var.retry
-  update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   dynamic "timeouts" {
     for_each = try(each.value.timeouts, null) != null ? [each.value.timeouts] : var.timeouts == null ? [] : [var.timeouts]
@@ -137,16 +133,12 @@ resource "azapi_resource" "virtual_hub_connection" {
       }
     }
   }
-  create_headers      = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers      = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   ignore_body_changes = length(var.ignore_body_changes.network_virtual_hubs_hub_virtual_network_connections) > 0 ? var.ignore_body_changes.network_virtual_hubs_hub_virtual_network_connections : null
-  read_headers        = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   replace_triggers_refs = [
     "properties.remoteVirtualNetwork.id",
   ]
   response_export_values = []
   retry                  = var.retry
-  update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   dynamic "timeouts" {
     for_each = var.timeouts == null ? [] : [var.timeouts]
