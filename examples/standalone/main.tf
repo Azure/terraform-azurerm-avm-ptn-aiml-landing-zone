@@ -215,6 +215,7 @@ module "test" {
     }
   }
   bastion_definition = {
+    tunneling_enabled = true
   }
   buildvm_definition = {
     sku = module.vm_sku.sku
@@ -248,5 +249,9 @@ module "test" {
   }
   ks_ai_search_definition = {
     enable_diagnostic_settings = false
+  }
+  nat_gateway_definition = {
+    deploy      = true
+    subnet_keys = ["JumpboxSubnet"]
   }
 }
