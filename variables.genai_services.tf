@@ -166,6 +166,10 @@ DESCRIPTION
     error_message = "The network_rule_set.default_action must be one of: 'Allow', 'Deny'."
   }
   validation {
+    condition     = var.genai_container_registry_definition.network_rule_set == null ? true : var.genai_container_registry_definition.sku == "Premium"
+    error_message = "The network_rule_set can only be configured when sku is 'Premium'."
+  }
+  validation {
     condition     = var.genai_container_registry_definition.network_rule_set == null ? true : alltrue([for ip_rule in var.genai_container_registry_definition.network_rule_set.ip_rule : ip_rule.action == "Allow"])
     error_message = "Each network_rule_set.ip_rule.action must be 'Allow'."
   }
@@ -298,6 +302,14 @@ Configuration object for the Azure Cosmos DB account to be created for GenAI ser
   - `max_age_in_seconds` - (Optional) Maximum age in seconds for CORS.
 - `tags` - (Optional) Map of tags to assign to the Cosmos DB account.
 DESCRIPTION
+
+  validation {
+    condition = alltrue([
+      for rule in var.genai_cosmosdb_definition.virtual_network_rules :
+      can(provider::azapi::parse_resource_id("Microsoft.Network/virtualNetworks/subnets", rule.subnet_id))
+    ])
+    error_message = "Each virtual_network_rules.subnet_id must be a valid subnet resource ID."
+  }
 }
 
 variable "genai_key_vault_definition" {
@@ -375,6 +387,14 @@ Configuration object for the Azure Key Vault to be created for GenAI services.
   - `principal_type` - (Optional) Type of the principal (User, Group, ServicePrincipal).
 - `tags` - (Optional) Map of tags to assign to the Key Vault.
 DESCRIPTION
+
+  validation {
+    condition = try(var.genai_key_vault_definition.network_acls, null) == null ? true : alltrue([
+      for subnet_id in var.genai_key_vault_definition.network_acls.virtual_network_subnet_ids :
+      can(provider::azapi::parse_resource_id("Microsoft.Network/virtualNetworks/subnets", subnet_id))
+    ])
+    error_message = "Each network_acls.virtual_network_subnet_ids entry must be a valid subnet resource ID."
+  }
 }
 
 variable "genai_storage_account_definition" {
@@ -478,5 +498,12 @@ DESCRIPTION
   validation {
     condition     = var.genai_storage_account_definition.network_rules == null ? true : length(setsubtract(var.genai_storage_account_definition.network_rules.bypass, ["Logging", "Metrics", "AzureServices", "None"])) == 0
     error_message = "Each network_rules.bypass entry must be one of: 'Logging', 'Metrics', 'AzureServices', 'None'."
+  }
+  validation {
+    condition = var.genai_storage_account_definition.network_rules == null ? true : alltrue([
+      for subnet_id in var.genai_storage_account_definition.network_rules.virtual_network_subnet_ids :
+      can(provider::azapi::parse_resource_id("Microsoft.Network/virtualNetworks/subnets", subnet_id))
+    ])
+    error_message = "Each network_rules.virtual_network_subnet_ids entry must be a valid subnet resource ID."
   }
 }

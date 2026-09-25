@@ -581,4 +581,39 @@ DESCRIPTION
     condition     = try(var.ai_foundry_definition.ai_foundry.network_acls.bypass, null) == null ? true : var.ai_foundry_definition.ai_foundry.network_acls.bypass == "AzureServices"
     error_message = "The ai_foundry.network_acls.bypass must be 'AzureServices' or null."
   }
+  validation {
+    condition = alltrue([
+      for rule in try(var.ai_foundry_definition.ai_foundry.network_acls.virtual_network_rules, []) :
+      can(provider::azapi::parse_resource_id("Microsoft.Network/virtualNetworks/subnets", rule.subnet_resource_id))
+    ])
+    error_message = "Each ai_foundry.network_acls.virtual_network_rules.subnet_resource_id must be a valid subnet resource ID."
+  }
+  validation {
+    condition = alltrue([
+      for cosmosdb in values(var.ai_foundry_definition.cosmosdb_definition) : alltrue([
+        for rule in cosmosdb.virtual_network_rules :
+        can(provider::azapi::parse_resource_id("Microsoft.Network/virtualNetworks/subnets", rule.subnet_id))
+      ])
+    ])
+    error_message = "Each cosmosdb_definition.virtual_network_rules.subnet_id must be a valid subnet resource ID."
+  }
+  validation {
+    condition = alltrue([
+      for key_vault in values(var.ai_foundry_definition.key_vault_definition) : alltrue([
+        for subnet_id in key_vault.network_acls.virtual_network_subnet_ids :
+        can(provider::azapi::parse_resource_id("Microsoft.Network/virtualNetworks/subnets", subnet_id))
+      ])
+    ])
+    error_message = "Each key_vault_definition.network_acls.virtual_network_subnet_ids entry must be a valid subnet resource ID."
+  }
+  validation {
+    condition = alltrue([
+      for storage_account in values(var.ai_foundry_definition.storage_account_definition) :
+      storage_account.network_rules == null ? true : alltrue([
+        for subnet_id in storage_account.network_rules.virtual_network_subnet_ids :
+        can(provider::azapi::parse_resource_id("Microsoft.Network/virtualNetworks/subnets", subnet_id))
+      ])
+    ])
+    error_message = "Each storage_account_definition.network_rules.virtual_network_subnet_ids entry must be a valid subnet resource ID."
+  }
 }
