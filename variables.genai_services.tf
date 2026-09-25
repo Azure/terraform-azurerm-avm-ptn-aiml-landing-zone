@@ -165,6 +165,10 @@ DESCRIPTION
     condition     = var.genai_container_registry_definition.network_rule_set == null ? true : contains(["Allow", "Deny"], var.genai_container_registry_definition.network_rule_set.default_action)
     error_message = "The network_rule_set.default_action must be one of: 'Allow', 'Deny'."
   }
+  validation {
+    condition     = var.genai_container_registry_definition.network_rule_set == null ? true : alltrue([for ip_rule in var.genai_container_registry_definition.network_rule_set.ip_rule : ip_rule.action == "Allow"])
+    error_message = "Each network_rule_set.ip_rule.action must be 'Allow'."
+  }
 }
 
 variable "genai_cosmosdb_definition" {
@@ -447,7 +451,7 @@ Configuration object for the Azure Storage Account to be created for GenAI servi
 - `access_tier` - (Optional) The access tier for the storage account. Default is "Hot".
 - `public_network_access_enabled` - (Optional) Whether public network access is enabled. Default is false.
 - `shared_access_key_enabled` - (Optional) Whether shared access keys are enabled. Default is true.
-- `network_rules` - (Optional) Storage account firewall configuration. Defaults to `{}`, which denies public traffic while still allowing trusted Azure services. Set to `null` to remove all network rules, which leaves the account reachable from any public network.
+- `network_rules` - (Optional) Storage account firewall configuration. Defaults to `{}`, which denies public traffic while still allowing trusted Azure services.
   - `bypass` - (Optional) Traffic permitted to bypass the rules. Any combination of "Logging", "Metrics", "AzureServices" or "None". Default is ["AzureServices"].
   - `default_action` - (Optional) Action taken when no rule matches. Possible values are "Allow" and "Deny". Default is "Deny".
   - `ip_rules` - (Optional) Set of public IPv4 addresses or CIDR ranges allowed access. RFC 1918 private ranges are not permitted by Azure. Default is [].
