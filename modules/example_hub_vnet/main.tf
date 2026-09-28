@@ -34,15 +34,15 @@ module "natgateway" {
   source  = "Azure/avm-res-network-natgateway/azurerm"
   version = "0.3.2"
 
-  location            = azurerm_resource_group.this.location
-  name                = local.nat_gateway_name
-  resource_group_name = azurerm_resource_group.this.name
-  enable_telemetry    = true
+  location         = azurerm_resource_group.this.location
+  name             = local.nat_gateway_name
+  enable_telemetry = true
   public_ips = {
     public_ip_1 = {
       name = "${local.nat_gateway_name}-pip"
     }
   }
+  resource_group_name = azurerm_resource_group.this.name
 }
 
 module "bastion_pip" {
@@ -189,8 +189,16 @@ module "jumpvm" {
   source  = "Azure/avm-res-compute-virtualmachine/azurerm"
   version = "0.21.0"
 
-  location = azurerm_resource_group.this.location
-  name     = local.jump_vm_name
+  location            = azurerm_resource_group.this.location
+  name                = local.jump_vm_name
+  resource_group_name = azurerm_resource_group.this.name
+  zone                = length(local.region_zones) > 0 ? random_integer.zone_index.result : null
+  account_credentials = {
+    key_vault_configuration = {
+      resource_id = module.avm_res_keyvault_vault.resource_id
+    }
+  }
+  enable_telemetry = var.enable_telemetry
   network_interfaces = {
     network_interface_1 = {
       name = "${local.jump_vm_name}-nic1"
@@ -202,16 +210,8 @@ module "jumpvm" {
       }
     }
   }
-  resource_group_name = azurerm_resource_group.this.name
-  zone                = length(local.region_zones) > 0 ? random_integer.zone_index.result : null
-  account_credentials = {
-    key_vault_configuration = {
-      resource_id = module.avm_res_keyvault_vault.resource_id
-    }
-  }
-  enable_telemetry = var.enable_telemetry
-  sku_size         = var.jump_vm_definition.sku
-  tags             = merge(var.tags != null ? var.tags : {}, var.jump_vm_definition.tags != null ? var.jump_vm_definition.tags : {})
+  sku_size = var.jump_vm_definition.sku
+  tags     = merge(var.tags != null ? var.tags : {}, var.jump_vm_definition.tags != null ? var.jump_vm_definition.tags : {})
 
   depends_on = [module.avm_res_keyvault_vault, time_sleep.wait_for_kv_rbac]
 }
