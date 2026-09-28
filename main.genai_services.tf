@@ -1,6 +1,6 @@
 module "avm_res_keyvault_vault" {
   source  = "Azure/avm-res-keyvault-vault/azurerm"
-  version = "=0.10.2"
+  version = "0.11.0"
   count   = var.genai_key_vault_definition.deploy ? 1 : 0
 
   location                        = azurerm_resource_group.this.location
@@ -60,7 +60,7 @@ resource "time_sleep" "wait_for_kv_rbac" {
 # create private endpoint config
 module "cosmosdb" {
   source  = "Azure/avm-res-documentdb-databaseaccount/azurerm"
-  version = "0.10.0"
+  version = "0.11.0"
   count   = var.genai_cosmosdb_definition.deploy ? 1 : 0
 
   location                   = azurerm_resource_group.this.location
@@ -107,7 +107,7 @@ module "cosmosdb" {
 
 module "storage_account" {
   source  = "Azure/avm-res-storage-storageaccount/azurerm"
-  version = "0.6.6"
+  version = "0.10.0"
   count   = var.genai_storage_account_definition.deploy ? 1 : 0
 
   location                            = azurerm_resource_group.this.location
@@ -140,7 +140,7 @@ module "storage_account" {
 
 module "containerregistry" {
   source  = "Azure/avm-res-containerregistry-registry/azurerm"
-  version = "0.5.0"
+  version = "0.8.0"
   count   = var.genai_container_registry_definition.deploy ? 1 : 0
 
   location                   = azurerm_resource_group.this.location
