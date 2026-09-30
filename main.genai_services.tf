@@ -34,13 +34,12 @@ module "avm_res_keyvault_vault" {
   depends_on = [module.private_dns_zones, module.hub_vnet_peering]
 }
 
-#moving this outside of the KV AVM module so I can set an implicit dependency from the jump vm module to order deletion properly.
-#TODO: Review if this permission is too permissive.  Can this be Secrets User instead?
 resource "azurerm_role_assignment" "deployment_user_kv_admin" {
   count = var.genai_key_vault_definition.deploy ? 1 : 0
 
-  principal_id         = data.azurerm_client_config.current.object_id
+  principal_id         = local.security_deployment_principal_id
   scope                = module.avm_res_keyvault_vault[0].resource_id
+  principal_type       = var.security_definition.deployment_principal_type
   role_definition_name = "Key Vault Administrator"
 }
 
@@ -48,11 +47,16 @@ resource "time_sleep" "wait_for_kv_rbac" {
   count = var.genai_key_vault_definition.deploy ? 1 : 0
 
   create_duration = "60s"
-  triggers = {
-    role_assignment = azurerm_role_assignment.deployment_user_kv_admin[0].id
-  }
+  triggers = merge(
+    {
+      role_assignment = azurerm_role_assignment.deployment_user_kv_admin[0].id
+    },
+    length(local.security_genai_key_vault_role_assignments) > 0 ? {
+      security_role_assignments = jsonencode(local.security_genai_key_vault_role_assignments)
+    } : {}
+  )
 
-  depends_on = [azurerm_role_assignment.deployment_user_kv_admin]
+  depends_on = [module.avm_res_keyvault_vault, azurerm_role_assignment.deployment_user_kv_admin]
 }
 
 #TODO:
