@@ -21,5 +21,5 @@ module "container_apps_managed_environment" {
   role_assignments        = local.container_app_environment_role_assignments
   tags                    = merge(local.tags, var.container_app_environment_definition.tags != null ? var.container_app_environment_definition.tags : {})
   workload_profile        = var.container_app_environment_definition.workload_profile
-  zone_redundancy_enabled = length(local.region_zones) > 1 ? var.container_app_environment_definition.zone_redundancy_enabled : false
+  zone_redundancy_enabled = length(local.region_zones) > 1 ? coalesce(local.application_platform_use_zone_redundancy, var.container_app_environment_definition.zone_redundancy_enabled) : false
 }
