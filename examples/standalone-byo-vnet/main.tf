@@ -260,6 +260,10 @@ module "test" {
   }
   genai_storage_account_definition = {
   }
+  hosted_agent_definition = {
+    prepare     = true
+    project_key = "project_1"
+  }
   jumpvm_definition = {
     sku = module.vm_sku.sku
   }
