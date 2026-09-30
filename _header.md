@@ -10,6 +10,7 @@ Start from one of the deployable examples in this repository:
 - [default-byo-vnet](./examples/default-byo-vnet) - Platform landing zone with an existing VNet.
 - [standalone](./examples/standalone) - Standalone deployment without platform landing zone dependencies.
 - [standalone-byo-vnet](./examples/standalone-byo-vnet) - Standalone deployment with an existing VNet.
+- [standalone-managed-vnet](./examples/standalone-managed-vnet) - Standalone deployment where the AI Foundry agent uses a Microsoft-managed VNet.
 
 Copy the example that best matches your environment, then replace `source = "../../"` with the registry source when deploying from your own configuration.
 

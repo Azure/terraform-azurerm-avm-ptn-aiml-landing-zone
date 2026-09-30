@@ -257,7 +257,7 @@ locals {
       }] : []
     }
     AIFoundrySubnet = {
-      enabled = try(local.subnets_definition["AIFoundrySubnet"].enabled, true)
+      enabled = try(local.subnets_definition["AIFoundrySubnet"].enabled, true) && !var.ai_foundry_definition.ai_foundry.agent_managed_network_enabled
       name    = try(local.subnets_definition["AIFoundrySubnet"].name, null) != null ? local.subnets_definition["AIFoundrySubnet"].name : "AIFoundrySubnet"
       address_prefixes = (var.vnet_definition.ipam_pools == null ?
         try(local.subnets_definition["AIFoundrySubnet"].address_prefix, null) != null ?
