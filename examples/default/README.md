@@ -50,6 +50,8 @@ data "azurerm_client_config" "current" {}
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
   version = "0.9.2"
+
+  enable_telemetry = var.enable_telemetry
 }
 
 # This allows us to randomize the region for the resource group.
@@ -57,6 +59,7 @@ resource "random_integer" "region_index" {
   max = length(module.regions.regions) - 1
   min = 0
 }
+
 ## End of section to provide a random Azure region for the resource group
 
 # This ensures we have unique CAF compliant names for our resources.
@@ -67,6 +70,7 @@ module "naming" {
 
 data "http" "ip" {
   url = "https://api.ipify.org/"
+
   retry {
     attempts     = 5
     max_delay_ms = 1000
@@ -78,8 +82,9 @@ module "vm_sku" {
   source  = "Azure/avm-utl-sku-finder/azapi"
   version = "0.3.0"
 
-  location      = "australiaeast"
-  cache_results = true
+  location         = "australiaeast"
+  cache_results    = true
+  enable_telemetry = var.enable_telemetry
   vm_filters = {
     cpu_architecture_type          = "x64"
     min_vcpus                      = 2
@@ -114,7 +119,7 @@ module "test" {
   #resource_group_name = "ai-lz-rg-default-ivrhi-1"
   vnet_definition = {
     name          = "ai-lz-vnet-default-1"
-    address_space = ["192.168.0.0/23"]                                                               # has to be out of 192.168.0.0/16 currently. Other RFC1918 not supported for foundry capabilityHost injection.
+    address_space = ["192.168.0.0/23"]
     dns_servers   = [for key, value in module.example_hub.dns_resolver_inbound_ip_addresses : value] # Use the DNS resolver IPs from the example hub
     vnet_peering_configuration = {
       peer_vnet_resource_id = module.example_hub.virtual_network_resource_id
@@ -255,11 +260,18 @@ module "test" {
     }
   }
   genai_storage_account_definition = {
+    # Rules are stored but only enforced once public_network_access_enabled is true.
+    network_rules = {
+      bypass         = ["AzureServices"]
+      default_action = "Deny"
+      ip_rules       = [data.http.ip.response_body]
+    }
   }
   jumpvm_definition = {
     sku = module.vm_sku.sku
   }
   ks_ai_search_definition = {
+    allowed_ips                = [data.http.ip.response_body]
     enable_diagnostic_settings = false
   }
   private_dns_zones = {

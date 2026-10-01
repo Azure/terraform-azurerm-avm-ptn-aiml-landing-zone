@@ -6,6 +6,7 @@ module "search_service" {
   location                     = azurerm_resource_group.this.location
   name                         = local.ks_ai_search_name
   resource_group_name          = azurerm_resource_group.this.name
+  allowed_ips                  = var.ks_ai_search_definition.allowed_ips
   diagnostic_settings          = local.ks_ai_search_diagnostic_settings
   enable_telemetry             = var.enable_telemetry # see variables.tf
   local_authentication_enabled = var.ks_ai_search_definition.local_authentication_enabled
@@ -40,12 +41,8 @@ resource "azapi_resource" "bing_grounding" {
       name = var.ks_bing_grounding_definition.sku
     }
   }
-  create_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  read_headers              = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   schema_validation_enabled = false
   tags                      = merge(local.tags, var.ks_bing_grounding_definition.tags != null ? var.ks_bing_grounding_definition.tags : {})
-  update_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   # The Microsoft.Bing/accounts resource provider normalizes tag keys by
   # lower-casing the first character (e.g. "SecurityControl" -> "securityControl"),
