@@ -1,227 +1,114 @@
 ---
-description: ' Azure Verified Modules (AVM) and Terraform'
-applyTo: '**/*.terraform, **/*.tf, **/*.tfvars, **/*.tfstate, **/*.tflint.hcl, **/*.tf.json, **/*.tfvars.json'
+description: Instructions for developing and maintaining Azure Verified Modules for Terraform.
 ---
 
-# Azure Verified Modules (AVM) Terraform
+# Azure Verified Modules (AVM) - Terraform Instructions
 
 ## Overview
 
-Azure Verified Modules (AVM) are pre-built, tested, and validated Terraform and Bicep modules that follow Azure best practices. Use these modules to create, update, or review Azure Infrastructure as Code (IaC) with confidence.
+This repository contains an Azure Verified Module for Terraform. AVM modules are reusable, tested Azure infrastructure modules that follow the published AVM specifications.
 
-## Custom Instructions for GitHub Copilot Agents
+AVM has three module classifications:
 
-**IMPORTANT**: When GitHub Copilot Agent or GitHub Copilot Coding Agent is working on this repository, the following local unit tests MUST be executed to comply with PR checks. Failure to run these tests will cause PR validation failures:
+- **Resource modules** - one primary Azure resource and its child or extension resources.
+- **Pattern modules** - opinionated multi-resource solutions composed from resource modules.
+- **Utility modules** - shared logic or interfaces that do not directly deploy an Azure resource.
 
-```bash
-PORCH_NO_TUI=1 ./avm pre-commit
-git add . && git commit -m "chore: avm pre-commit"
-PORCH_NO_TUI=1 ./avm pr-check
+Use the [AVM Terraform agent](agents/avm-tf.agent.md) for specification-driven module development. `AGENTS.md` is a compatibility entry point for agents that do not load this Copilot-specific file directly.
+
+## Critical Compliance Requirements
+
+### Instruction acknowledgement
+
+After reading these instructions and the relevant skills, but before modifying files, output this block visibly to the user:
+
+```json
+{
+  "avm-terraform-instructions": "loaded",
+  "skills": ["<loaded-skill-name>"]
+}
 ```
 
-These commands must be run before any pull request is created or updated to ensure compliance with the Azure Verified Modules standards and prevent CI/CD pipeline failures.
-More details on the AVM process can be found in the [Azure Verified Modules Contribution documentation](https://azure.github.io/Azure-Verified-Modules/contributing/terraform/testing/).
+List every skill loaded for the task. Use an empty `skills` array when no specialized skill applies.
 
-**Failure to run these tests will cause PR validation failures and prevent successful merges.**
+### Follow current AVM specifications
+
+Before reviewing or generating Terraform:
+
+1. Fetch <https://azure.github.io/Azure-Verified-Modules/llms.txt>.
+2. Locate and read the current raw page for every relevant Terraform and shared specification.
+3. Read the complete skill matching the task.
+4. Resolve conflicts in favor of the current published specification.
+
+Do not cite a specification from memory or treat an older module as authoritative.
+
+### Use AzAPI for managed authoring
+
+New AVM Terraform modules use `Azure/azapi` for every control-plane resource and every supported direct Azure operation. Do not use `hashicorp/azurerm` for convenience, ordinary supporting infrastructure, examples, tests, or fixtures.
+
+AzureRM is permitted only for a specifically documented data-plane or non-ARM operation that AzAPI cannot perform. Each exception must be independently justified and must not authorize other AzureRM usage. Read `avm-tf-azapi` and `avm-tf-tflint` before implementing an exception.
+
+### Generate documentation
+
+Do not hand-edit generated `README.md` files. Author module content in `_header.md` and `_footer.md`, then run `avm docs` or `avm pre-commit`. Read `avm-tf-documentation` before changing module documentation.
+
+## Use the Managed Toolchain
+
+Use PowerShell 7.4 or later with `Avm.Authoring`:
+
+```pwsh
+Install-PSResource -Name Avm.Authoring -Repository PSGallery -TrustRepository
+Import-Module Avm.Authoring
+avm version
+```
+
+| Command | Purpose |
+| --- | --- |
+| `avm pre-commit` | Synchronize managed files, apply fixable conventions and transforms, format Terraform, and generate documentation. |
+| `avm pr-check` | Run the clean-worktree pull request validation gate. |
+| `avm test unit` | Run provider-mocked Terraform tests. |
+| `avm test integration` | Run real-Azure integration tests. |
+| `avm test e2e` | Deploy, idempotency-check, and destroy runnable examples. |
+| `avm lint` | Run the managed TFLint configuration. |
+| `avm check policy` | Evaluate example plans against APRL and AVMSEC through Conftest. |
+
+If the version gate reports that `Avm.Authoring` is stale, run `avm update`, re-import the module, and retry. Do not substitute the retired Make, Porch, container, or repository-launcher workflows.
 
 ## Module Discovery
 
-### Terraform Registry
+Use the current AVM indexes to confirm module availability, classification, naming, and ownership:
 
-- Search for "avm" + resource name
-- Filter by "Partner" tag to find official AVM modules
-- Example: Search "avm storage account" → filter by Partner
+- [Terraform resource modules](https://azure.github.io/Azure-Verified-Modules/indexes/terraform/tf-resource-modules/)
+- [Terraform pattern modules](https://azure.github.io/Azure-Verified-Modules/indexes/terraform/tf-pattern-modules/)
+- [Terraform utility modules](https://azure.github.io/Azure-Verified-Modules/indexes/terraform/tf-utility-modules/)
 
-### Official AVM Index
+New repositories use `terraform-azure-avm-<class>-<name>` and publish under the `Azure` Terraform Registry namespace with the `/azure` system identifier. Existing legacy repository and Registry names do not permit AzureRM use.
 
-- **Terraform Resources**: `https://azure.github.io/Azure-Verified-Modules/indexes/terraform/tf-resource-modules/`
-- **Terraform Patterns**: `https://azure.github.io/Azure-Verified-Modules/indexes/terraform/tf-pattern-modules/`
-- **Bicep Resources**: `https://azure.github.io/Azure-Verified-Modules/indexes/bicep/bicep-resource-modules/`
-- **Bicep Patterns**: `https://azure.github.io/Azure-Verified-Modules/indexes/bicep/bicep-pattern-modules/`
+## Quality Assurance
 
-## Terraform Module Usage
+- Keep reusable modules free of provider configuration blocks.
+- Use PowerShell for supported hooks and scripts.
+- Add or update the smallest relevant unit, integration, or E2E coverage.
+- Run `avm pre-commit` and review generated changes.
+- Commit the complete worktree before running `avm pr-check`.
+- Treat TFLint and Conftest exceptions as reviewed deviations, not shortcuts around a failing check.
 
-### From Examples
+## Skills
 
-1. Copy the example code from the module documentation
-2. Replace `source = "../../"` with `source = "Azure/avm-res-{service}-{resource}/azurerm"`
-3. Add `version = "1.0.0"` (use latest available)
-4. Set `enable_telemetry = true`
+When a task falls within a skill's domain, read and follow the full skill before proceeding.
 
-### From Scratch
-
-1. Copy the Provision Instructions from module documentation
-2. Configure required and optional inputs
-3. Pin the module version
-4. Enable telemetry
-
-### Example Usage
-
-```hcl
-module "storage_account" {
-  source  = "Azure/avm-res-storage-storageaccount/azurerm"
-  version = "0.1.0"
-
-  enable_telemetry    = true
-  location            = "East US"
-  name                = "mystorageaccount"
-  resource_group_name = "my-rg"
-
-  # Additional configuration...
-}
-```
-
-## Naming Conventions
-
-### Module Types
-
-- **Resource Modules**: `Azure/avm-res-{service}-{resource}/azurerm`
-  - Example: `Azure/avm-res-storage-storageaccount/azurerm`
-- **Pattern Modules**: `Azure/avm-ptn-{pattern}/azurerm`
-  - Example: `Azure/avm-ptn-aks-enterprise/azurerm`
-- **Utility Modules**: `Azure/avm-utl-{utility}/azurerm`
-  - Example: `Azure/avm-utl-regions/azurerm`
-
-### Service Naming
-
-- Use kebab-case for services and resources
-- Follow Azure service names (e.g., `storage-storageaccount`, `network-virtualnetwork`)
-
-## Version Management
-
-### Check Available Versions
-
-- Endpoint: `https://registry.terraform.io/v1/modules/Azure/{module}/azurerm/versions`
-- Example: `https://registry.terraform.io/v1/modules/Azure/avm-res-storage-storageaccount/azurerm/versions`
-
-### Version Pinning Best Practices
-
-- For providers: use pessimistic version constraints for minor version: `version = "~> 1.0"`
-- For modules: Pin to specific versions: `version = "1.2.3"`
-
-## Module Sources
-
-### Terraform Registry
-
-- **URL Pattern**: `https://registry.terraform.io/modules/Azure/{module}/azurerm/latest`
-- **Example**: `https://registry.terraform.io/modules/Azure/avm-res-storage-storageaccount/azurerm/latest`
-
-### GitHub Repository
-
-- **URL Pattern**: `https://github.com/Azure/terraform-azurerm-avm-{type}-{service}-{resource}`
-- **Examples**:
-  - Resource: `https://github.com/Azure/terraform-azurerm-avm-res-storage-storageaccount`
-  - Pattern: `https://github.com/Azure/terraform-azurerm-avm-ptn-aks-enterprise`
-
-## Development Best Practices
-
-### Module Usage
-
-- ✅ **Always** pin module versions
-- ✅ **Start** with official examples from module documentation
-- ✅ **Review** all inputs and outputs before implementation
-- ✅ **Enable** telemetry: `enable_telemetry = true`
-- ✅ **Use** AVM utility modules for common patterns
-
-### Code Quality
-
-- ✅ **Always** run `terraform fmt` after making changes
-- ✅ **Always** run `terraform validate` after making changes
-- ✅ **Use** meaningful variable names and descriptions
-- ✅ **Use** snake_case
-- ✅ **Add** proper tags and metadata
-- ✅ **Document** complex configurations
-
-### Validation Requirements
-
-Before creating or updating any pull request:
-
-```bash
-# Format code
-terraform fmt -recursive
-
-# Validate syntax
-terraform validate
-
-# AVM-specific validation (MANDATORY)
-export PORCH_NO_TUI=1
-./avm pre-commit
-<commit any changes>
-./avm pr-check
-```
-
-## Tool Integration
-
-### Use Available Tools
-
-- **Deployment Guidance**: Use `azure_get_deployment_best_practices` tool
-- **Service Documentation**: Use `microsoft.docs.mcp` tool for Azure service-specific guidance
-- **Schema Information**: Use `query_azapi_resource_schema` & `query_azapi_resource_document` to query AzAPI resources and schemas.
-- **Provider resources and resource schemas**: Use `list_terraform_provider_items` & `query_terraform_schema` to query azurerm resource schema.
-
-### GitHub Copilot Integration
-
-When working with AVM repositories:
-
-1. Always check for existing modules before creating new resources
-2. Use the official examples as starting points
-3. Run all validation tests before committing
-4. Document any customizations or deviations from examples
-
-## Common Patterns
-
-### Resource Group Module
-
-```hcl
-module "resource_group" {
-  source  = "Azure/avm-res-resources-resourcegroup/azurerm"
-  version = "0.1.0" # use latest
-
-  enable_telemetry = true
-  location         = var.location
-  name            = var.resource_group_name
-}
-```
-
-### Virtual Network Module
-
-```hcl
-module "virtual_network" {
-  source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "0.1.0" # use latest
-
-  enable_telemetry    = true
-  location            = module.resource_group.location
-  name                = var.vnet_name
-  resource_group_name = module.resource_group.name
-  address_space       = ["10.0.0.0/16"]
-}
-```
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Version Conflicts**: Always check compatibility between module and provider versions
-2. **Missing Dependencies**: Ensure all required resources are created first
-3. **Validation Failures**: Run AVM validation tools before committing
-4. **Documentation**: Always refer to the latest module documentation
-
-### Support Resources
-
-- **AVM Documentation**: `https://azure.github.io/Azure-Verified-Modules/`
-- **GitHub Issues**: Report issues in the specific module's GitHub repository
-- **Community**: Azure Terraform Provider GitHub discussions
-
-## Compliance Checklist
-
-Before submitting any AVM-related code:
-
-- [ ] Module version is pinned
-- [ ] Telemetry is enabled
-- [ ] Code is formatted (`terraform fmt`)
-- [ ] Code is validated (`terraform validate`)
-- [ ] AVM pre-commit checks pass (`./avm pre-commit`)
-- [ ] AVM PR checks pass (`./avm pr-check`)
-- [ ] Documentation is updated
-- [ ] Examples are tested and working
+| Skill | Use for | File |
+| --- | --- | --- |
+| `avm-tf-azapi` | AzAPI resources, ARM schemas, provider constraints, retries, timeouts, response exports, replacement triggers, and `ignore_body_changes`. | `.github/skills/avm-tf-azapi/SKILL.md` |
+| `avm-tf-classifications` | Resource, pattern, and utility module classification and naming. | `.github/skills/avm-tf-classifications/SKILL.md` |
+| `avm-tf-codestyle` | Terraform file layout, HCL style, variables, outputs, validation, and lifecycle syntax. | `.github/skills/avm-tf-codestyle/SKILL.md` |
+| `avm-tf-conftest` | Conftest policy findings, APRL and AVMSEC rule identifiers, and example-local Rego exceptions. | `.github/skills/avm-tf-conftest/SKILL.md` |
+| `avm-tf-documentation` | Generated README inputs, examples, and documentation validation. | `.github/skills/avm-tf-documentation/SKILL.md` |
+| `avm-tf-interfaces` | Standard AVM interfaces and utility-module composition. | `.github/skills/avm-tf-interfaces/SKILL.md` |
+| `avm-tf-lifecycle` | Module proposal, ownership, lifecycle, versioning, and deprecation. | `.github/skills/avm-tf-lifecycle/SKILL.md` |
+| `avm-tf-migration` | AzureRM-to-AzAPI migration and state-preserving changes. | `.github/skills/avm-tf-migration/SKILL.md` |
+| `avm-tf-process` | Contribution flow from repository setup through validation, pull request, and release. | `.github/skills/avm-tf-process/SKILL.md` |
+| `avm-tf-submodules` | Child-resource submodule structure and composition. | `.github/skills/avm-tf-submodules/SKILL.md` |
+| `avm-tf-telemetry` | AVM telemetry resources, inputs, and AzAPI headers. | `.github/skills/avm-tf-telemetry/SKILL.md` |
+| `avm-tf-testing` | Unit, integration, E2E, hooks, and CI testing. | `.github/skills/avm-tf-testing/SKILL.md` |
+| `avm-tf-tflint` | Current AVM TFLint rules, canonical rule IDs, severity, overrides, scope, and precedence. | `.github/skills/avm-tf-tflint/SKILL.md` |

@@ -1,0 +1,31 @@
+---
+# Dependabot version updates for AVM Terraform module repositories.
+#
+# Dependabot security updates (CVE-driven) are enabled at the repository level
+# via Terraform; this file enables proactive *version* updates for pinned
+# provider versions.
+#
+# Docs: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+version: 2
+
+updates:
+  # Terraform providers in the root module, examples, and any submodules.
+  - package-ecosystem: terraform
+    directories:
+      - "/"
+      - "/examples/**"
+      - "/modules/**"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Etc/UTC
+    groups:
+      terraform:
+        patterns:
+          - "*"
+    labels:
+      - "Language: Terraform :globe_with_meridians:"
+    commit-message:
+      prefix: chore
+      include: scope

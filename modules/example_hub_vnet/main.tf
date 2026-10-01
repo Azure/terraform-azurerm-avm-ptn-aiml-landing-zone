@@ -1,11 +1,8 @@
-
 data "azurerm_client_config" "current" {}
 
 module "avm_utl_regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.5.2"
-
-  recommended_filter = false
+  version = "0.9.2"
 }
 
 resource "random_string" "name_suffix" {
@@ -23,14 +20,14 @@ resource "azurerm_resource_group" "this" {
 #Create Hub Vnet (Subnets: AzureBastionSubnet, BuildVM subnet, Private Resolver Subnet?)
 module "ai_lz_vnet" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "=0.7.1"
+  version = "=0.16.0"
 
-  address_space       = [var.vnet_definition.address_space]
-  location            = azurerm_resource_group.this.location
-  resource_group_name = azurerm_resource_group.this.name
-  enable_telemetry    = var.enable_telemetry
-  name                = local.vnet_name
-  subnets             = local.deployed_subnets
+  location         = azurerm_resource_group.this.location
+  parent_id        = azurerm_resource_group.this.id
+  address_space    = [var.vnet_definition.address_space]
+  enable_telemetry = var.enable_telemetry
+  name             = local.vnet_name
+  subnets          = local.deployed_subnets
 }
 
 module "natgateway" {
@@ -86,7 +83,7 @@ module "fw_pip" {
 
 module "firewall" {
   source  = "Azure/avm-res-network-azurefirewall/azurerm"
-  version = "0.3.0"
+  version = "0.4.0"
 
   firewall_sku_name   = "AZFW_VNet"
   firewall_sku_tier   = "Standard"
@@ -129,9 +126,10 @@ module "firewall_network_rule_collection_group" {
 
   firewall_policy_rule_collection_group_firewall_policy_id      = module.firewall_policy.resource_id
   firewall_policy_rule_collection_group_name                    = local.firewall_policy_rule_collection_group_name
-  firewall_policy_rule_collection_group_network_rule_collection = local.firewall_policy_rule_collection_group_network_rule_collection
   firewall_policy_rule_collection_group_priority                = local.firewall_policy_rule_collection_group_priority
+  firewall_policy_rule_collection_group_network_rule_collection = local.firewall_policy_rule_collection_group_network_rule_collection
 }
+
 # Add a log analytics workspace for the firewall logs to do any connectivity troubleshooting if needed.
 module "log_analytics_workspace" {
   source  = "Azure/avm-res-operationalinsights-workspace/azurerm"
@@ -144,6 +142,7 @@ module "log_analytics_workspace" {
   log_analytics_workspace_retention_in_days = 30
   log_analytics_workspace_sku               = "PerGB2018"
 }
+
 # Add DNS resolver with inbound endpoint
 module "private_resolver" {
   source  = "Azure/avm-res-network-dnsresolver/azurerm"
@@ -160,15 +159,16 @@ module "private_resolver" {
     }
   }
 }
+
 # Create the Private DNS zones and link to the hub VNet
 module "private_dns_zones" {
   source   = "Azure/avm-res-network-privatednszone/azurerm"
-  version  = "0.3.4"
+  version  = "0.4.2"
   for_each = local.private_dns_zones
 
-  domain_name         = each.value.name
-  resource_group_name = azurerm_resource_group.this.name
-  enable_telemetry    = var.enable_telemetry
+  domain_name      = each.value.name
+  parent_id        = azurerm_resource_group.this.id
+  enable_telemetry = var.enable_telemetry
   virtual_network_links = {
     alz_vnet_link = {
       vnetlinkname      = "${module.ai_lz_vnet.name}-link"
@@ -178,6 +178,7 @@ module "private_dns_zones" {
     }
   }
 }
+
 # Create a jump VM for verifying connectivity to the linked vnet and private connection resources.
 resource "random_integer" "zone_index" {
   max = length(local.region_zones)
@@ -186,7 +187,7 @@ resource "random_integer" "zone_index" {
 
 module "jumpvm" {
   source  = "Azure/avm-res-compute-virtualmachine/azurerm"
-  version = "0.19.3"
+  version = "0.20.0"
 
   location = azurerm_resource_group.this.location
   name     = local.jump_vm_name
@@ -210,14 +211,14 @@ module "jumpvm" {
   }
   enable_telemetry = var.enable_telemetry
   sku_size         = var.jump_vm_definition.sku
-  tags             = var.jump_vm_definition.tags
+  tags             = merge(var.tags != null ? var.tags : {}, var.jump_vm_definition.tags != null ? var.jump_vm_definition.tags : {})
 
-  depends_on = [module.avm_res_keyvault_vault]
+  depends_on = [module.avm_res_keyvault_vault, time_sleep.wait_for_kv_rbac]
 }
 
 module "avm_res_keyvault_vault" {
   source  = "Azure/avm-res-keyvault-vault/azurerm"
-  version = "=0.10.0"
+  version = "=0.10.2"
 
   location                    = azurerm_resource_group.this.location
   name                        = local.kv_name
@@ -235,10 +236,23 @@ module "avm_res_keyvault_vault" {
       principal_id               = data.azurerm_client_config.current.object_id
     }
   }
+  wait_for_rbac_before_contact_operations = {
+    create = "60s"
+  }
   wait_for_rbac_before_key_operations = {
     create = "60s"
   }
   wait_for_rbac_before_secret_operations = {
     create = "60s"
   }
+}
+
+resource "time_sleep" "wait_for_kv_rbac" {
+  create_duration = "60s"
+  triggers = {
+    role_assignments = jsonencode(module.avm_res_keyvault_vault.resource_id)
+    principal_id     = data.azurerm_client_config.current.object_id
+  }
+
+  depends_on = [module.avm_res_keyvault_vault]
 }

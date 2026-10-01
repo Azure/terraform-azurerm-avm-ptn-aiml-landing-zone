@@ -18,20 +18,20 @@ locals {
   # General NSG rules (for AppGateway, APIM, AIFoundry, DevOps, Jumpbox, PrivateEndpoint subnets)
   general_nsg_specific_rules = {
     "appgw_rule01" = {
-      name                         = "Allow-AppGW_Management"
-      access                       = "Allow"
-      destination_address_prefixes = try(var.vnet_definition.subnets["AppGatewaySubnet"].address_prefix, null) != null ? [var.vnet_definition.subnets["AppGatewaySubnet"].address_prefix] : [cidrsubnet(var.vnet_definition.address_space, 4, 5)]
-      destination_port_range       = "65503-65534"
-      direction                    = "Inbound"
-      priority                     = 110
-      protocol                     = "*"
-      source_address_prefix        = "Internet"
-      source_port_range            = "*"
+      name                       = "Allow-AppGW_Management"
+      access                     = "Allow"
+      destination_address_prefix = "*" # Allow to all addresses as per MS documentation, https://learn.microsoft.com/en-us/azure/application-gateway/configuration-infrastructure#network-security-groups
+      destination_port_range     = "65200-65535"
+      direction                  = "Inbound"
+      priority                   = 110
+      protocol                   = "*"
+      source_address_prefix      = "GatewayManager"
+      source_port_range          = "*"
     }
     "appgw_rule02" = {
       name                         = "Allow-AppGW_Web"
       access                       = "Allow"
-      destination_address_prefixes = try(var.vnet_definition.subnets["AppGatewaySubnet"].address_prefix, null) != null ? [var.vnet_definition.subnets["AppGatewaySubnet"].address_prefix] : [cidrsubnet(var.vnet_definition.address_space, 4, 5)]
+      destination_address_prefixes = length(var.vnet_definition.existing_byo_vnet) > 0 ? module.byo_subnets["AppGatewaySubnet"].address_prefixes : module.ai_lz_vnet[0].subnets["AppGatewaySubnet"].address_prefixes
       destination_port_ranges      = ["80", "443"]
       direction                    = "Inbound"
       priority                     = 120
@@ -42,13 +42,46 @@ locals {
     "appgw_rule03" = {
       name                         = "Allow-AppGW_LoadBalancer"
       access                       = "Allow"
-      destination_address_prefixes = try(var.vnet_definition.subnets["AppGatewaySubnet"].address_prefix, null) != null ? [var.vnet_definition.subnets["AppGatewaySubnet"].address_prefix] : [cidrsubnet(var.vnet_definition.address_space, 4, 5)]
+      destination_address_prefixes = length(var.vnet_definition.existing_byo_vnet) > 0 ? module.byo_subnets["AppGatewaySubnet"].address_prefixes : module.ai_lz_vnet[0].subnets["AppGatewaySubnet"].address_prefixes
       destination_port_range       = "*"
       direction                    = "Inbound"
       priority                     = 4000
       protocol                     = "*"
       source_address_prefix        = "AzureLoadBalancer"
       source_port_range            = "*"
+    }
+    "apim_rule01" = {
+      name                       = "Allow-APIM-Management"
+      access                     = "Allow"
+      destination_address_prefix = "VirtualNetwork"
+      destination_port_range     = "3443"
+      direction                  = "Inbound"
+      priority                   = 130
+      protocol                   = "Tcp"
+      source_address_prefix      = "ApiManagement"
+      source_port_range          = "*"
+    }
+    "apim_rule02" = {
+      name                       = "Allow-APIM-Storage-Outbound"
+      access                     = "Allow"
+      destination_address_prefix = "Storage"
+      destination_port_range     = "443"
+      direction                  = "Outbound"
+      priority                   = 110
+      protocol                   = "Tcp"
+      source_address_prefix      = "VirtualNetwork"
+      source_port_range          = "*"
+    }
+    "apim_rule03" = {
+      name                       = "Allow-APIM-LoadBalancer"
+      access                     = "Allow"
+      destination_address_prefix = "VirtualNetwork"
+      destination_port_range     = "6390"
+      direction                  = "Inbound"
+      priority                   = 140
+      protocol                   = "Tcp"
+      source_address_prefix      = "AzureLoadBalancer"
+      source_port_range          = "*"
     }
   }
 
@@ -153,7 +186,7 @@ locals {
     "cae_rule01" = {
       name                         = "Allow-CAE_Client_HTTP"
       access                       = "Allow"
-      destination_address_prefixes = try(var.vnet_definition.subnets["ContainerAppEnvironmentSubnet"].address_prefix, null) != null ? [var.vnet_definition.subnets["ContainerAppEnvironmentSubnet"].address_prefix] : [cidrsubnet(var.vnet_definition.address_space, 4, 1)]
+      destination_address_prefixes = local.container_app_subnet_address_prefixes
       destination_port_ranges      = ["80", "31080"]
       direction                    = "Inbound"
       priority                     = 200
@@ -164,7 +197,7 @@ locals {
     "cae_rule02" = {
       name                         = "Allow-CAE_Client_HTTPS"
       access                       = "Allow"
-      destination_address_prefixes = try(var.vnet_definition.subnets["ContainerAppEnvironmentSubnet"].address_prefix, null) != null ? [var.vnet_definition.subnets["ContainerAppEnvironmentSubnet"].address_prefix] : [cidrsubnet(var.vnet_definition.address_space, 4, 1)]
+      destination_address_prefixes = local.container_app_subnet_address_prefixes
       destination_port_ranges      = ["443", "31443"]
       direction                    = "Inbound"
       priority                     = 210
@@ -175,7 +208,7 @@ locals {
     "cae_rule03" = {
       name                         = "Allow-CAE_LoadBalancer_Health"
       access                       = "Allow"
-      destination_address_prefixes = try(var.vnet_definition.subnets["ContainerAppEnvironmentSubnet"].address_prefix, null) != null ? [var.vnet_definition.subnets["ContainerAppEnvironmentSubnet"].address_prefix] : [cidrsubnet(var.vnet_definition.address_space, 4, 1)]
+      destination_address_prefixes = local.container_app_subnet_address_prefixes
       destination_port_range       = "30000-32767"
       direction                    = "Inbound"
       priority                     = 220
@@ -186,12 +219,12 @@ locals {
     "cae_rule04" = {
       name                         = "Allow-CAE_VNet_Internal"
       access                       = "Allow"
-      destination_address_prefixes = try(var.vnet_definition.subnets["ContainerAppEnvironmentSubnet"].address_prefix, null) != null ? [var.vnet_definition.subnets["ContainerAppEnvironmentSubnet"].address_prefix] : [cidrsubnet(var.vnet_definition.address_space, 4, 1)]
+      destination_address_prefixes = local.container_app_subnet_address_prefixes
       destination_port_range       = "*"
       direction                    = "Inbound"
       priority                     = 230
       protocol                     = "*"
-      source_address_prefixes      = try(var.vnet_definition.subnets["ContainerAppEnvironmentSubnet"].address_prefix, null) != null ? [var.vnet_definition.subnets["ContainerAppEnvironmentSubnet"].address_prefix] : [cidrsubnet(var.vnet_definition.address_space, 4, 1)]
+      source_address_prefixes      = local.container_app_subnet_address_prefixes
       source_port_range            = "*"
     }
     # Container App Environment NSG Rules - Outbound
@@ -203,7 +236,7 @@ locals {
       direction                  = "Outbound"
       priority                   = 200
       protocol                   = "Tcp"
-      source_address_prefixes    = try(var.vnet_definition.subnets["ContainerAppEnvironmentSubnet"].address_prefix, null) != null ? [var.vnet_definition.subnets["ContainerAppEnvironmentSubnet"].address_prefix] : [cidrsubnet(var.vnet_definition.address_space, 4, 1)]
+      source_address_prefixes    = local.container_app_subnet_address_prefixes
       source_port_range          = "*"
     }
     "cae_rule06" = {
@@ -214,18 +247,18 @@ locals {
       direction                  = "Outbound"
       priority                   = 210
       protocol                   = "Tcp"
-      source_address_prefixes    = try(var.vnet_definition.subnets["ContainerAppEnvironmentSubnet"].address_prefix, null) != null ? [var.vnet_definition.subnets["ContainerAppEnvironmentSubnet"].address_prefix] : [cidrsubnet(var.vnet_definition.address_space, 4, 1)]
+      source_address_prefixes    = local.container_app_subnet_address_prefixes
       source_port_range          = "*"
     }
     "cae_rule07" = {
       name                         = "Allow-CAE_VNet_Internal_Out"
       access                       = "Allow"
-      destination_address_prefixes = try(var.vnet_definition.subnets["ContainerAppEnvironmentSubnet"].address_prefix, null) != null ? [var.vnet_definition.subnets["ContainerAppEnvironmentSubnet"].address_prefix] : [cidrsubnet(var.vnet_definition.address_space, 4, 1)]
+      destination_address_prefixes = local.container_app_subnet_address_prefixes
       destination_port_range       = "*"
       direction                    = "Outbound"
       priority                     = 220
       protocol                     = "*"
-      source_address_prefixes      = try(var.vnet_definition.subnets["ContainerAppEnvironmentSubnet"].address_prefix, null) != null ? [var.vnet_definition.subnets["ContainerAppEnvironmentSubnet"].address_prefix] : [cidrsubnet(var.vnet_definition.address_space, 4, 1)]
+      source_address_prefixes      = local.container_app_subnet_address_prefixes
       source_port_range            = "*"
     }
     "cae_rule08" = {
@@ -236,7 +269,7 @@ locals {
       direction                  = "Outbound"
       priority                   = 230
       protocol                   = "Tcp"
-      source_address_prefixes    = try(var.vnet_definition.subnets["ContainerAppEnvironmentSubnet"].address_prefix, null) != null ? [var.vnet_definition.subnets["ContainerAppEnvironmentSubnet"].address_prefix] : [cidrsubnet(var.vnet_definition.address_space, 4, 1)]
+      source_address_prefixes    = local.container_app_subnet_address_prefixes
       source_port_range          = "*"
     }
     "cae_rule09" = {
@@ -247,7 +280,7 @@ locals {
       direction                  = "Outbound"
       priority                   = 240
       protocol                   = "Tcp"
-      source_address_prefixes    = try(var.vnet_definition.subnets["ContainerAppEnvironmentSubnet"].address_prefix, null) != null ? [var.vnet_definition.subnets["ContainerAppEnvironmentSubnet"].address_prefix] : [cidrsubnet(var.vnet_definition.address_space, 4, 1)]
+      source_address_prefixes    = local.container_app_subnet_address_prefixes
       source_port_range          = "*"
     }
     "cae_rule10" = {
@@ -258,7 +291,7 @@ locals {
       direction                  = "Outbound"
       priority                   = 250
       protocol                   = "*"
-      source_address_prefixes    = try(var.vnet_definition.subnets["ContainerAppEnvironmentSubnet"].address_prefix, null) != null ? [var.vnet_definition.subnets["ContainerAppEnvironmentSubnet"].address_prefix] : [cidrsubnet(var.vnet_definition.address_space, 4, 1)]
+      source_address_prefixes    = local.container_app_subnet_address_prefixes
       source_port_range          = "*"
     }
     "cae_rule11" = {
@@ -269,13 +302,15 @@ locals {
       direction                  = "Outbound"
       priority                   = 260
       protocol                   = "Tcp"
-      source_address_prefixes    = try(var.vnet_definition.subnets["ContainerAppEnvironmentSubnet"].address_prefix, null) != null ? [var.vnet_definition.subnets["ContainerAppEnvironmentSubnet"].address_prefix] : [cidrsubnet(var.vnet_definition.address_space, 4, 1)]
+      source_address_prefixes    = local.container_app_subnet_address_prefixes
       source_port_range          = "*"
     }
   }
 
-  # Bastion subnet enablement (used to avoid circular dependency)
-  bastion_subnet_enabled = var.flag_platform_landing_zone == true ? try(var.vnet_definition.subnets["AzureBastionSubnet"].enabled, true) : try(var.vnet_definition.subnets["AzureBastionSubnet"].enabled, false)
+  # Subnet enablement (used to avoid circular dependency)
+  bastion_subnet_enabled                = var.flag_platform_landing_zone == false ? try(local.subnets_definition["AzureBastionSubnet"].enabled, true) : try(local.subnets_definition["AzureBastionSubnet"].enabled, false)
+  container_app_subnet_address_prefixes = local.container_app_subnet_enabled ? (length(var.vnet_definition.existing_byo_vnet) > 0 ? module.byo_subnets["ContainerAppEnvironmentSubnet"].address_prefixes : module.ai_lz_vnet[0].subnets["ContainerAppEnvironmentSubnet"].address_prefixes) : []
+  container_app_subnet_enabled          = try(local.subnets_definition["ContainerAppEnvironmentSubnet"].enabled, true)
 
   # Merged rule sets for each NSG type
   nsg_name = try(var.nsgs_definition.name, null) != null ? var.nsgs_definition.name : (var.name_prefix != null ? "${var.name_prefix}-ai-alz-nsg" : "ai-alz-nsg")
