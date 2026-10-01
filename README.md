@@ -66,6 +66,7 @@ The following resources are used by this module:
 - [azapi_resource.apim_backend_ai_foundry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.bing_grounding](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource_action.purge_ai_foundry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action) (resource)
+- [azurerm_network_security_rule.container_app](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_security_rule) (resource)
 - [azurerm_network_security_rule.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_security_rule) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [azurerm_role_assignment.deployment_user_kv_admin](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
@@ -2583,6 +2584,12 @@ Source: Azure/avm-res-network-bastionhost/azurerm
 
 Version: 0.7.2
 
+### <a name="module_bastion_nsg"></a> [bastion\_nsg](#module\_bastion\_nsg)
+
+Source: Azure/avm-res-network-networksecuritygroup/azurerm
+
+Version: 0.5.0
+
 ### <a name="module_buildvm"></a> [buildvm](#module\_buildvm)
 
 Source: Azure/avm-res-compute-virtualmachine/azurerm
@@ -2594,6 +2601,12 @@ Version: 0.20.0
 Source: Azure/avm-res-network-virtualnetwork/azurerm//modules/subnet
 
 Version: 0.16.0
+
+### <a name="module_container_app_nsg"></a> [container\_app\_nsg](#module\_container\_app\_nsg)
+
+Source: Azure/avm-res-network-networksecuritygroup/azurerm
+
+Version: 0.5.0
 
 ### <a name="module_container_apps_managed_environment"></a> [container\_apps\_managed\_environment](#module\_container\_apps\_managed\_environment)
 

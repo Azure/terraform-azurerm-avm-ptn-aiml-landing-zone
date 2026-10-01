@@ -53,6 +53,27 @@ module "nsgs" {
   resource_group_name = var.nsgs_definition.resource_group_name != null ? var.nsgs_definition.resource_group_name : azurerm_resource_group.this.name
 }
 
+module "bastion_nsg" {
+  source  = "Azure/avm-res-network-networksecuritygroup/azurerm"
+  version = "0.5.0"
+  count   = local.bastion_subnet_enabled ? 1 : 0
+
+  location            = azurerm_resource_group.this.location
+  name                = local.bastion_nsg_name
+  resource_group_name = var.nsgs_definition.resource_group_name != null ? var.nsgs_definition.resource_group_name : azurerm_resource_group.this.name
+  security_rules      = local.bastion_nsg_rules
+}
+
+module "container_app_nsg" {
+  source  = "Azure/avm-res-network-networksecuritygroup/azurerm"
+  version = "0.5.0"
+  count   = local.container_app_subnet_enabled ? 1 : 0
+
+  location            = azurerm_resource_group.this.location
+  name                = local.container_app_nsg_name
+  resource_group_name = var.nsgs_definition.resource_group_name != null ? var.nsgs_definition.resource_group_name : azurerm_resource_group.this.name
+}
+
 # NSGs are required during subnet creation but rules use cidrs which are not known until after vnet creation.
 # Therefore, NSG rules are created in a separate resource after the VNet and subnets are created.
 resource "azurerm_network_security_rule" "this" {
@@ -65,6 +86,40 @@ resource "azurerm_network_security_rule" "this" {
   priority                                   = each.value.priority
   protocol                                   = each.value.protocol
   resource_group_name                        = module.nsgs.resource.resource_group_name
+  description                                = try(each.value.description, null)
+  destination_address_prefix                 = try(each.value.destination_address_prefix, null)
+  destination_address_prefixes               = try(each.value.destination_address_prefixes, null)
+  destination_application_security_group_ids = try(each.value.destination_application_security_group_ids, null)
+  destination_port_range                     = try(each.value.destination_port_range, null)
+  destination_port_ranges                    = try(each.value.destination_port_ranges, null)
+  source_address_prefix                      = try(each.value.source_address_prefix, null)
+  source_address_prefixes                    = try(each.value.source_address_prefixes, null)
+  source_application_security_group_ids      = try(each.value.source_application_security_group_ids, null)
+  source_port_range                          = try(each.value.source_port_range, null)
+  source_port_ranges                         = try(each.value.source_port_ranges, null)
+
+  dynamic "timeouts" {
+    for_each = try(each.value.timeouts, null) == null ? [] : [each.value.timeouts]
+
+    content {
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
+    }
+  }
+}
+
+resource "azurerm_network_security_rule" "container_app" {
+  for_each = { for key, rule in local.container_app_nsg_rules : key => rule if local.container_app_subnet_enabled }
+
+  access                                     = each.value.access
+  direction                                  = each.value.direction
+  name                                       = each.value.name
+  network_security_group_name                = module.container_app_nsg[0].resource.name
+  priority                                   = each.value.priority
+  protocol                                   = each.value.protocol
+  resource_group_name                        = module.container_app_nsg[0].resource.resource_group_name
   description                                = try(each.value.description, null)
   destination_address_prefix                 = try(each.value.destination_address_prefix, null)
   destination_address_prefixes               = try(each.value.destination_address_prefixes, null)
