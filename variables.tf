@@ -39,6 +39,29 @@ If set to true, the module will deploy resources and connect to a platform landi
 DESCRIPTION
 }
 
+variable "ignore_body_changes" {
+  type = object({
+    apimanagement_service_apis            = optional(list(string), [])
+    apimanagement_service_apis_operations = optional(list(string), [])
+    apimanagement_service_apis_policies   = optional(list(string), [])
+    apimanagement_service_backends        = optional(list(string), [])
+    authorization_role_assignments        = optional(list(string), [])
+    bing_accounts                         = optional(list(string), [])
+  })
+  default     = {}
+  description = <<DESCRIPTION
+Body-relative paths to ignore for each AzAPI resource. Paths use dot notation. Changes take effect only after apply, and ignored configuration is not sent to Azure until the path is removed.
+
+- `apimanagement_service_apis` - Paths ignored on API Management API resources.
+- `apimanagement_service_apis_operations` - Paths ignored on API Management API operation resources.
+- `apimanagement_service_apis_policies` - Paths ignored on API Management API policy resources.
+- `apimanagement_service_backends` - Paths ignored on API Management backend resources.
+- `authorization_role_assignments` - Paths ignored on hosted-agent role assignment resources.
+- `bing_accounts` - Paths ignored on Bing account resources.
+DESCRIPTION
+  nullable    = false
+}
+
 variable "name_prefix" {
   type        = string
   default     = null
@@ -57,6 +80,47 @@ DESCRIPTION
   }
 }
 
+variable "resource_types" {
+  type = object({
+    apimanagement_service_apis                                   = optional(string, "Microsoft.ApiManagement/service/apis@2024-05-01")
+    apimanagement_service_apis_operations                        = optional(string, "Microsoft.ApiManagement/service/apis/operations@2024-05-01")
+    apimanagement_service_apis_policies                          = optional(string, "Microsoft.ApiManagement/service/apis/policies@2024-05-01")
+    apimanagement_service_backends                               = optional(string, "Microsoft.ApiManagement/service/backends@2024-05-01")
+    authorization_role_assignments                               = optional(string, "Microsoft.Authorization/roleAssignments@2022-04-01")
+    bing_accounts                                                = optional(string, "Microsoft.Bing/accounts@2025-05-01-preview")
+    cognitiveservices_locations_resource_groups_deleted_accounts = optional(string, "Microsoft.CognitiveServices/locations/resourceGroups/deletedAccounts@2021-04-30")
+  })
+  default     = {}
+  description = <<DESCRIPTION
+AzAPI resource types and API versions used by the module.
+
+- `apimanagement_service_apis` - Resource type and API version for API Management APIs.
+- `apimanagement_service_apis_operations` - Resource type and API version for API Management API operations.
+- `apimanagement_service_apis_policies` - Resource type and API version for API Management API policies.
+- `apimanagement_service_backends` - Resource type and API version for API Management backends.
+- `authorization_role_assignments` - Resource type and API version for role assignments.
+- `bing_accounts` - Resource type and API version for Bing accounts.
+- `cognitiveservices_locations_resource_groups_deleted_accounts` - Resource type and API version for Foundry purge actions.
+DESCRIPTION
+  nullable    = false
+}
+
+variable "retry" {
+  type = object({
+    error_message_regex  = optional(list(string))
+    interval_seconds     = optional(number)
+    max_interval_seconds = optional(number)
+  })
+  default     = null
+  description = <<DESCRIPTION
+Retry configuration applied to every supported AzAPI resource declared by the module. Defaults to `null` (no custom retry).
+
+- `error_message_regex` - (Optional) Regex patterns matching errors that trigger a retry.
+- `interval_seconds` - (Optional) Initial interval between retries in seconds.
+- `max_interval_seconds` - (Optional) Maximum interval between retries in seconds.
+DESCRIPTION
+}
+
 variable "tags" {
   type        = map(string)
   default     = null
@@ -64,5 +128,23 @@ variable "tags" {
 Map of tags to be assigned to all resources created by this module.
 
 Tags are key-value pairs that help organize and manage Azure resources. These tags will be applied to all resources created by the module, enabling consistent resource governance, cost tracking, and operational management across the AI/ML landing zone infrastructure.
+DESCRIPTION
+}
+
+variable "timeouts" {
+  type = object({
+    create = optional(string)
+    read   = optional(string)
+    update = optional(string)
+    delete = optional(string)
+  })
+  default     = null
+  description = <<DESCRIPTION
+Default per-operation timeouts applied to every supported AzAPI resource declared by the module. Defaults to `null` (provider defaults).
+
+- `create` - (Optional) Timeout for create operations.
+- `read` - (Optional) Timeout for read operations.
+- `update` - (Optional) Timeout for update operations.
+- `delete` - (Optional) Timeout for delete operations.
 DESCRIPTION
 }
