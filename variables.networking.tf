@@ -709,6 +709,29 @@ DESCRIPTION
 variable "waf_policy_definition" {
   type = object({
     name = optional(string)
+    existing_policy = optional(object({
+      resource_id = string
+    }))
+    custom_rules = optional(map(object({
+      action               = string
+      enabled              = optional(bool)
+      group_rate_limit_by  = optional(string)
+      name                 = optional(string)
+      priority             = number
+      rate_limit_duration  = optional(string)
+      rate_limit_threshold = optional(number)
+      rule_type            = string
+      match_conditions = map(object({
+        match_values       = optional(list(string))
+        negation_condition = optional(bool)
+        operator           = string
+        transforms         = optional(set(string))
+        match_variables = list(object({
+          selector      = optional(string)
+          variable_name = string
+        }))
+      }))
+    })))
     policy_settings = optional(object({
       enabled                  = optional(bool, true)
       mode                     = optional(string, "Prevention")
@@ -762,6 +785,25 @@ variable "waf_policy_definition" {
 Configuration object for the Web Application Firewall (WAF) Policy to be deployed.
 
 - `name` - (Optional) The name of the WAF Policy. If not provided, a name will be generated.
+- `existing_policy` - (Optional) Attach an externally managed policy at Application Gateway scope instead of creating an internal policy. Internal policy settings, managed rules, name, and tags are not applied to this policy. Omit this object to keep the default internal policy. The object must be known at plan time, but its resource ID may be computed during deployment.
+  - `resource_id` - The ARM resource ID of an Application Gateway WAF policy. The caller remains responsible for its rules and lifecycle.
+- `custom_rules` - (Optional) Map of custom rules passed to the internal WAF policy. Cannot be combined with `existing_policy`. Omitted by default.
+  - `action` - Required action: `Allow`, `Block`, or `Log`.
+  - `enabled` - (Optional) Whether the rule is enabled. The underlying resource defaults to true.
+  - `group_rate_limit_by` - (Optional) Group rate-limited requests by `GeoLocation`, `ClientAddr`, or `None`.
+  - `name` - (Optional) The custom rule name.
+  - `priority` - Required evaluation priority. Lower values run first.
+  - `rate_limit_duration` - (Optional) Rate-limit window: `OneMin` or `FiveMins`.
+  - `rate_limit_threshold` - (Optional) Number of requests permitted during the rate-limit window.
+  - `rule_type` - Required rule type, such as `MatchRule` or `RateLimitRule`.
+  - `match_conditions` - Required map of match conditions.
+    - `match_values` - (Optional) Values to match. Required unless the operator is `Any`.
+    - `negation_condition` - (Optional) Whether to negate the condition.
+    - `operator` - Required comparison operator, such as `IPMatch` for client IP addresses.
+    - `transforms` - (Optional) Set of transformations applied before matching.
+    - `match_variables` - Required list of request fields to inspect.
+      - `selector` - (Optional) The field within a collection, such as a request header name.
+      - `variable_name` - Required request variable, such as `RemoteAddr` for the client IP address.
 - `policy_settings` - (Optional) Policy settings configuration.
   - `enabled` - (Optional) Whether the WAF policy is enabled. Default is true.
   - `mode` - (Optional) The mode of the WAF policy (Detection/Prevention). Default is "Prevention".
@@ -788,4 +830,13 @@ Configuration object for the Web Application Firewall (WAF) Policy to be deploye
         - `id` - The ID of the rule.
 - `tags` - (Optional) Map of tags to assign to the WAF Policy.
 DESCRIPTION
+
+  validation {
+    condition     = var.waf_policy_definition.existing_policy == null ? true : can(provider::azapi::parse_resource_id("Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies", var.waf_policy_definition.existing_policy.resource_id))
+    error_message = "existing_policy.resource_id must be a valid Application Gateway WAF policy ARM resource ID."
+  }
+  validation {
+    condition     = var.waf_policy_definition.existing_policy == null || var.waf_policy_definition.custom_rules == null
+    error_message = "custom_rules configures the internal WAF policy and cannot be combined with existing_policy. Configure custom rules on the external policy instead."
+  }
 }
