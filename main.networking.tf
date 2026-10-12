@@ -211,16 +211,16 @@ module "azure_bastion" {
   version = "0.9.0"
   count   = !var.flag_platform_landing_zone && var.bastion_definition.deploy ? 1 : 0
 
-  location            = azurerm_resource_group.this.location
-  name                = local.bastion_name
-  resource_group_name = var.bastion_definition.resource_group_name != null ? var.bastion_definition.resource_group_name : azurerm_resource_group.this.name
-  enable_telemetry    = var.enable_telemetry
+  location         = azurerm_resource_group.this.location
+  name             = local.bastion_name
+  enable_telemetry = var.enable_telemetry
   ip_configuration = {
     subnet_id = local.subnet_ids["AzureBastionSubnet"]
   }
-  sku   = var.bastion_definition.sku
-  tags  = merge(local.tags, var.bastion_definition.tags != null ? var.bastion_definition.tags : {})
-  zones = var.bastion_definition.zones
+  sku                 = var.bastion_definition.sku
+  tags                = merge(local.tags, var.bastion_definition.tags != null ? var.bastion_definition.tags : {})
+  zones               = var.bastion_definition.zones
+  resource_group_name = var.bastion_definition.resource_group_name != null ? var.bastion_definition.resource_group_name : azurerm_resource_group.this.name
 }
 
 module "private_dns_zones" {
@@ -275,37 +275,37 @@ module "application_gateway" {
   version = "0.5.3"
   count   = var.app_gateway_definition.deploy ? 1 : 0
 
-  backend_address_pools = var.app_gateway_definition.backend_address_pools
-  backend_http_settings = var.app_gateway_definition.backend_http_settings
-  frontend_ports        = var.app_gateway_definition.frontend_ports
+  location                = azurerm_resource_group.this.location
+  name                    = local.application_gateway_name
+  autoscale_configuration = var.app_gateway_definition.autoscale_configuration
+  backend_address_pools   = var.app_gateway_definition.backend_address_pools
+  diagnostic_settings     = local.app_gw_diagnostic_settings
+  enable_telemetry        = var.enable_telemetry
+  frontend_ports          = var.app_gateway_definition.frontend_ports
+  http_listeners          = var.app_gateway_definition.http_listeners
+  request_routing_rules   = var.app_gateway_definition.request_routing_rules
+  role_assignments        = local.application_gateway_role_assignments
+  sku                     = var.app_gateway_definition.sku
+  ssl_certificates        = var.app_gateway_definition.ssl_certificates
+  ssl_policy              = var.app_gateway_definition.ssl_policy
+  tags                    = merge(local.tags, var.app_gateway_definition.tags != null ? var.app_gateway_definition.tags : {})
+  zones                   = local.region_zones
+  backend_http_settings   = var.app_gateway_definition.backend_http_settings
   gateway_ip_configuration = {
     subnet_id = local.subnet_ids["AppGatewaySubnet"]
   }
-  http_listeners                     = var.app_gateway_definition.http_listeners
-  location                           = azurerm_resource_group.this.location
-  name                               = local.application_gateway_name
-  request_routing_rules              = var.app_gateway_definition.request_routing_rules
   resource_group_name                = azurerm_resource_group.this.name
   app_gateway_waf_policy_resource_id = one(module.app_gateway_waf_policy[*].resource_id)
   authentication_certificate         = var.app_gateway_definition.authentication_certificate
-  autoscale_configuration            = var.app_gateway_definition.autoscale_configuration
-  diagnostic_settings                = local.app_gw_diagnostic_settings
-  enable_telemetry                   = var.enable_telemetry
   http2_enable                       = var.app_gateway_definition.http2_enable
   probe_configurations               = var.app_gateway_definition.probe_configurations
   public_ip_name                     = "${local.application_gateway_name}-pip"
   redirect_configuration             = var.app_gateway_definition.redirect_configuration
   rewrite_rule_set                   = var.app_gateway_definition.rewrite_rule_set
-  role_assignments                   = local.application_gateway_role_assignments
-  sku                                = var.app_gateway_definition.sku
-  ssl_certificates                   = var.app_gateway_definition.ssl_certificates
-  ssl_policy                         = var.app_gateway_definition.ssl_policy
   ssl_profile                        = var.app_gateway_definition.ssl_profile
-  tags                               = merge(local.tags, var.app_gateway_definition.tags != null ? var.app_gateway_definition.tags : {})
   trusted_client_certificate         = var.app_gateway_definition.trusted_client_certificate
   trusted_root_certificate           = var.app_gateway_definition.trusted_root_certificate
   url_path_map_configurations        = var.app_gateway_definition.url_path_map_configurations
-  zones                              = local.region_zones
 
   depends_on = [
     azurerm_network_security_rule.this
