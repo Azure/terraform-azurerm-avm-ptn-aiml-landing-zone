@@ -2,7 +2,13 @@ data "azurerm_client_config" "current" {}
 
 module "avm_utl_regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.9.2"
+  version = "0.13.0"
+  providers = {
+    azapi = azapi
+  }
+
+  location         = var.location
+  enable_telemetry = var.enable_telemetry
 }
 
 resource "random_string" "name_suffix" {
@@ -19,8 +25,9 @@ resource "azurerm_resource_group" "this" {
 
 #Create Hub Vnet (Subnets: AzureBastionSubnet, BuildVM subnet, Private Resolver Subnet?)
 module "ai_lz_vnet" {
-  source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "=0.16.0"
+  source    = "Azure/avm-res-network-virtualnetwork/azurerm"
+  version   = "=0.16.0"
+  providers = { modtm = modtm }
 
   location         = azurerm_resource_group.this.location
   parent_id        = azurerm_resource_group.this.id
@@ -31,8 +38,9 @@ module "ai_lz_vnet" {
 }
 
 module "natgateway" {
-  source  = "Azure/avm-res-network-natgateway/azurerm"
-  version = "0.2.1"
+  source    = "Azure/avm-res-network-natgateway/azurerm"
+  version   = "0.2.1"
+  providers = { modtm = modtm }
 
   location            = azurerm_resource_group.this.location
   name                = local.nat_gateway_name
@@ -46,8 +54,9 @@ module "natgateway" {
 }
 
 module "bastion_pip" {
-  source  = "Azure/avm-res-network-publicipaddress/azurerm"
-  version = "0.2.0"
+  source    = "Azure/avm-res-network-publicipaddress/azurerm"
+  version   = "0.2.0"
+  providers = { modtm = modtm }
 
   location            = azurerm_resource_group.this.location
   name                = "${local.bastion_name}-pip"
@@ -71,8 +80,9 @@ resource "azurerm_bastion_host" "bastion" {
 
 # Add Azure Firewall with a permissive outbound rule for RFC 1918 traffic
 module "fw_pip" {
-  source  = "Azure/avm-res-network-publicipaddress/azurerm"
-  version = "0.2.0"
+  source    = "Azure/avm-res-network-publicipaddress/azurerm"
+  version   = "0.2.0"
+  providers = { modtm = modtm }
 
   location            = azurerm_resource_group.this.location
   name                = "${local.firewall_name}-pip"
@@ -82,8 +92,9 @@ module "fw_pip" {
 }
 
 module "firewall" {
-  source  = "Azure/avm-res-network-azurefirewall/azurerm"
-  version = "0.4.0"
+  source    = "Azure/avm-res-network-azurefirewall/azurerm"
+  version   = "0.4.0"
+  providers = { modtm = modtm }
 
   firewall_sku_name   = "AZFW_VNet"
   firewall_sku_tier   = "Standard"
@@ -110,8 +121,9 @@ module "firewall" {
 }
 
 module "firewall_policy" {
-  source  = "Azure/avm-res-network-firewallpolicy/azurerm"
-  version = "0.3.3"
+  source    = "Azure/avm-res-network-firewallpolicy/azurerm"
+  version   = "0.3.3"
+  providers = { modtm = modtm }
 
   location            = azurerm_resource_group.this.location
   name                = "${local.firewall_name}-policy"
@@ -132,8 +144,9 @@ module "firewall_network_rule_collection_group" {
 
 # Add a log analytics workspace for the firewall logs to do any connectivity troubleshooting if needed.
 module "log_analytics_workspace" {
-  source  = "Azure/avm-res-operationalinsights-workspace/azurerm"
-  version = "0.4.2"
+  source    = "Azure/avm-res-operationalinsights-workspace/azurerm"
+  version   = "0.4.2"
+  providers = { modtm = modtm }
 
   location                                  = azurerm_resource_group.this.location
   name                                      = local.log_analytics_workspace_name
@@ -145,8 +158,9 @@ module "log_analytics_workspace" {
 
 # Add DNS resolver with inbound endpoint
 module "private_resolver" {
-  source  = "Azure/avm-res-network-dnsresolver/azurerm"
-  version = "0.8.0"
+  source    = "Azure/avm-res-network-dnsresolver/azurerm"
+  version   = "0.8.0"
+  providers = { modtm = modtm }
 
   location                    = azurerm_resource_group.this.location
   name                        = "example-resolver"
@@ -162,9 +176,10 @@ module "private_resolver" {
 
 # Create the Private DNS zones and link to the hub VNet
 module "private_dns_zones" {
-  source   = "Azure/avm-res-network-privatednszone/azurerm"
-  version  = "0.4.2"
-  for_each = local.private_dns_zones
+  source    = "Azure/avm-res-network-privatednszone/azurerm"
+  version   = "0.4.2"
+  providers = { modtm = modtm }
+  for_each  = local.private_dns_zones
 
   domain_name      = each.value.name
   parent_id        = azurerm_resource_group.this.id
@@ -186,8 +201,9 @@ resource "random_integer" "zone_index" {
 }
 
 module "jumpvm" {
-  source  = "Azure/avm-res-compute-virtualmachine/azurerm"
-  version = "0.20.0"
+  source    = "Azure/avm-res-compute-virtualmachine/azurerm"
+  version   = "0.20.0"
+  providers = { modtm = modtm }
 
   location = azurerm_resource_group.this.location
   name     = local.jump_vm_name
@@ -217,8 +233,9 @@ module "jumpvm" {
 }
 
 module "avm_res_keyvault_vault" {
-  source  = "Azure/avm-res-keyvault-vault/azurerm"
-  version = "=0.10.2"
+  source    = "Azure/avm-res-keyvault-vault/azurerm"
+  version   = "=0.10.2"
+  providers = { modtm = modtm }
 
   location                    = azurerm_resource_group.this.location
   name                        = local.kv_name

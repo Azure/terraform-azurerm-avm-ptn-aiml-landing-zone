@@ -1,7 +1,8 @@
 module "avm_res_keyvault_vault" {
-  source  = "Azure/avm-res-keyvault-vault/azurerm"
-  version = "=0.10.2"
-  count   = var.genai_key_vault_definition.deploy ? 1 : 0
+  source    = "Azure/avm-res-keyvault-vault/azurerm"
+  version   = "=0.10.2"
+  providers = { modtm = modtm }
+  count     = var.genai_key_vault_definition.deploy ? 1 : 0
 
   location                        = azurerm_resource_group.this.location
   name                            = local.genai_key_vault_name
@@ -59,9 +60,10 @@ resource "time_sleep" "wait_for_kv_rbac" {
 # validate the defaults for the cosmosdb module
 # create private endpoint config
 module "cosmosdb" {
-  source  = "Azure/avm-res-documentdb-databaseaccount/azurerm"
-  version = "0.10.0"
-  count   = var.genai_cosmosdb_definition.deploy ? 1 : 0
+  source    = "Azure/avm-res-documentdb-databaseaccount/azurerm"
+  version   = "0.10.0"
+  providers = { modtm = modtm }
+  count     = var.genai_cosmosdb_definition.deploy ? 1 : 0
 
   location                   = azurerm_resource_group.this.location
   name                       = local.genai_cosmosdb_name
@@ -106,9 +108,10 @@ module "cosmosdb" {
 # removing for testing PE DNS zone strategy when platform flag is false
 
 module "storage_account" {
-  source  = "Azure/avm-res-storage-storageaccount/azurerm"
-  version = "0.6.6"
-  count   = var.genai_storage_account_definition.deploy ? 1 : 0
+  source    = "Azure/avm-res-storage-storageaccount/azurerm"
+  version   = "0.6.6"
+  providers = { modtm = modtm }
+  count     = var.genai_storage_account_definition.deploy ? 1 : 0
 
   location                            = azurerm_resource_group.this.location
   name                                = local.genai_storage_account_name
@@ -139,9 +142,10 @@ module "storage_account" {
 }
 
 module "containerregistry" {
-  source  = "Azure/avm-res-containerregistry-registry/azurerm"
-  version = "0.5.0"
-  count   = var.genai_container_registry_definition.deploy ? 1 : 0
+  source    = "Azure/avm-res-containerregistry-registry/azurerm"
+  version   = "0.5.0"
+  providers = { modtm = modtm }
+  count     = var.genai_container_registry_definition.deploy ? 1 : 0
 
   location                   = azurerm_resource_group.this.location
   name                       = local.genai_container_registry_name
@@ -165,9 +169,10 @@ module "containerregistry" {
 }
 
 module "app_configuration" {
-  source  = "Azure/avm-res-appconfiguration-configurationstore/azure"
-  version = "0.5.1"
-  count   = var.genai_app_configuration_definition.deploy ? 1 : 0
+  source    = "Azure/avm-res-appconfiguration-configurationstore/azure"
+  version   = "0.5.1"
+  providers = { modtm = modtm }
+  count     = var.genai_app_configuration_definition.deploy ? 1 : 0
 
   location                        = azurerm_resource_group.this.location
   name                            = local.genai_app_configuration_name

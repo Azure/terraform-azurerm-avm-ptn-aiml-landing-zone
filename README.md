@@ -49,6 +49,8 @@ The following requirements are needed by this module:
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
 
+- <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (>= 0.3, < 1.0, ~> 0.3)
+
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 
 - <a name="requirement_time"></a> [time](#requirement\_time) (~> 0.12)
@@ -2572,7 +2574,7 @@ Version: =0.10.2
 
 Source: Azure/avm-utl-regions/azurerm
 
-Version: 0.9.2
+Version: 0.13.0
 
 ### <a name="module_azure_bastion"></a> [azure\_bastion](#module\_azure\_bastion)
 
