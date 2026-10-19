@@ -84,7 +84,7 @@ data "azurerm_client_config" "current" {}
 
 module "vm_sku" {
   source    = "Azure/avm-utl-sku-finder/azapi"
-  version   = "0.3.0"
+  version   = "0.4.0"
   providers = { modtm = modtm }
 
   location         = local.location

@@ -84,7 +84,7 @@ data "http" "ip" {
 
 module "vm_sku" {
   source    = "Azure/avm-utl-sku-finder/azapi"
-  version   = "0.3.0"
+  version   = "0.4.0"
   providers = { modtm = modtm }
 
   location         = local.location
@@ -129,7 +129,7 @@ module "example_hub" {
 #create a BYO vnet and peer to the hub
 module "vnet" {
   source    = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version   = "=0.16.0"
+  version   = "0.22.3"
   providers = { modtm = modtm }
 
   location      = azurerm_resource_group.vnet_rg.location

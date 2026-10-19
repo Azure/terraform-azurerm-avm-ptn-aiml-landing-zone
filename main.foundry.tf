@@ -1,6 +1,6 @@
 module "foundry_ptn" {
   source    = "Azure/avm-ptn-aiml-ai-foundry/azurerm"
-  version   = "0.11.3"
+  version   = "0.12.0"
   providers = { modtm = modtm }
 
   #configure the base resource

@@ -1,6 +1,6 @@
 module "search_service" {
   source    = "Azure/avm-res-search-searchservice/azurerm"
-  version   = "0.2.0"
+  version   = "0.3.0"
   providers = { modtm = modtm }
   count     = var.ks_ai_search_definition.deploy ? 1 : 0
 
