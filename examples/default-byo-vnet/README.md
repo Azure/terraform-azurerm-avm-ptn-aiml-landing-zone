@@ -10,8 +10,8 @@ terraform {
 
   required_providers {
     azapi = {
-      source  = "azure/azapi"
-      version = "~> 2.0"
+      source  = "Azure/azapi"
+      version = "~> 2.12"
     }
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -20,6 +20,10 @@ terraform {
     http = {
       source  = "hashicorp/http"
       version = "~> 3.4"
+    }
+    modtm = {
+      source  = "registry.terraform.io/azure/modtm"
+      version = ">= 0.3, < 1.0, ~> 0.3, ~> 0.3"
     }
     random = {
       source  = "hashicorp/random"
@@ -53,8 +57,9 @@ data "azurerm_client_config" "current" {}
 # This allows us to randomize the region for the resource group.
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.9.2"
+  version = "0.13.0"
 
+  location         = var.location
   enable_telemetry = var.enable_telemetry
 }
 
@@ -68,8 +73,8 @@ resource "random_integer" "region_index" {
 
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
-  source  = "Azure/naming/azurerm"
-  version = "0.4.2"
+  source  = "Azure/avm-utl-naming/azure"
+  version = "0.2.0"
 }
 
 # Get the deployer IP address to allow for public write to the key vault. This is to make sure the tests run.
@@ -85,8 +90,9 @@ data "http" "ip" {
 }
 
 module "vm_sku" {
-  source  = "Azure/avm-utl-sku-finder/azapi"
-  version = "0.3.0"
+  source    = "Azure/avm-utl-sku-finder/azapi"
+  version   = "0.3.0"
+  providers = { modtm = modtm }
 
   location         = local.location
   cache_results    = true
@@ -110,6 +116,10 @@ resource "azurerm_resource_group" "vnet_rg" {
 #create a sample hub to mimic an existing network landing zone configuration
 module "example_hub" {
   source = "../../modules/example_hub_vnet"
+  providers = {
+    azapi = azapi
+    modtm = modtm
+  }
 
   deployer_ip_address = "${data.http.ip.response_body}/32"
   location            = local.location
@@ -125,8 +135,9 @@ module "example_hub" {
 
 #create a BYO vnet and peer to the hub
 module "vnet" {
-  source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "=0.16.0"
+  source    = "Azure/avm-res-network-virtualnetwork/azurerm"
+  version   = "=0.16.0"
+  providers = { modtm = modtm }
 
   location      = azurerm_resource_group.vnet_rg.location
   parent_id     = azurerm_resource_group.vnet_rg.id
@@ -153,6 +164,10 @@ module "vnet" {
 
 module "test" {
   source = "../../"
+  providers = {
+    azapi = azapi
+    modtm = modtm
+  }
 
   location            = local.location
   resource_group_name = "ai-lz-rg-standalone-byo-vnet-${substr(module.naming.unique-seed, 0, 5)}"
@@ -321,11 +336,13 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
 
-- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.0)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.12)
 
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 3.116, < 5.0)
 
 - <a name="requirement_http"></a> [http](#requirement\_http) (~> 3.4)
+
+- <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (>= 0.3, < 1.0, ~> 0.3, ~> 0.3)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 
@@ -333,7 +350,7 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
-- [azapi_update_resource.allow_drop_unencrypted_vnet](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/update_resource) (resource)
+- [azapi_update_resource.allow_drop_unencrypted_vnet](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
 - [azurerm_resource_group.vnet_rg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 - [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
@@ -358,6 +375,14 @@ Type: `bool`
 
 Default: `true`
 
+### <a name="input_location"></a> [location](#input\_location)
+
+Description: The Azure region for this module's resources or telemetry deployment.
+
+Type: `string`
+
+Default: `"eastus"`
+
 ## Outputs
 
 No outputs.
@@ -374,15 +399,15 @@ Version:
 
 ### <a name="module_naming"></a> [naming](#module\_naming)
 
-Source: Azure/naming/azurerm
+Source: Azure/avm-utl-naming/azure
 
-Version: 0.4.2
+Version: 0.2.0
 
 ### <a name="module_regions"></a> [regions](#module\_regions)
 
 Source: Azure/avm-utl-regions/azurerm
 
-Version: 0.9.2
+Version: 0.13.0
 
 ### <a name="module_test"></a> [test](#module\_test)
 

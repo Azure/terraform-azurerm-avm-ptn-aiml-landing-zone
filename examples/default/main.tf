@@ -3,8 +3,8 @@ terraform {
 
   required_providers {
     azapi = {
-      source  = "azure/azapi"
-      version = "~> 2.0"
+      source  = "Azure/azapi"
+      version = "~> 2.12"
     }
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -13,6 +13,10 @@ terraform {
     http = {
       source  = "hashicorp/http"
       version = "~> 3.4"
+    }
+    modtm = {
+      source  = "registry.terraform.io/azure/modtm"
+      version = ">= 0.3, < 1.0, ~> 0.3, ~> 0.3"
     }
     random = {
       source  = "hashicorp/random"
@@ -42,8 +46,9 @@ data "azurerm_client_config" "current" {}
 # This allows us to randomize the region for the resource group.
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.9.2"
+  version = "0.13.0"
 
+  location         = var.location
   enable_telemetry = var.enable_telemetry
 }
 
@@ -57,8 +62,8 @@ resource "random_integer" "region_index" {
 
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
-  source  = "Azure/naming/azurerm"
-  version = "0.4.2"
+  source  = "Azure/avm-utl-naming/azure"
+  version = "0.2.0"
 }
 
 data "http" "ip" {
@@ -72,8 +77,9 @@ data "http" "ip" {
 }
 
 module "vm_sku" {
-  source  = "Azure/avm-utl-sku-finder/azapi"
-  version = "0.3.0"
+  source    = "Azure/avm-utl-sku-finder/azapi"
+  version   = "0.3.0"
+  providers = { modtm = modtm }
 
   location         = "australiaeast"
   cache_results    = true
@@ -91,6 +97,10 @@ module "vm_sku" {
 #create a sample hub to mimic an existing network landing zone configuration
 module "example_hub" {
   source = "../../modules/example_hub_vnet"
+  providers = {
+    azapi = azapi
+    modtm = modtm
+  }
 
   deployer_ip_address = "${data.http.ip.response_body}/32"
   location            = "australiaeast"
@@ -106,6 +116,10 @@ module "example_hub" {
 
 module "test" {
   source = "../../"
+  providers = {
+    azapi = azapi
+    modtm = modtm
+  }
 
   location            = "australiaeast"
   resource_group_name = "ai-lz-rg-default-${substr(module.naming.unique-seed, 0, 5)}"

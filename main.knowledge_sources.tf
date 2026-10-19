@@ -1,7 +1,8 @@
 module "search_service" {
-  source  = "Azure/avm-res-search-searchservice/azurerm"
-  version = "0.2.0"
-  count   = var.ks_ai_search_definition.deploy ? 1 : 0
+  source    = "Azure/avm-res-search-searchservice/azurerm"
+  version   = "0.2.0"
+  providers = { modtm = modtm }
+  count     = var.ks_ai_search_definition.deploy ? 1 : 0
 
   location                     = azurerm_resource_group.this.location
   name                         = local.ks_ai_search_name
