@@ -21,6 +21,7 @@ terraform {
       source  = "hashicorp/http"
       version = "~> 3.4"
     }
+    # tflint-ignore: terraform_unused_required_providers
     modtm = {
       source  = "registry.terraform.io/azure/modtm"
       version = ">= 0.3, < 1.0, ~> 0.3, ~> 0.3"
@@ -90,9 +91,8 @@ data "http" "ip" {
 }
 
 module "vm_sku" {
-  source    = "Azure/avm-utl-sku-finder/azapi"
-  version   = "0.3.0"
-  providers = { modtm = modtm }
+  source  = "Azure/avm-utl-sku-finder/azapi"
+  version = "0.3.0"
 
   location         = local.location
   cache_results    = true
@@ -116,10 +116,6 @@ resource "azurerm_resource_group" "vnet_rg" {
 #create a sample hub to mimic an existing network landing zone configuration
 module "example_hub" {
   source = "../../modules/example_hub_vnet"
-  providers = {
-    azapi = azapi
-    modtm = modtm
-  }
 
   deployer_ip_address = "${data.http.ip.response_body}/32"
   location            = local.location
@@ -135,9 +131,8 @@ module "example_hub" {
 
 #create a BYO vnet and peer to the hub
 module "vnet" {
-  source    = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version   = "=0.16.0"
-  providers = { modtm = modtm }
+  source  = "Azure/avm-res-network-virtualnetwork/azurerm"
+  version = "=0.16.0"
 
   location      = azurerm_resource_group.vnet_rg.location
   parent_id     = azurerm_resource_group.vnet_rg.id
@@ -164,10 +159,6 @@ module "vnet" {
 
 module "test" {
   source = "../../"
-  providers = {
-    azapi = azapi
-    modtm = modtm
-  }
 
   location            = local.location
   resource_group_name = "ai-lz-rg-standalone-byo-vnet-${substr(module.naming.unique-seed, 0, 5)}"
