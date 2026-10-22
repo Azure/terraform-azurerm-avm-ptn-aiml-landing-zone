@@ -14,6 +14,7 @@ terraform {
       source  = "hashicorp/http"
       version = "~> 3.4"
     }
+    # tflint-ignore: terraform_unused_required_providers
     modtm = {
       source  = "registry.terraform.io/azure/modtm"
       version = ">= 0.3, < 1.0, ~> 0.3, ~> 0.3"
@@ -83,9 +84,8 @@ locals {
 data "azurerm_client_config" "current" {}
 
 module "vm_sku" {
-  source    = "Azure/avm-utl-sku-finder/azapi"
-  version   = "0.3.0"
-  providers = { modtm = modtm }
+  source  = "Azure/avm-utl-sku-finder/azapi"
+  version = "0.3.0"
 
   location         = local.location
   cache_results    = true
@@ -102,10 +102,6 @@ module "vm_sku" {
 
 module "test" {
   source = "../../"
-  providers = {
-    azapi = azapi
-    modtm = modtm
-  }
 
   location            = local.location
   resource_group_name = "ai-lz-rg-standalone-${substr(module.naming.unique-seed, 0, 5)}"

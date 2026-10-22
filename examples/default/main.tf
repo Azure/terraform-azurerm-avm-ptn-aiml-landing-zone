@@ -14,6 +14,7 @@ terraform {
       source  = "hashicorp/http"
       version = "~> 3.4"
     }
+    # tflint-ignore: terraform_unused_required_providers
     modtm = {
       source  = "registry.terraform.io/azure/modtm"
       version = ">= 0.3, < 1.0, ~> 0.3, ~> 0.3"
@@ -77,9 +78,8 @@ data "http" "ip" {
 }
 
 module "vm_sku" {
-  source    = "Azure/avm-utl-sku-finder/azapi"
-  version   = "0.3.0"
-  providers = { modtm = modtm }
+  source  = "Azure/avm-utl-sku-finder/azapi"
+  version = "0.3.0"
 
   location         = "australiaeast"
   cache_results    = true
@@ -97,10 +97,6 @@ module "vm_sku" {
 #create a sample hub to mimic an existing network landing zone configuration
 module "example_hub" {
   source = "../../modules/example_hub_vnet"
-  providers = {
-    azapi = azapi
-    modtm = modtm
-  }
 
   deployer_ip_address = "${data.http.ip.response_body}/32"
   location            = "australiaeast"
@@ -116,10 +112,6 @@ module "example_hub" {
 
 module "test" {
   source = "../../"
-  providers = {
-    azapi = azapi
-    modtm = modtm
-  }
 
   location            = "australiaeast"
   resource_group_name = "ai-lz-rg-default-${substr(module.naming.unique-seed, 0, 5)}"
