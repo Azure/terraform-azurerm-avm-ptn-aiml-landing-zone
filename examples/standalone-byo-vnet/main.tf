@@ -85,7 +85,7 @@ data "http" "ip" {
 
 module "vm_sku" {
   source  = "Azure/avm-utl-sku-finder/azapi"
-  version = "0.3.0"
+  version = "0.4.0"
 
   location         = local.location
   cache_results    = true
@@ -109,7 +109,7 @@ resource "azurerm_resource_group" "vnet_rg" {
 
 module "vnet" {
   source  = "Azure/avm-res-network-virtualnetwork/azurerm"
-  version = "=0.16.0"
+  version = "0.22.3"
 
   location         = azurerm_resource_group.vnet_rg.location
   parent_id        = azurerm_resource_group.vnet_rg.id
