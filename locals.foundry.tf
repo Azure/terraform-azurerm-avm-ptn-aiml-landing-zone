@@ -3,10 +3,14 @@ locals {
   foundry_ai_foundry = merge(
     var.ai_foundry_definition.ai_foundry, {
       name = local.ai_foundry_name
+      # When var.vnet_definition.managed_vnet is set, switch the Foundry account into Microsoft-managed
+      # VNet mode (subnetArmId = "", useMicrosoftManagedNetwork = true). Otherwise preserve the
+      # existing BYO/module-created behavior. try() handles the case where AIFoundrySubnet is
+      # filtered out of local.subnet_ids by locals.networking.tf when managed_vnet is set.
       network_injections = [{
         scenario                   = "agent"
-        subnetArmId                = local.subnet_ids["AIFoundrySubnet"]
-        useMicrosoftManagedNetwork = false
+        subnetArmId                = var.vnet_definition.managed_vnet != null ? "" : try(local.subnet_ids["AIFoundrySubnet"], "")
+        useMicrosoftManagedNetwork = var.vnet_definition.managed_vnet != null
       }]
       private_dns_zone_resource_ids = var.private_dns_zones.azure_policy_pe_zone_linking_enabled ? null : [
         (!var.flag_platform_landing_zone ? module.private_dns_zones.ai_foundry_openai_zone.resource_id : local.private_dns_zones_existing.ai_foundry_openai_zone.resource_id),
