@@ -45,7 +45,7 @@ provider "azurerm" {
 # This allows us to randomize the region for the resource group.
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.13.0"
+  version = "0.13.2"
 
   location         = var.location
   enable_telemetry = var.enable_telemetry
@@ -62,7 +62,7 @@ resource "random_integer" "region_index" {
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/avm-utl-naming/azure"
-  version = "0.2.0"
+  version = "0.3.0"
 }
 
 # Get the deployer IP address to allow for public write to the key vault. This is to make sure the tests run.
@@ -85,7 +85,7 @@ data "azurerm_client_config" "current" {}
 
 module "vm_sku" {
   source  = "Azure/avm-utl-sku-finder/azapi"
-  version = "0.3.0"
+  version = "0.4.0"
 
   location         = local.location
   cache_results    = true
