@@ -314,7 +314,7 @@ The following resources are used by this module:
 
 - [azapi_update_resource.allow_drop_unencrypted_vnet](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
-- [azapi_resource.waf_policy](https://registry.terraform.io/providers/azure/azapi/latest/docs/data-sources/resource) (data source)
+- [azapi_resource.waf_policy](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
 - [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 - [http_http.ip](https://registry.terraform.io/providers/hashicorp/http/latest/docs/data-sources/http) (data source)
 
