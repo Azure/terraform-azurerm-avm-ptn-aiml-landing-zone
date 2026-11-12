@@ -3,8 +3,8 @@ terraform {
 
   required_providers {
     azapi = {
-      source  = "azure/azapi"
-      version = "~> 2.0"
+      source  = "Azure/azapi"
+      version = "~> 2.12"
     }
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -13,6 +13,11 @@ terraform {
     http = {
       source  = "hashicorp/http"
       version = "~> 3.4"
+    }
+    # tflint-ignore: terraform_unused_required_providers
+    modtm = {
+      source  = "registry.terraform.io/azure/modtm"
+      version = ">= 0.3, < 1.0, ~> 0.3, ~> 0.3"
     }
     random = {
       source  = "hashicorp/random"
@@ -42,8 +47,9 @@ data "azurerm_client_config" "current" {}
 # This allows us to randomize the region for the resource group.
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.9.2"
+  version = "0.13.0"
 
+  location         = var.location
   enable_telemetry = var.enable_telemetry
 }
 
@@ -57,8 +63,8 @@ resource "random_integer" "region_index" {
 
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
-  source  = "Azure/naming/azurerm"
-  version = "0.4.2"
+  source  = "Azure/avm-utl-naming/azure"
+  version = "0.2.0"
 }
 
 data "http" "ip" {
