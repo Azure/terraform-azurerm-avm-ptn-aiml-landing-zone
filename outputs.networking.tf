@@ -1,3 +1,8 @@
+output "nat_gateway_resource_id" {
+  description = "The resource ID of the created or supplied standalone NAT Gateway, or null when NAT Gateway integration is disabled."
+  value       = local.nat_gateway_resource_id
+}
+
 output "subnets" {
   description = "A map of the deployed subnets in the AI PTN LZA."
   value = { for key, value in local.deployed_subnets : key => merge(

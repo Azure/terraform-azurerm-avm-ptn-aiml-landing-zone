@@ -36,12 +36,31 @@ module "byo_subnets" {
 
   name = each.value.name
   # Direct VNet resource id (module not instantiated when BYO is null due to empty for_each)
-  parent_id              = values(var.vnet_definition.existing_byo_vnet)[0].vnet_resource_id
-  address_prefixes       = each.value.ipam_pools == null ? each.value.address_prefixes : null
-  delegations            = try(each.value.delegations, try(each.value.delegation, null), null)
-  ipam_pools             = each.value.ipam_pools
-  network_security_group = try(each.value.network_security_group, null)
-  route_table            = try(each.value.route_table, null)
+  parent_id                         = values(var.vnet_definition.existing_byo_vnet)[0].vnet_resource_id
+  address_prefixes                  = each.value.ipam_pools == null ? each.value.address_prefixes : null
+  delegations                       = try(each.value.delegations, try(each.value.delegation, null), null)
+  ipam_pools                        = each.value.ipam_pools
+  nat_gateway                       = try(each.value.nat_gateway, null)
+  network_security_group            = try(each.value.network_security_group, null)
+  private_endpoint_network_policies = try(each.value.private_endpoint_network_policies, "Enabled")
+  route_table                       = try(each.value.route_table, null)
+}
+
+module "nat_gateway" {
+  source = "./modules/nat_gateway"
+  count  = !var.flag_platform_landing_zone && var.nat_gateway_definition.deploy && var.nat_gateway_definition.resource_id == null ? 1 : 0
+
+  location                = azurerm_resource_group.this.location
+  name                    = local.nat_gateway_name
+  parent_id               = var.nat_gateway_definition.resource_group_name != null ? "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${var.nat_gateway_definition.resource_group_name}" : azurerm_resource_group.this.id
+  public_ip_name          = "${local.nat_gateway_name}-pip"
+  idle_timeout_in_minutes = var.nat_gateway_definition.idle_timeout_in_minutes
+  ignore_body_changes     = var.nat_gateway_definition.ignore_body_changes
+  resource_types          = var.nat_gateway_definition.resource_types
+  retry                   = var.nat_gateway_definition.retry
+  tags                    = merge(local.tags, var.nat_gateway_definition.tags != null ? var.nat_gateway_definition.tags : {})
+  timeouts                = var.nat_gateway_definition.timeouts
+  zones                   = var.nat_gateway_definition.zones
 }
 
 module "nsgs" {
@@ -123,27 +142,30 @@ resource "azurerm_virtual_hub_connection" "this" {
 module "firewall_route_table" {
   source  = "Azure/avm-res-network-routetable/azurerm"
   version = "0.4.1"
-  count = ((!var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
+  count = var.firewall_definition.route_table_resource_id == null && ((!var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
   (!var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? 1 : 0
 
   location                      = azurerm_resource_group.this.location
   name                          = local.route_table_name
   resource_group_name           = var.firewall_definition.resource_group_name != null ? var.firewall_definition.resource_group_name : azurerm_resource_group.this.name
   bgp_route_propagation_enabled = true
-  routes = var.use_internet_routing ? {
-    internet_route = {
-      name           = "default-to-internet"
-      address_prefix = "0.0.0.0/0"
-      next_hop_type  = "Internet"
-    }
-    } : {
-    azure_firewall = {
-      name                   = "default-to-firewall"
-      address_prefix         = "0.0.0.0/0"
-      next_hop_type          = "VirtualAppliance"
-      next_hop_in_ip_address = length(var.vnet_definition.existing_byo_vnet) == 0 ? module.firewall[0].resource.ip_configuration[0].private_ip_address : values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address
-    }
-  }
+  routes = merge(
+    var.use_internet_routing ? {
+      internet_route = {
+        name           = "default-to-internet"
+        address_prefix = "0.0.0.0/0"
+        next_hop_type  = "Internet"
+      }
+      } : {
+      azure_firewall = {
+        name                   = "default-to-firewall"
+        address_prefix         = "0.0.0.0/0"
+        next_hop_type          = "VirtualAppliance"
+        next_hop_in_ip_address = var.firewall_definition.private_ip_address != null ? var.firewall_definition.private_ip_address : (length(var.vnet_definition.existing_byo_vnet) == 0 ? module.firewall[0].resource.ip_configuration[0].private_ip_address : values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address)
+      }
+    },
+    var.firewall_definition.routes
+  )
 }
 
 module "fw_pip" {
@@ -218,9 +240,10 @@ module "azure_bastion" {
   ip_configuration = {
     subnet_id = local.subnet_ids["AzureBastionSubnet"]
   }
-  sku   = var.bastion_definition.sku
-  tags  = merge(local.tags, var.bastion_definition.tags != null ? var.bastion_definition.tags : {})
-  zones = var.bastion_definition.zones
+  sku               = var.bastion_definition.sku
+  tags              = merge(local.tags, var.bastion_definition.tags != null ? var.bastion_definition.tags : {})
+  tunneling_enabled = var.bastion_definition.tunneling_enabled
+  zones             = var.bastion_definition.zones
 }
 
 module "private_dns_zones" {
