@@ -259,12 +259,13 @@ moved {
 module "app_gateway_waf_policy" {
   source  = "Azure/avm-res-network-applicationgatewaywebapplicationfirewallpolicy/azurerm"
   version = "0.2.0"
-  count   = var.app_gateway_definition.deploy ? 1 : 0
+  count   = var.app_gateway_definition.deploy && var.waf_policy_definition.existing_policy == null ? 1 : 0
 
   location            = azurerm_resource_group.this.location
   managed_rules       = var.waf_policy_definition.managed_rules #local.web_application_firewall_managed_rules
   name                = local.web_application_firewall_policy_name
   resource_group_name = azurerm_resource_group.this.name
+  custom_rules        = var.waf_policy_definition.custom_rules
   enable_telemetry    = var.enable_telemetry
   policy_settings     = var.waf_policy_definition.policy_settings
   tags                = merge(local.tags, var.waf_policy_definition.tags != null ? var.waf_policy_definition.tags : {})
@@ -286,7 +287,7 @@ module "application_gateway" {
   name                               = local.application_gateway_name
   request_routing_rules              = var.app_gateway_definition.request_routing_rules
   resource_group_name                = azurerm_resource_group.this.name
-  app_gateway_waf_policy_resource_id = one(module.app_gateway_waf_policy[*].resource_id)
+  app_gateway_waf_policy_resource_id = var.waf_policy_definition.existing_policy != null ? var.waf_policy_definition.existing_policy.resource_id : one(module.app_gateway_waf_policy[*].resource_id)
   authentication_certificate         = var.app_gateway_definition.authentication_certificate
   autoscale_configuration            = var.app_gateway_definition.autoscale_configuration
   diagnostic_settings                = local.app_gw_diagnostic_settings

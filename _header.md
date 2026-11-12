@@ -13,6 +13,16 @@ Start from one of the deployable examples in this repository:
 
 Copy the example that best matches your environment, then replace `source = "../../"` with the registry source when deploying from your own configuration.
 
+## Application Gateway WAF policies
+
+By default, deploying Application Gateway creates and attaches an internal Web Application Firewall (WAF) policy. Use `waf_policy_definition.custom_rules` to add custom rules alongside its managed rules. The [standalone example](./examples/standalone) blocks requests from the documentation-only address `192.0.2.1/32` using `RemoteAddr`, `IPMatch`, and `Block`.
+
+To use a policy managed outside this pattern module, set `waf_policy_definition.existing_policy.resource_id` to its ARM resource ID. This attaches the supplied policy at gateway scope and skips internal policy creation. The `existing_policy` object selects this behavior even when another resource computes its ID during deployment. The [default example](./examples/default) demonstrates this with a separate WAF policy module.
+
+The caller owns the external policy's rules and lifecycle. Internal policy settings, managed rules, name, and tags do not modify it. Do not combine `custom_rules` with `existing_policy`; configure those rules on the external policy instead. Listener and path-specific policies remain supported and override the gateway policy rather than combining their rules with it.
+
+Switching an existing deployment to an external policy removes the internal policy from Terraform's desired resources. Review the plan and copy any required protections into the external policy before switching. Existing callers who omit both new options retain the current behavior.
+
 ## Policy-restricted environments
 
 If your tenant policies enforce restrictions (for example, storage account key access controls), use the same `azurerm` provider settings as the examples:
