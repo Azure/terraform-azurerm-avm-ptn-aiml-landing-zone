@@ -132,7 +132,7 @@ locals {
   subnet_ids       = length(var.vnet_definition.existing_byo_vnet) > 0 ? { for key, m in module.byo_subnets : key => try(m.resource_id, m.id) } : { for key, s in module.ai_lz_vnet[0].subnets : key => s.resource_id }
   subnets = {
     AzureBastionSubnet = {
-      enabled = var.flag_platform_landing_zone == false ? try(local.subnets_definition["AzureBastionSubnet"].enabled, true) : try(local.subnets_definition["AzureBastionSubnet"].enabled, false)
+      enabled = local.bastion_subnet_enabled
       name    = "AzureBastionSubnet"
       address_prefixes = (var.vnet_definition.ipam_pools == null ?
         try(local.subnets_definition["AzureBastionSubnet"].address_prefix, null) != null ?
@@ -148,9 +148,9 @@ locals {
         }]
       : null)
       route_table = null
-      #network_security_group = {
-      #  id = module.nsgs.resource_id
-      #}
+      network_security_group = local.bastion_subnet_enabled ? {
+        id = module.bastion_nsg[0].resource_id
+      } : null
     }
     AzureFirewallSubnet = {
       enabled = var.flag_platform_landing_zone == false ? try(local.subnets_definition["AzureFirewallSubnet"].enabled, true) : try(local.subnets_definition["AzureFirewallSubnet"].enabled, false)
@@ -318,7 +318,7 @@ locals {
           name = "Microsoft.App/environments"
         }
       }]
-      enabled = try(local.subnets_definition["ContainerAppEnvironmentSubnet"].enabled, true)
+      enabled = local.container_app_subnet_enabled
       name    = try(local.subnets_definition["ContainerAppEnvironmentSubnet"].name, null) != null ? local.subnets_definition["ContainerAppEnvironmentSubnet"].name : "ContainerAppEnvironmentSubnet"
       address_prefixes = (var.vnet_definition.ipam_pools == null ?
         try(local.subnets_definition["ContainerAppEnvironmentSubnet"].address_prefix, null) != null ?
@@ -336,6 +336,9 @@ locals {
       route_table = ((!var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) == 0) ||
         (!var.flag_platform_landing_zone && length(var.vnet_definition.existing_byo_vnet) > 0 && try(values(var.vnet_definition.existing_byo_vnet)[0].firewall_ip_address, null) != null)) ? {
         id = module.firewall_route_table[0].resource_id
+      } : null
+      network_security_group = local.container_app_subnet_enabled ? {
+        id = module.container_app_nsg[0].resource_id
       } : null
     }
     PrivateEndpointSubnet = {
