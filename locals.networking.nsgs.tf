@@ -31,7 +31,8 @@ locals {
       direction                    = "Inbound"
       priority                     = 120
       protocol                     = "Tcp"
-      source_address_prefix        = "*"
+      source_address_prefix        = length(var.app_gateway_definition.allowed_source_ip_prefixes) == 0 ? "*" : null
+      source_address_prefixes      = length(var.app_gateway_definition.allowed_source_ip_prefixes) > 0 ? var.app_gateway_definition.allowed_source_ip_prefixes : null
       source_port_range            = "*"
     }
     "appgw_rule03" = {
